@@ -1,0 +1,35 @@
+[
+  {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "1234567890",
+    "dob": "1990-01-15",
+    "gender": "Male",
+    "address": "123 Main Street, City, State 12345",
+    "status": "Active",
+    "addDate": "2024-01-01",
+    "medicalHistory": "No known allergies"
+  },
+  {
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "phone": "0987654321",
+    "dob": "1985-05-20",
+    "gender": "Female",
+    "address": "456 Oak Avenue, City, State 12345",
+    "status": "Active",
+    "addDate": "2024-01-02",
+    "medicalHistory": "Allergic to penicillin"
+  },
+  {
+    "name": "Mike Johnson",
+    "email": "mike.johnson@example.com",
+    "phone": "5551234567",
+    "dob": "1978-12-10",
+    "gender": "Male",
+    "address": "789 Pine Road, City, State 12345",
+    "status": "Active",
+    "addDate": "2024-01-03",
+    "medicalHistory": "Diabetes type 2"
+  }
+]

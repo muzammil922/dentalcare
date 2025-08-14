@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DentalCare Pro - Clinic Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="description" content="Professional dental clinic management system with patient management, appointments, billing, and automation features.">
+    <meta name="keywords" content="dental clinic, management system, appointments, billing, patient records">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading DentalCare Pro...</p>
+    </div>
+
+    <!-- Main Container -->
+    <div id="main-container" class="main-container" style="display: none;">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-tooth"></i>
+                    <span>DentalCare Pro</span>
+                </div>
+                <button class="sidebar-close" id="sidebar-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li class="menu-item active" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="menu-item" data-section="patient-services">
+                    <i class="fas fa-user-md"></i>
+                    <span>Patient Services</span>
+                </li>
+                <li class="menu-item" data-section="staff">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Staff</span>
+                </li>
+                <li class="menu-item" data-section="inventory">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </li>
+                <li class="menu-item" data-section="automation">
+                    <i class="fas fa-cogs"></i>
+                    <span>Automation</span>
+                </li>
+                
+                <li class="menu-item" data-section="feedback">
+                    <i class="fas fa-star"></i>
+                    <span>Feedback</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="page-title">Dashboard Overview</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <span>Dr. Smith's Clinic</span>
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Sections -->
+            
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <!-- Dashboard Overview Button -->
+                <div class="dashboard-overview">
+                    <button class="overview-btn active">
+                        <i class="fas fa-chart-line"></i>
+                        Overview
+                    </button>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-patients">0</h3>
+                            <p>Total Patients</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="today-appointments">0</h3>
+                            <p>Today's Appointments</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="appointments-completed">0</h3>
+                            <p>Appointments Completed</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="appointments-cancelled">0</h3>
+                            <p>Appointments Cancelled</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="monthly-payment">Rs.0</h3>
+                            <p>Monthly Payment</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="payment-dues">Rs.0</h3>
+                            <p>Payment Dues</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="paid-invoices">0</h3>
+                            <p>Paid Invoices</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="unpaid-invoices">0</h3>
+                            <p>Unpaid Invoices</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="recent-appointments">
+                        <h3>Today's Appointments</h3>
+                        <div id="today-appointments-list" class="appointments-list">
+                            <!-- Appointments will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Patient Services Section -->
+            <section id="patient-services" class="content-section">
+                <div class="patient-services-header">
+                    <h2>Patient Services</h2>
+                </div>
+                
+                <!-- Patient Services Navigation Tabs -->
+                <div class="patient-services-tabs">
+                    <button class="tab-btn active" data-tab="patient-management">
+                        <i class="fas fa-users"></i>
+                        Patient
+                    </button>
+                    <button class="tab-btn" data-tab="appointment-management">
+                        <i class="fas fa-calendar-alt"></i>
+                        Appointment
+                    </button>
+                    <button class="tab-btn" data-tab="billing-management">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        Billing
+                    </button>
+                </div>
+
+                <!-- Patient Management Tab Content -->
+                <div id="patient-management" class="tab-content active">
+                    <!-- Patient Filters and Actions -->
+                    <div class="patient-filters-container">
+                        <div class="patient-filters">
+                            <div class="dropdown-filter" id="patient-filter-dropdown">
+                                <button class="dropdown-filter-trigger active" type="button">
+                                <i class="fas fa-users"></i>
+                                    <span class="filter-text">All Patients</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                                <div class="dropdown-filter-menu">
+                                    <div class="dropdown-filter-option active" data-filter="all" data-type="patient">
+                                <i class="fas fa-users"></i>
+                                All Patients
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="active" data-type="patient">
+                                <i class="fas fa-user-check"></i>
+                                Active Patients
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="inactive" data-type="patient">
+                                <i class="fas fa-user-times"></i>
+                                Inactive Patients
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="patient-actions">
+                            <button class="btn btn-primary" id="add-new-patient-btn">
+                                <i class="fas fa-plus"></i> Add New Patient
+                            </button>
+                            
+                            <!-- Import Button -->
+                            <button class="import-btn" id="import-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Import CSV, Excel, or JSON files">
+                                <i class="fas fa-download" style="font-size: 1rem;"></i>
+                            </button>
+                            
+                            <!-- Refresh Button -->
+                            <button class="refresh-btn" id="refresh-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Refresh patient data" onclick="window.dentalApp.refreshPatientData()">
+                                <i class="fas fa-sync-alt" style="font-size: 1rem;"></i>
+                            </button>
+                            
+                            <!-- Hidden file input for import -->
+                            <input type="file" id="import-file-input" accept=".csv,.json,.xlsx,.xls" style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Patient Form Modal -->
+                    <div id="patient-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 id="patient-modal-title">Add New Patient</h3>
+                                <span class="close" id="patient-modal-close">&times;</span>
+                            </div>
+                            <form id="patient-form">
+                                <div class="form-layout">
+                                    <!-- Left Column -->
+                                    <div class="form-column">
+                                        <div class="form-group">
+                                            <label for="patient-name">FULL NAME *</label>
+                                            <input type="text" id="patient-name" name="name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="patient-email">EMAIL</label>
+                                            <input type="email" id="patient-email" name="email">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="patient-dob">DATE OF BIRTH *</label>
+                                            <div class="enhanced-date-picker">
+                                                <input type="date" id="patient-dob" name="dob" required>
+                                                <i class="fas fa-calendar-alt date-icon"></i>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="patient-gender">GENDER *</label>
+                                            <select id="patient-gender" name="gender" required>
+                                                <option value="">Select Gender</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="patient-age">AGE</label>
+                                            <input type="text" id="patient-age" name="age" readonly>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Middle Column -->
+                                    <div class="form-column">
+                                        <div class="form-group">
+                                            <label for="patient-phone">PHONE NUMBER *</label>
+                                            <input type="tel" id="patient-phone" name="phone" required>
+                                        </div>
+                                        <div class="form-group patient-add-date-picker">
+                                            <label for="patient-add-date">ADD DATE *</label>
+                                            <div class="enhanced-date-picker">
+                                                <input type="date" id="patient-add-date" name="addDate" required>
+                                                <i class="fas fa-calendar-alt date-icon"></i>
+                                            </div>
+                                        </div>
+
+                                        
+                                        <div class="form-group">
+                                            <label for="patient-address">ADDRESS</label>
+                                            <input type="text" id="patient-address" name="address">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="patient-status">STATUS</label>
+                                            <select id="patient-status" name="status" required>
+                                                <option value="Active">Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Right Column -->
+                                    <div class="form-column">
+                                        <div class="form-group">
+                                            <label for="patient-medical-history">MEDICAL HISTORY</label>
+                                            <textarea id="patient-medical-history" name="medicalHistory" rows="8"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" id="patient-cancel-btn">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Patient</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Patients List -->
+                    <div class="patients-container">
+                        <div class="search-bar">
+                            <input type="text" id="patient-search" placeholder="Search patients...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div id="patients-list" class="patients-list">
+                            <!-- Patients will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointment Management Tab Content -->
+                <div id="appointment-management" class="tab-content">
+                    <!-- Appointment Filters and Actions -->
+                    <div class="patient-filters-container">
+                        <div class="patient-filters">
+                            <div class="dropdown-filter" id="appointment-filter-dropdown">
+                                <button class="dropdown-filter-trigger active" type="button">
+                                <i class="fas fa-calendar-alt"></i>
+                                    <span class="filter-text">All Appointments</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                                <div class="dropdown-filter-menu">
+                                    <div class="dropdown-filter-option active" data-filter="all" data-type="appointment">
+                                <i class="fas fa-calendar-alt"></i>
+                                All Appointments
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="today" data-type="appointment">
+                                <i class="fas fa-calendar-day"></i>
+                                Today
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="week" data-type="appointment">
+                                <i class="fas fa-calendar-week"></i>
+                                This Week
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="month" data-type="appointment">
+                                        <i class="fas fa-calendar"></i>
+                                        This Month
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown-filter" id="appointment-status-filter-dropdown">
+                                <button class="dropdown-filter-trigger" type="button">
+                                    <i class="fas fa-filter"></i>
+                                    <span class="filter-text">All Status</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                                <div class="dropdown-filter-menu">
+                                    <div class="dropdown-filter-option active" data-filter="all" data-type="appointment-status">
+                                        <i class="fas fa-filter"></i>
+                                        All Status
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="scheduled" data-type="appointment-status">
+                                        <i class="fas fa-clock"></i>
+                                        Scheduled
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="confirmed" data-type="appointment-status">
+                                        <i class="fas fa-check-circle"></i>
+                                        Confirmed
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="completed" data-type="appointment-status">
+                                        <i class="fas fa-check-double"></i>
+                                        Completed
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="cancelled" data-type="appointment-status">
+                                        <i class="fas fa-times-circle"></i>
+                                        Cancelled
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="patient-actions">
+                            <button class="btn btn-primary" id="add-new-appointment-btn">
+                                <i class="fas fa-plus"></i> Schedule Appointment
+                            </button>
+                            
+                            <!-- Import Button for Appointments -->
+                            <button class="import-btn" id="import-appointments-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Import CSV, Excel, or JSON files">
+                                <i class="fas fa-download" style="font-size: 1rem;"></i>
+                            </button>
+                            
+                            <!-- Refresh Button for Appointments -->
+                            <button class="refresh-btn" id="refresh-appointments-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Refresh appointment data" onclick="window.dentalApp.refreshAppointmentData()">
+                                <i class="fas fa-sync-alt" style="font-size: 1rem;"></i>
+                            </button>
+                            
+                            <!-- Hidden file input for appointment import -->
+                            <input type="file" id="import-appointments-file-input" accept=".csv,.json,.xlsx,.xls" style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Appointment Form Modal -->
+                    <div id="appointment-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 id="appointment-modal-title">Schedule New Appointment</h3>
+                                <span class="close" id="appointment-modal-close">&times;</span>
+                            </div>
+                            <form id="appointment-form">
+                                <div class="form-layout">
+                                    <!-- First Column -->
+                                    <div class="form-column">
+                                        <div class="form-group">
+                                            <label for="appointment-patient">PATIENT *</label>
+                                            <select id="appointment-patient" name="patientId" required>
+                                                <option value="">Select Patient</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group appointment-date-picker">
+                                            <label for="appointment-date">APPOINTMENT DATE *</label>
+                                            <div class="enhanced-date-picker">
+                                                <input type="date" id="appointment-date" name="date" required>
+                                                <i class="fas fa-calendar-alt date-icon"></i>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="appointment-time">APPOINTMENT TIME *</label>
+                                            <input type="time" id="appointment-time" name="time" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="appointment-duration">DURATION</label>
+                                            <select id="appointment-duration" name="duration">
+                                                <option value="30">30 minutes</option>
+                                                <option value="45">45 minutes</option>
+                                                <option value="60" selected>1 hour</option>
+                                                <option value="90">1.5 hours</option>
+                                                <option value="120">2 hours</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Second Column -->
+                                    <div class="form-column">
+                                        <div class="form-group">
+                                            <label for="appointment-treatment">TREATMENT TYPE</label>
+                                            <select id="appointment-treatment" name="treatment">
+                                                <option value="consultation">Consultation</option>
+                                                <option value="cleaning">Cleaning</option>
+                                                <option value="filling">Filling</option>
+                                                <option value="extraction">Extraction</option>
+                                                <option value="root-canal">Root Canal</option>
+                                                <option value="crown">Crown</option>
+                                                <option value="whitening">Teeth Whitening</option>
+                                                <option value="braces">Braces Adjustment</option>
+                                                <option value="emergency">Emergency</option>
+                                                <option value="follow-up">Follow-up</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="appointment-status">STATUS</label>
+                                            <div class="status-input-container">
+                                                <input type="text" id="appointment-status" name="status" value="Scheduled" readonly>
+                                                <div class="status-options" id="appointment-status-options">
+                                                    <div class="status-option" data-value="Scheduled">Scheduled</div>
+                                                    <div class="status-option" data-value="Confirmed">Confirmed</div>
+                                                    <div class="status-option" data-value="Completed">Completed</div>
+                                                    <div class="status-option" data-value="Cancelled">Cancelled</div>
+                                                    <div class="status-option" data-value="No-show">No-show</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="appointment-priority">PRIORITY</label>
+                                            <select id="appointment-priority" name="priority">
+                                                <option value="normal">Normal</option>
+                                                <option value="urgent">Urgent</option>
+                                                <option value="emergency">Emergency</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="appointment-reminder">REMINDER</label>
+                                            <select id="appointment-reminder" name="reminder">
+                                                <option value="none">No Reminder</option>
+                                                <option value="1">1 day before</option>
+                                                <option value="2">2 days before</option>
+                                                <option value="7">1 week before</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Third Column - Notes -->
+                                    <div class="form-column medical-history-column">
+                                        <div class="form-group">
+                                            <label for="appointment-notes">APPOINTMENT NOTES</label>
+                                            <textarea id="appointment-notes" name="notes" rows="8" placeholder="Enter any special instructions, patient concerns, or additional notes..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" id="appointment-cancel-btn">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Schedule Appointment</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Appointments List -->
+                    <div class="appointments-container">
+                        <div class="search-bar">
+                            <input type="text" id="appointment-search" placeholder="Search appointments...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div id="appointments-list" class="appointments-list">
+                            <!-- Appointments will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Management Tab Content -->
+                <div id="billing-management" class="tab-content">
+                    <!-- Billing Filters and Actions -->
+                    <div class="patient-filters-container">
+                        <div class="patient-filters">
+                            <div class="dropdown-filter" id="billing-filter-dropdown">
+                                <button class="dropdown-filter-trigger active" type="button">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                    <span class="filter-text">All Invoices</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                                <div class="dropdown-filter-menu">
+                                    <div class="dropdown-filter-option active" data-filter="all" data-type="billing">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                All Invoices
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="paid" data-type="billing">
+                                <i class="fas fa-check-circle"></i>
+                                Paid
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="unpaid" data-type="billing">
+                                <i class="fas fa-clock"></i>
+                                Unpaid
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="patient-actions">
+                            <button class="btn btn-primary" id="add-new-billing-btn">
+                                <i class="fas fa-plus"></i> Create Invoice
+                            </button>
+                            
+                            <!-- Import Button for Billing -->
+                            <button class="import-btn" id="import-billing-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Import CSV, Excel, or JSON files">
+                                <i class="fas fa-download" style="font-size: 1rem;"></i>
+                            </button>
+                            
+                            <!-- Refresh Button for Billing -->
+                            <button class="refresh-btn" id="refresh-billing-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Refresh billing data" onclick="window.dentalApp.refreshBillingData()">
+                                <i class="fas fa-sync-alt" style="font-size: 1rem;"></i>
+                            </button>
+                            
+                            <!-- Hidden file input for billing import -->
+                            <input type="file" id="import-billing-file-input" accept=".csv,.json,.xlsx,.xls" style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Billing Form Modal -->
+                    <div id="billing-modal" class="modal">
+                        <div class="modal-content professional-billing-modal">
+                            <div class="modal-header">
+                                <div class="header-content">
+                                    <div class="header-left">
+                                        
+                                        <div class="header-text">
+                                            <h3 id="billing-modal-title">Create Professional Invoice</h3>
+                                            <p class="header-subtitle">Generate a detailed invoice for dental services</p>
+                                        </div>
+                                    </div>
+                                <span class="close" id="billing-modal-close">&times;</span>
+                                </div>
+                            </div>
+                            <form id="billing-form">
+                                <div class="scrollable-content">
+                                    <!-- Invoice Header Section -->
+                                    <div class="invoice-header-section">
+                                    <div class="invoice-info-grid">
+                                        <div class="invoice-info-card">
+                                            <div class="info-label">
+                                                <i class="fas fa-user-circle"></i>
+                                                <span>Patient Information</span>
+                                            </div>
+                                    <div class="form-group">
+                                                <label for="billing-patient">Select Patient *</label>
+                                        <select id="billing-patient" name="patientId" required>
+                                                    <option value="">Choose a patient from the list</option>
+                                        </select>
+                                    </div>
+                                        </div>
+                                        
+                                        <div class="invoice-info-card">
+                                            <div class="info-label">
+                                                <i class="fas fa-calendar-alt"></i>
+                                                <span>Invoice Details</span>
+                                            </div>
+                                            <div class="form-row">
+                                    <div class="form-group">
+                                                    <label for="billing-date">Invoice Date *</label>
+                                        <div class="enhanced-date-picker">
+                                            <input type="date" id="billing-date" name="date" required>
+                                            <i class="fas fa-calendar-alt date-icon"></i>
+                                        </div>
+                                    </div>
+                                                <div class="form-group">
+                                                    <label for="billing-due-date">Due Date</label>
+                                                    <div class="enhanced-date-picker">
+                                                        <input type="date" id="billing-due-date" name="dueDate">
+                                                        <i class="fas fa-calendar-alt date-icon"></i>
+                                                    </div>
+                                    </div>
+                                </div>
+                                
+                                        </div>
+                                        
+                                        <div class="invoice-info-card">
+                                            <div class="info-label">
+                                                <i class="fas fa-credit-card"></i>
+                                                <span>Payment Settings</span>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="billing-status">Invoice Status</label>
+                                                    <div class="status-input-container">
+                                                        <input type="text" id="billing-status" name="status" value="Pending" readonly>
+                                                        <div class="status-options" id="billing-status-options">
+                                                            <div class="status-option" data-value="Pending">Pending</div>
+                                                            <div class="status-option" data-value="Paid">Paid</div>
+                            
+                                                            <div class="status-option" data-value="Cancelled">Cancelled</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="billing-payment-method">Payment Method</label>
+                                                    <select id="billing-payment-method" name="paymentMethod">
+                                                        <option value="cash">Cash</option>
+                                                        <option value="online">Online Payment</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group" id="receipt-number-group" style="display: none;">
+                                                    <label for="billing-receipt-number">Receipt Number</label>
+                                                    <input type="text" id="billing-receipt-number" name="receiptNumber" placeholder="Enter online payment receipt number">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+                                <!-- Services Section -->
+                                <div class="services-section" style="
+                                    background: var(--white);
+                                    border-radius: var(--radius-lg);
+                                    padding: 1.5rem;
+                                    box-shadow: var(--shadow-md);
+                                    border: 1px solid var(--gray-200);
+                                    margin-bottom: 1.5rem;
+                                ">
+                                    <div class="section-header" style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 0.75rem;
+                                        margin-bottom: 1.25rem;
+                                        padding-bottom: 0.75rem;
+                                        border-bottom: 1px solid var(--gray-200);
+                                    ">
+                                        <div style="
+                                            width: 40px;
+                                            height: 40px;
+                                            background: var(--primary-light);
+                                            border-radius: 50%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            color: var(--primary-color);
+                                        ">
+                                            <i class="fas fa-stethoscope" style="font-size: 1rem;"></i>
+                                        </div>
+                                        <h3 style="margin: 0; color: var(--gray-800); font-size: 1.125rem; font-weight: 600;">Dental Services</h3>
+                                    </div>
+                                    <div class="services-container">
+                                        <div id="treatments-list">
+                                            <div class="treatment-item professional-treatment">
+                                                <div class="treatment-header">
+                                                    <span class="treatment-number">#1</span>
+                                                    <span class="treatment-label">Service Details</span>
+                                                </div>
+                                                <div class="treatment-content">
+                                                    <div class="form-group">
+                                                        <label>Service Type</label>
+                                                    <select class="treatment-type" name="treatmentType">
+                                                            <option value="">Select a service</option>
+                                                            <option value="consultation">Initial Consultation</option>
+                                                            <option value="cleaning">Dental Cleaning</option>
+                                                            <option value="filling">Cavity Filling</option>
+                                                            <option value="extraction">Tooth Extraction</option>
+                                                            <option value="root-canal">Root Canal Treatment</option>
+                                                            <option value="crown">Dental Crown</option>
+                                                            <option value="whitening">Teeth Whitening</option>
+                                                            <option value="braces">Orthodontic Consultation</option>
+                                                            <option value="custom">Custom Service</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                        <label>Amount (PKR)</label>
+                                                        <div class="amount-input-group">
+                                                            <span class="currency-symbol">Rs.</span>
+                                                            <input type="number" class="treatment-amount" name="amount" step="0.01" min="0" placeholder="0">
+                                                </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Discount (%)</label>
+                                                        <input type="number" class="treatment-discount" name="discount" min="0" max="100" step="0.01"  placeholder="0">
+                                                    </div>
+                                                    <button type="button" class="btn-remove-treatment" title="Remove Service">
+                                                        <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                        <button type="button" class="btn-add-service" id="add-treatment">
+                                            <i class="fas fa-plus"></i>
+                                            <span>Add Another Service</span>
+                                    </button>
+                                    </div>
+                                </div>
+
+                                <!-- Notes Section -->
+                                <div class="notes-section">
+                                    <div class="section-header">
+                                        <i class="fas fa-edit"></i>
+                                        <span>Additional Information</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="billing-notes">Invoice Notes & Terms</label>
+                                        <textarea id="billing-notes" name="notes" rows="4" placeholder="Enter payment terms, special instructions, or any additional notes for this invoice..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Invoice Summary -->
+                                <div class="invoice-summary-section" style="
+                                    background: var(--white);
+                                    border-radius: var(--radius-lg);
+                                    padding: 1.5rem;
+                                    box-shadow: var(--shadow-md);
+                                    border: 1px solid var(--gray-200);
+                                    margin-bottom: 1.5rem;
+                                ">
+                                    <div class="summary-header" style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 0.75rem;
+                                        margin-bottom: 1.25rem;
+                                        padding-bottom: 0.75rem;
+                                        border-bottom: 1px solid var(--gray-200);
+                                    ">
+                                        <div style="
+                                            width: 40px;
+                                            height: 40px;
+                                            background: var(--primary-light);
+                                            border-radius: 50%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            color: var(--primary-color);
+                                        ">
+                                            <i class="fas fa-receipt" style="font-size: 1rem;"></i>
+                                        </div>
+                                        <h3 style="margin: 0; color: var(--gray-800); font-size: 1.125rem; font-weight: 600;">Invoice Summary</h3>
+                                    </div>
+                                    <div class="summary-content">
+                                    <div class="summary-row">
+                                            <span class="summary-label">Subtotal:</span>
+                                            <span class="summary-value" id="billing-subtotal">Rs. 0.00</span>
+                                    </div>
+                                    <div class="summary-row">
+                                            <span class="summary-label">Total Discount:</span>
+                                            <span class="summary-value discount" id="billing-discount-amount">Rs. 0.00</span>
+                                    </div>
+                                        <div class="summary-row total-row">
+                                            <span class="summary-label">Total Amount:</span>
+                                            <span class="summary-value total-amount" id="billing-total">Rs. 0.00</span>
+                                    </div>
+                                </div>
+                                </div>
+                                </div>
+
+                                <!-- Form Actions -->
+                                <div class="form-actions professional-actions">
+                                    <button type="button" class="btn btn-secondary" id="billing-cancel-btn">
+                                        <i class="fas fa-times"></i>
+                                        <span>Cancel</span>
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="billing-save-btn">
+                                        <i class="fas fa-save"></i>
+                                        <span id="billing-save-text">Generate Invoice</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Billing List -->
+                    <div class="billing-container">
+                        <div class="search-bar">
+                            <input type="text" id="billing-search" placeholder="Search invoices...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div id="billing-list" class="billing-list">
+                            <!-- Billing records will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+
+            <!-- Staff Section -->
+            <section id="staff" class="content-section">
+                <div class="patient-services-header">
+                    <h2>Staff Management</h2>
+                    <button class="header-settings-btn" id="staff-header-settings-btn">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+                
+                <!-- Staff Services Navigation Tabs -->
+                <div class="patient-services-tabs">
+                    <button class="tab-btn active" data-tab="staff-management">
+                        <i class="fas fa-users"></i>
+                        Staff List
+                    </button>
+                    <button class="tab-btn" data-tab="attendance-management">
+                        <i class="fas fa-clock"></i>
+                        Attendance
+                    </button>
+                    <button class="tab-btn" data-tab="salary-management">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Salary
+                    </button>
+                </div>
+
+                <!-- Staff List Tab Content -->
+                <div id="staff-management" class="tab-content active">
+                    <!-- Staff Filters and Actions -->
+                    <div class="staff-filters-container">
+                        <div class="staff-filters">
+                            <div class="dropdown-filter" id="staff-filter-dropdown">
+                                <button class="dropdown-filter-trigger active" type="button">
+                                    <i class="fas fa-users"></i>
+                                    <span class="filter-text">All Staff</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="dropdown-filter-menu">
+                                    <div class="dropdown-filter-option active" data-filter="all" data-type="staff">
+                                        <i class="fas fa-users"></i>
+                                        All Staff
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="active" data-type="staff">
+                                        <i class="fas fa-user-check"></i>
+                                        Active Staff
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="leave" data-type="staff">
+                                        <i class="fas fa-user-clock"></i>
+                                        Leave Staff
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="left" data-type="staff">
+                                        <i class="fas fa-user-times"></i>
+                                        Left Staff
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="staff-actions">
+
+                            <button class="btn btn-primary" id="add-new-staff-btn">
+                                <i class="fas fa-plus"></i> Add New Staff
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Staff List -->
+                    <div class="staff-container">
+                        <div class="search-bar">
+                            <input type="text" id="staff-search" placeholder="Search staff...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div id="staff-list" class="staff-list">
+                            <!-- Staff will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Management Tab Content -->
+                <div id="attendance-management" class="tab-content">
+                    <!-- Attendance Filters and Actions -->
+                    <div class="attendance-filters-container">
+                        <div class="attendance-filters">
+                            <div class="dropdown-filter" id="attendance-filter-dropdown">
+                                <button class="dropdown-filter-trigger active" type="button">
+                                    <i class="fas fa-clock"></i>
+                                    <span class="filter-text">Today's Attendance</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="dropdown-filter-menu">
+                                    <div class="dropdown-filter-option active" data-filter="today" data-type="attendance">
+                                        <i class="fas fa-calendar-day"></i>
+                                        Today's Attendance
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="week" data-type="attendance">
+                                        <i class="fas fa-calendar-week"></i>
+                                        This Week
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="month" data-type="attendance">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        This Month
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="all" data-type="attendance">
+                                        <i class="fas fa-calendar"></i>
+                                        All Records
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="attendance-actions">
+
+                        </div>
+                    </div>
+
+                    <!-- Attendance Overview Cards -->
+                    <div class="attendance-overview">
+                        <div class="attendance-stat-card">
+                            <div class="stat-icon present">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="present-count">0</h3>
+                                <p>Present Today</p>
+                            </div>
+                        </div>
+                        <div class="attendance-stat-card">
+                            <div class="stat-icon absent">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="absent-count">0</h3>
+                                <p>Absent Today</p>
+                            </div>
+                        </div>
+                        <div class="attendance-stat-card">
+                            <div class="stat-icon late">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="late-count">0</h3>
+                                <p>Late Today</p>
+                            </div>
+                        </div>
+                        <div class="attendance-stat-card">
+                            <div class="stat-icon leave">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="leave-count">0</h3>
+                                <p>On Leave</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attendance List -->
+                    <div class="attendance-container">
+                        <div class="search-bar">
+                            <input type="text" id="attendance-search" placeholder="Search attendance records...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div id="attendance-list" class="attendance-list">
+                            <!-- Attendance records will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Salary Management Tab Content -->
+                <div id="salary-management" class="tab-content">
+                    <!-- Salary Filters and Actions -->
+                    <div class="salary-filters-container">
+                        <div class="salary-filters">
+                            <div class="dropdown-filter" id="salary-filter-dropdown">
+                                <button class="dropdown-filter-trigger active" type="button">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <span class="filter-text">All Salaries</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="dropdown-filter-menu">
+                                    <div class="dropdown-filter-option active" data-filter="all" data-type="salary">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        All Salaries
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="paid" data-type="salary">
+                                        <i class="fas fa-check-circle"></i>
+                                        Paid
+                                    </div>
+                                    <div class="dropdown-filter-option" data-filter="pending" data-type="salary">
+                                        <i class="fas fa-clock"></i>
+                                        Pending
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="salary-actions">
+
+                            <button class="btn btn-primary" id="add-new-salary-btn">
+                                <i class="fas fa-plus"></i> Create Salary
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Salary List -->
+                    <div class="salary-container">
+                        <div class="search-bar">
+                            <input type="text" id="salary-search" placeholder="Search salary records...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div id="salary-list" class="salary-list">
+                            <!-- Salary records will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Salary Form Modal -->
+                <div id="salary-modal" class="modal">
+                    <div class="modal-content salary-modal-content">
+                        <div class="modal-header">
+                            <div class="salary-header-left">
+                                <h3 id="salary-modal-title">Create Salary</h3>
+                                <div class="salary-staff-info">
+                                    <span id="salary-staff-name">Select Staff Member</span>
+                                    <span id="salary-current-date"></span>
+                                </div>
+                            </div>
+                            <div class="salary-header-right">
+                                <span class="close" id="salary-modal-close">&times;</span>
+                            </div>
+                        </div>
+                        <form id="salary-form">
+                            <div class="salary-form-scrollable">
+                                <!-- Salary Period Section -->
+                                <div class="salary-period-grid">
+                                    <div class="form-group">
+                                        <label for="salary-month">Salary Month</label>
+                                        <select id="salary-month" name="month" required>
+                                            <option value="">Select Month</option>
+                                            <option value="01">January</option>
+                                            <option value="02">February</option>
+                                            <option value="03">March</option>
+                                            <option value="04">April</option>
+                                            <option value="05">May</option>
+                                            <option value="06">June</option>
+                                            <option value="07">July</option>
+                                            <option value="08">August</option>
+                                            <option value="09">September</option>
+                                            <option value="10">October</option>
+                                            <option value="11">November</option>
+                                            <option value="12">December</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="salary-year">Year</label>
+                                        <select id="salary-year" name="year" required>
+                                            <option value="">Select Year</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="salary-payment-date">Payment Date</label>
+                                        <div class="enhanced-date-picker">
+                                            <input type="date" id="salary-payment-date" name="paymentDate" required>
+                                            <i class="fas fa-calendar-alt date-icon"></i>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="salary-department">Department</label>
+                                        <select id="salary-department" name="department">
+                                            <option value="Staff">Staff</option>
+                                            <option value="Management">Management</option>
+                                            <option value="Support">Support</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Staff Selection Section -->
+                                <div class="form-group">
+                                    <label for="salary-staff">Staff Member</label>
+                                    <select id="salary-staff" name="staffId" required>
+                                        <option value="">Select a staff member</option>
+                                    </select>
+                                </div>
+
+                                <!-- Attendance Section -->
+                                <div class="section-header">
+                                    <h4><i class="fas fa-sync-alt"></i> Attendance</h4>
+                                </div>
+                                <div class="attendance-grid">
+                                    <div class="form-group">
+                                        <label for="working-days">Working Days</label>
+                                        <input type="number" id="working-days" name="workingDays" value="27" min="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="present-days">Present</label>
+                                        <input type="number" id="present-days" name="presentDays" value="0" min="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="leave-days">Leave <span class="info-text">(0 remaining)</span></label>
+                                        <input type="number" id="leave-days" name="leaveDays" value="0" min="0">
+                                        <i class="fas fa-info-circle info-icon"></i>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="absent-days">Absent <span class="info-text">(0 deductible)</span></label>
+                                        <input type="number" id="absent-days" name="absentDays" value="0" min="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="late-days">Late Coming <span class="info-text">(0 deductible)</span></label>
+                                        <input type="number" id="late-days" name="lateDays" value="0" min="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="half-leave-days">Half Leave <span class="info-text">(0 deductible)</span></label>
+                                        <input type="number" id="half-leave-days" name="halfLeaveDays" value="0" min="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="bonus-days">Bonus Working Days</label>
+                                        <input type="number" id="bonus-days" name="bonusDays" value="0" min="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="encashment-days">Leave Encashment Days</label>
+                                        <input type="number" id="encashment-days" name="encashmentDays" value="0" min="0">
+                                    </div>
+                                </div>
+                                <div class="calculate-salary-btn">
+                                    <button type="button" class="btn btn-success" id="calculate-salary-btn">
+                                        <i class="fas fa-calculator"></i> Calculate Salary
+                                    </button>
+                                </div>
+
+                                <!-- Allowances Section -->
+                                <div class="section-header">
+                                    <h4>Allowances</h4>
+                                </div>
+                                <div class="allowances-container" id="allowances-container">
+                                    <!-- Dynamic allowances will be added here -->
+                                </div>
+                                <button type="button" class="btn btn-outline" id="add-allowance-btn">
+                                    <i class="fas fa-plus"></i> Add Allowance
+                                </button>
+
+
+
+                                <!-- Summary Section -->
+                                <div class="section-header">
+                                    <h4>Summary</h4>
+                                </div>
+                                <div class="summary-grid">
+                                    <div class="form-group">
+                                        <label for="basic-salary">Basic Salary (PKR)</label>
+                                        <input type="number" id="basic-salary" name="basicSalary" value="0" step="0.01" min="0" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="total-allowance">Total Allowance (PKR)</label>
+                                        <input type="number" id="total-allowance" name="totalAllowance" value="0" step="0.01" min="0" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="gross-salary">Gross Salary (PKR)</label>
+                                        <input type="number" id="gross-salary" name="grossSalary" value="0" step="0.01" min="0" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="total-deduction">Total Deduction (PKR)</label>
+                                        <input type="number" id="total-deduction" name="totalDeduction" value="0" step="0.01" min="0" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="gross-payable">Gross Payable (PKR)</label>
+                                        <input type="number" id="gross-payable" name="grossPayable" value="0" step="0.01" min="0" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="net-salary">Net Salary (PKR)</label>
+                                        <input type="number" id="net-salary" name="netSalary" value="0" step="0.01" min="0" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="salary-from">Salary From</label>
+                                        <select id="salary-from" name="salaryFrom">
+                                            <option value="Cash"><i class="fas fa-briefcase"></i> Cash</option>
+                                            <option value="Bank">Bank Transfer</option>
+                                            <option value="Check">Check</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Note Section -->
+                                <div class="form-group">
+                                    <label for="salary-notes">Note</label>
+                                    <textarea id="salary-notes" name="notes" rows="4" placeholder="Enter note"></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="salary-form-actions">
+                                <div class="action-buttons-left">
+                                    <button type="submit" class="btn btn-success" id="salary-save-btn">
+                                        <i class="fas fa-save"></i> Save
+                                    </button>
+                                    <button type="button" class="btn btn-success" id="salary-save-print-btn">
+                                        <i class="fas fa-print"></i> Save & Print
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Staff Settings Modal -->
+                <div id="staff-settings-modal" class="modal">
+                    <div class="modal-content" style="max-width: 500px; width: 90%;">
+                        <div class="modal-header">
+                            <h3>Staff Settings</h3>
+                            <span class="close" id="staff-settings-close">&times;</span>
+                        </div>
+                        <form id="staff-settings-form">
+                            <div style="padding: 1.5rem;">
+                                <div class="form-group">
+                                    <label for="working-days-input">Working Days</label>
+                                    <input type="text" id="working-days-input" name="workingDays" placeholder="e.g., Monday-Friday, 9 AM - 5 PM">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="late-detection-rs">Late Detection (Rs)</label>
+                                    <input type="number" id="late-detection-rs" name="lateDetectionRs" step="0.01" min="0" value="0" placeholder="Rs. amount for late detection">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="staff-timing">Staff Timing</label>
+                                    <input type="text" id="staff-timing" name="staffTiming" placeholder="e.g., 9:00 AM - 6:00 PM">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="specific-staff-time">Specific Staff Time</label>
+                                    <input type="text" id="specific-staff-time" name="specificStaffTime" placeholder="e.g., Dr. Smith: 8:00 AM - 4:00 PM">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="overtime-rate">Overtime Rate (Rs)</label>
+                                    <input type="number" id="overtime-rate" name="overtimeRate" step="0.01" min="0" value="0" placeholder="Rs. per hour">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="holiday-mark">Holiday Mark</label>
+                                    <select id="holiday-mark" name="holidayMark">
+                                        <option value="paid">Paid Holiday</option>
+                                        <option value="unpaid">Unpaid Holiday</option>
+                                        <option value="half-day">Half Day</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="leave-detection-rs">Leave Detection (Rs)</label>
+                                    <input type="number" id="leave-detection-rs" name="leaveDetectionRs" step="0.01" min="0" value="0" placeholder="Rs. amount for leave detection">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="absent-detection-rs">Absent Detection (Rs)</label>
+                                    <input type="number" id="absent-detection-rs" name="absentDetectionRs" step="0.01" min="0" value="0" placeholder="Rs. amount for absent detection">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="half-day-detection-rs">Half Day Detection (Rs)</label>
+                                    <input type="number" id="half-day-detection-rs" name="halfDayDetectionRs" step="0.01" min="0" value="0" placeholder="Rs. amount for half day detection">
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" id="staff-settings-cancel">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Attendance Modal -->
+                <div id="attendance-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="attendance-modal-title">Mark Attendance</h3>
+                            <span class="close" id="attendance-modal-close">&times;</span>
+                        </div>
+                        <form id="attendance-form" style="padding: 1.5rem;">
+                            <!-- Header Section -->
+                            <div style="background: var(--primary-light); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                                <h4 style="color: var(--primary-color); margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 600;">
+                                    <i class="fas fa-clock" style="margin-right: 0.5rem;"></i>Mark Attendance
+                                </h4>
+                                <p style="margin: 0; color: var(--gray-600); font-size: 0.875rem;">
+                                    Record attendance for the selected staff member
+                                </p>
+                            </div>
+
+                            <!-- Staff Information Card -->
+                            <div style=" padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; ">
+                                <h5 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <i class="fas fa-user" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Staff Information
+                                </h5>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="attendance-date" style="color: var(--gray-700); font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">
+                                            <i class="fas fa-calendar" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Date
+                                        </label>
+                                        <div class="enhanced-date-picker">
+                                            <input type="date" id="attendance-date" name="date" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; transition: all 0.3s ease;" onfocus="this.style.borderColor='var(--success-color)'; this.style.boxShadow='0 0 0 3px var(--success-light)'" onblur="this.style.borderColor='var(--gray-300)'; this.style.boxShadow='none'">
+                                            <i class="fas fa-calendar-alt date-icon"></i>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="attendance-staff" style="color: var(--gray-700); font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">
+                                            <i class="fas fa-user-tie" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Staff Member
+                                        </label>
+                                        <select id="attendance-staff" name="staffId" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; transition: all 0.3s ease;" onfocus="this.style.borderColor='var(--success-color)'; this.style.boxShadow='0 0 0 3px var(--success-light)'" onblur="this.style.borderColor='var(--gray-300)'; this.style.boxShadow='none'">
+                                            <option value="">Select Staff Member</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Attendance Details Card -->
+                            <div style="background: var(--info-light); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; border-left: 4px solid var(--info-color);">
+                                <h5 style="color: var(--info-color); margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <i class="fas fa-clipboard-check" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Attendance Details
+                                </h5>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="attendance-status" style="color: var(--gray-700); font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">
+                                            <i class="fas fa-toggle-on" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Status
+                                        </label>
+                                        <select id="attendance-status" name="status" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; transition: all 0.3s ease;" onfocus="this.style.borderColor='var(--info-color)'; this.style.boxShadow='0 0 0 3px var(--info-light)'" onblur="this.style.borderColor='var(--gray-300)'; this.style.boxShadow='none'">
+                                            <option value="">Select Status</option>
+                                            <option value="present">Present</option>
+                                            <option value="absent">Absent</option>
+                                            <option value="late">Late</option>
+                                            <option value="leave">Leave</option>
+                                            <option value="half-day">Half Day</option>
+                                        </select>
+                                        
+                                        <!-- Quick Status Icons -->
+                                        <div style="margin-top: 0.75rem;">
+                                            <label style="color: var(--gray-600); font-size: 0.75rem; font-weight: 500; margin-bottom: 0.5rem; display: block;">
+                                                <i class="fas fa-bolt" style="margin-right: 0.25rem;"></i>Quick Select:
+                                            </label>
+                                            <div class="quick-status-icons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                                <button type="button" class="quick-status-btn absent" onclick="window.dentalApp.setQuickStatus('absent')" title="Absent" style="width: 36px; height: 36px; border: 2px solid var(--danger-color); border-radius: 50%; background: var(--white); color: var(--danger-color); cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </button>
+                                                <button type="button" class="quick-status-btn leave" onclick="window.dentalApp.setQuickStatus('leave')" title="Leave" style="width: 36px; height: 36px; border: 2px solid var(--warning-color); border-radius: 50%; background: var(--white); color: var(--warning-color); cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                                    <i class="fas fa-calendar-times"></i>
+                                                </button>
+                                                <button type="button" class="quick-status-btn half-day" onclick="window.dentalApp.setQuickStatus('half-day')" title="Half Day" style="width: 36px; height: 36px; border: 2px solid var(--purple-color); border-radius: 50%; background: var(--white); color: var(--purple-color); cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                                    <i class="fas fa-hourglass-half"></i>
+                                                </button>
+                                            </div>
+                                            <div id="auto-detection-info" style="margin-top: 0.5rem; padding: 0.5rem; background: var(--gray-50); border-radius: var(--radius-sm); border-left: 3px solid var(--primary-color);">
+                                                <p style="margin: 0; font-size: 0.75rem; color: var(--gray-600);">
+                                                    <i class="fas fa-info-circle" style="margin-right: 0.25rem; color: var(--primary-color);"></i>
+                                                    <strong>Auto-Detection:</strong> <span id="auto-detection-status">Present/Late will be automatically set based on time (10:30 AM threshold)</span>
+                                                </p>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="attendance-time" style="color: var(--gray-700); font-weight: 500; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">
+                                            <i class="fas fa-clock" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Time
+                                        </label>
+                                        <input type="time" id="attendance-time" name="time" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; transition: all 0.3s ease;" onfocus="this.style.borderColor='var(--info-color)'; this.style.boxShadow='0 0 0 3px var(--info-light)'" onblur="this.style.borderColor='var(--gray-300)'; this.style.boxShadow='none'">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes Section -->
+                            <div style=" padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                                <h5 style="color: var(--gray-600); margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <i class="fas fa-sticky-note" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Additional Notes
+                                </h5>
+                                <div class="form-group" style="margin: 0;">
+                                    <textarea id="attendance-notes" name="notes" rows="3" placeholder="Add any additional notes or comments about the attendance..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; font-family: inherit; resize: vertical; transition: all 0.3s ease;" onfocus="this.style.borderColor='var(--gray-400)'; this.style.boxShadow='0 0 0 3px var(--gray-100)'" onblur="this.style.borderColor='var(--gray-300)'; this.style.boxShadow='none'"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid var(--gray-200);">
+                                <button type="button" class="btn btn-secondary" id="attendance-cancel-btn" style="padding: 0.75rem 1.5rem; background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-300); border-radius: var(--radius-md); cursor: pointer; font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.background='var(--gray-200)'" onmouseout="this.style.background='var(--gray-100)'">
+                                    <i class="fas fa-times" style="margin-right: 0.5rem;"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; background: var(--primary-color); color: var(--white); border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500; transition: all 0.3s ease;" onmouseover="this.style.background='var(--primary-dark)'" onmouseout="this.style.background='var(--primary-color)'">
+                                    <i class="fas fa-check" style="margin-right: 0.5rem;"></i>Mark Attendance
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Automation Section -->
+            <section id="automation" class="content-section">
+                <div class="section-header">
+                    <h2>Automation Settings</h2>
+                </div>
+
+                <div class="automation-container">
+                    <div class="automation-card">
+                        <div class="automation-header">
+                            <h3>Email Notifications</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="email-notifications" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p>Send automated email notifications for appointments and reminders</p>
+                    </div>
+
+                    <div class="automation-card">
+                        <div class="automation-header">
+                            <h3>SMS Notifications</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sms-notifications">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p>Send SMS reminders and confirmations to patients</p>
+                    </div>
+
+                    <div class="automation-card">
+                        <div class="automation-header">
+                            <h3>Appointment Confirmations</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="appointment-confirmations" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p>Automatically send confirmation messages when appointments are scheduled</p>
+                    </div>
+
+                    <div class="automation-card">
+                        <div class="automation-header">
+                            <h3>24-Hour Reminders</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="reminder-24h" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p>Send reminder notifications 24 hours before appointments</p>
+                    </div>
+
+                    <div class="automation-card">
+                        <div class="automation-header">
+                            <h3>Auto Invoice Generation</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="auto-invoicing" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p>Automatically create invoices when appointments are marked as completed</p>
+                    </div>
+
+                    <div class="automation-card">
+                        <div class="automation-header">
+                            <h3>Feedback Requests</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="feedback-requests" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p>Send feedback request emails 1 day after treatment completion</p>
+                    </div>
+                </div>
+
+                <div class="automation-settings">
+                    <h3>Notification Settings</h3>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label for="clinic-email">Clinic Email</label>
+                            <input type="email" id="clinic-email" placeholder="clinic@example.com">
+                        </div>
+                        <div class="setting-item">
+                            <label for="clinic-phone">Clinic Phone</label>
+                            <input type="tel" id="clinic-phone" placeholder="+1234567890">
+                        </div>
+                        <div class="setting-item">
+                            <label for="webhook-url">n8n Webhook URL</label>
+                            <input type="url" id="webhook-url" placeholder="https://your-n8n-instance.com/webhook/...">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="save-automation-settings">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </section>
+
+            <!-- Feedback Section -->
+            <section id="feedback" class="content-section">
+                <div class="section-header">
+                    <h2>Patient Feedback</h2>
+                </div>
+
+                <div class="feedback-stats">
+                    <div class="stat-card">
+                        <h3 id="total-feedback">0</h3>
+                        <p>Total Reviews</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="average-rating">0.0</h3>
+                        <p>Average Rating</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="five-star-count">0</h3>
+                        <p>5-Star Reviews</p>
+                    </div>
+                </div>
+
+                <div class="feedback-container">
+                    <div class="feedback-filters">
+                        <select id="feedback-filter">
+                            <option value="all">All Ratings</option>
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="2">2 Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+                    </div>
+                    <div id="feedback-list" class="feedback-list">
+                        <!-- Feedback will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory Section -->
+            <section id="inventory" class="content-section">
+                <div class="section-header">
+                    <h2>Inventory Management</h2>
+                </div>
+
+                <!-- Inventory Overview -->
+                <div class="inventory-overview">
+                    <button class="overview-btn active" data-tab="overview">
+                        <i class="fas fa-boxes"></i>
+                        Overview
+                    </button>
+                    <button class="overview-btn" data-tab="usage">
+                        <i class="fas fa-clipboard-list"></i>
+                        Usage
+                    </button>
+                </div>
+                
+                <div class="inventory-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-items">0</h3>
+                            <p>Total Items</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="low-stock-items">0</h3>
+                            <p>Low Stock Items</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="out-of-stock-items">0</h3>
+                            <p>Out of Stock</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="inventory-value">Rs.0</h3>
+                            <p>Total Value</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="inventory-overview-btn-container">
+                    <button class="btn btn-primary" id="add-new-item-btn">
+                        <i class="fas fa-plus"></i> Add New Item
+                    </button>
+                    <button class="btn btn-secondary" id="refresh-inventory-btn" onclick="window.dentalApp.refreshInventory()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- Usage Section -->
+                <div id="usage-section" class="inventory-content-section" style="display: none;">
+                    <div class="usage-header">
+                        <h3>Item Usage Tracking</h3>
+                        <p>Track when items are used or consumed to monitor stock levels</p>
+                    </div>
+                    
+                    <div class="usage-controls">
+                        <button class="btn btn-primary" id="add-usage-btn">
+                            <i class="fas fa-plus"></i> Add Usage Record
+                        </button>
+                        <div class="usage-filters">
+                            <input type="text" id="usage-search" placeholder="Search usage records...">
+                            <select id="usage-item-filter">
+                                <option value="">All Items</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="usage-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="total-usage-records">0</h3>
+                                <p>Total Usage Records</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="today-usage">0</h3>
+                                <p>Today's Usage</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="monthly-usage">0</h3>
+                                <p>This Month</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="usage-list-container">
+                        <div id="usage-list" class="usage-list">
+                            <!-- Usage records will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Inventory List -->
+                <div class="inventory-container">
+                    <div class="search-bar">
+                        <input type="text" id="inventory-search" placeholder="Search inventory items...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div id="inventory-list" class="inventory-list">
+                        <!-- Inventory items will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Staff Form Modal -->
+            <div id="staff-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="staff-modal-title">Add New Staff</h3>
+                        <span class="close" id="staff-modal-close">&times;</span>
+                    </div>
+                    <form id="staff-form">
+                        <div class="form-layout">
+                            <!-- First Column -->
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="staff-name">FULL NAME *</label>
+                                    <input type="text" id="staff-name" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-phone">PHONE NUMBER *</label>
+                                    <input type="tel" id="staff-phone" name="phone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-email">EMAIL</label>
+                                    <input type="email" id="staff-email" name="email">
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-gender">GENDER</label>
+                                    <select id="staff-gender" name="gender">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-status">STATUS</label>
+                                    <div class="status-input-container">
+                                        <input type="text" id="staff-status" name="status" value="Active" readonly>
+                                        <div class="status-options" id="staff-status-options">
+                                            <div class="status-option" data-value="Active">Active</div>
+                                            <div class="status-option" data-value="Leave">Leave</div>
+                                            <div class="status-option" data-value="Left">Left</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Second Column -->
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="staff-role">ROLE *</label>
+                                    <select id="staff-role" name="role" required>
+                                        <option value="">Select Role</option>
+                                        <option value="Dentist">Dentist</option>
+                                        <option value="Dental Hygienist">Dental Hygienist</option>
+                                        <option value="Receptionist">Receptionist</option>
+                                        <option value="Nurse">Nurse</option>
+                                        <option value="Administrator">Administrator</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-qualification">QUALIFICATION</label>
+                                    <input type="text" id="staff-qualification" name="qualification" placeholder="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-experience">EXPERIENCE</label>
+                                    <input type="text" id="staff-experience" name="experience" placeholder="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-job-term">JOB TERM</label>
+                                    <select id="staff-job-term" name="jobTerm">
+                                        <option value="">Select Job Term</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Permanent">Permanent</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Temporary">Temporary</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-join-date">JOIN DATE *</label>
+                                    <div class="enhanced-date-picker">
+                                        <input type="date" id="staff-join-date" name="joinDate" required>
+                                        <i class="fas fa-calendar-alt date-icon"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Third Column -->
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="staff-dob">DATE OF BIRTH</label>
+                                    <div class="enhanced-date-picker">
+                                        <input type="date" id="staff-dob" name="dob">
+                                        <i class="fas fa-calendar-alt date-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-age">AGE</label>
+                                    <input type="text" id="staff-age" name="age" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-address">ADDRESS</label>
+                                    <input type="text" id="staff-address" name="address">
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-salary">SALARY</label>
+                                    <input type="number" id="staff-salary" name="salary" step="0.01" min="0" placeholder="Enter monthly salary">
+                                </div>
+                                <div class="form-group">
+                                    <label for="staff-working-days">WORKING DAYS</label>
+                                    <select id="staff-working-days" name="workingDays">
+                                        <option value="">Select Working Days</option>
+                                        <option value="Monday-Friday">Monday-Friday</option>
+                                        <option value="Monday-Saturday">Monday-Saturday</option>
+                                        <option value="Sunday-Saturday">Sunday-Saturday</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Flexible">Flexible</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="staff-cancel-btn">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="staff-submit-btn">Save Staff</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Usage Form Modal -->
+            <div id="usage-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="usage-modal-title">Add Usage Record</h3>
+                        <span class="close" id="usage-modal-close">&times;</span>
+                    </div>
+                    <form id="usage-form">
+                        <div class="form-layout">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="usage-item">ITEM *</label>
+                                    <select id="usage-item" name="itemId" required>
+                                        <option value="">Select Item</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="usage-quantity">QUANTITY USED *</label>
+                                    <input type="number" id="usage-quantity" name="quantity" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="usage-date">DATE *</label>
+                                    <div class="enhanced-date-picker">
+                                        <input type="date" id="usage-date" name="date" required>
+                                        <i class="fas fa-calendar date-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="usage-reason">REASON FOR USAGE</label>
+                                    <select id="usage-reason" name="reason">
+                                        <option value="">Select Reason</option>
+                                        <option value="patient-treatment">Patient Treatment</option>
+                                        <option value="cleaning">Cleaning</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="expired">Expired</option>
+                                        <option value="damaged">Damaged</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="usage-notes">NOTES</label>
+                                    <textarea id="usage-notes" name="notes" rows="3" placeholder="Additional notes about the usage..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Add Usage Record</button>
+                            <button type="button" class="btn btn-secondary" id="usage-cancel-btn">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Inventory Form Modal -->
+            <div id="inventory-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="inventory-modal-title">Add New Item</h3>
+                        <span class="close" id="inventory-modal-close">&times;</span>
+                    </div>
+                    <form id="inventory-form">
+                        <div class="form-layout">
+                            <!-- First Column -->
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="item-name">ITEM NAME *</label>
+                                    <input type="text" id="item-name" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-category">CATEGORY *</label>
+                                    <select id="item-category" name="category" required>
+                                        <option value="">Select Category</option>
+                                        <option value="Dental Supplies">Dental Supplies</option>
+                                        <option value="Medications">Medications</option>
+                                        <option value="Equipment">Equipment</option>
+                                        <option value="Office Supplies">Office Supplies</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-description">DESCRIPTION</label>
+                                    <textarea id="item-description" name="description" rows="3" placeholder="Enter item description"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-unit">UNIT</label>
+                                    <select id="item-unit" name="unit">
+                                        <option value="">Select Unit</option>
+                                        <option value="Pieces">Pieces</option>
+                                        <option value="Boxes">Boxes</option>
+                                        <option value="Bottles">Bottles</option>
+                                        <option value="Tubes">Tubes</option>
+                                        <option value="Packs">Packs</option>
+                                        <option value="Units">Units</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Second Column -->
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="item-quantity">QUANTITY *</label>
+                                    <input type="number" id="item-quantity" name="quantity" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-price">PRICE PER UNIT (PKR) *</label>
+                                    <input type="number" id="item-price" name="price" step="0.01" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-total-value">TOTAL VALUE (PKR)</label>
+                                    <input type="number" id="item-total-value" name="totalValue" step="0.01" min="0" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-min-stock">MINIMUM STOCK LEVEL</label>
+                                    <input type="number" id="item-min-stock" name="minStock" min="0" placeholder="Alert when stock goes below this level">
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-supplier">SUPPLIER</label>
+                                    <input type="text" id="item-supplier" name="supplier" placeholder="Enter supplier name">
+                                </div>
+                            </div>
+                            
+                            <!-- Third Column -->
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="item-location">LOCATION</label>
+                                    <input type="text" id="item-location" name="location" placeholder="Storage location">
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-expiry-date">EXPIRY DATE</label>
+                                    <div class="enhanced-date-picker">
+                                        <input type="date" id="item-expiry-date" name="expiryDate">
+                                        <i class="fas fa-calendar-alt date-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-status">STATUS</label>
+                                    <select id="item-status" name="status">
+                                        <option value="In Stock">In Stock</option>
+                                        <option value="Low Stock">Low Stock</option>
+                                        <option value="Out of Stock">Out of Stock</option>
+                                        <option value="Discontinued">Discontinued</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-notes">NOTES</label>
+                                    <textarea id="item-notes" name="notes" rows="3" placeholder="Additional notes"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="inventory-cancel-btn">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="inventory-submit-btn">Save Item</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- SheetJS for Excel file handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/patients.js"></script>
+    <script src="js/appointments.js"></script>
+    <script src="js/billing.js"></script>
+    <script src="js/automation.js"></script>
+    <script src="js/feedback.js"></script>
+   
+</body>
+</html>
+
+
+
