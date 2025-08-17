@@ -3143,6 +3143,7 @@ class DentalClinicApp {
             this.selectedAppointments.clear();
         }
         checkboxes.forEach(cb => { cb.checked = checked; });
+        this.updateAppointmentBulkActionsVisibility();
     }
 
     // Toggle single appointment selection
@@ -3151,6 +3152,66 @@ class DentalClinicApp {
             this.selectedAppointments.delete(appointmentId);
         } else {
             this.selectedAppointments.add(appointmentId);
+        }
+        this.updateAppointmentBulkActionsVisibility();
+    }
+
+    updateAppointmentBulkActionsVisibility() {
+        const bulkDeleteBtn = document.getElementById('appointments-delete-btn');
+        if (!bulkDeleteBtn) return;
+        if (this.selectedAppointments.size > 0) {
+            bulkDeleteBtn.style.display = 'inline-block';
+        } else {
+            bulkDeleteBtn.style.display = 'none';
+        }
+    }
+
+    showDeleteAppointmentsConfirmationModal() {
+        if (this.selectedAppointments.size === 0) {
+            this.showToast('No appointments selected for deletion', 'warning');
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 520px; padding: 1.5rem; border-radius: var(--radius-lg);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--primary-color)"></i>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color(--gray-color);">Delete Selected Appointments</h2>
+                    </div>
+                    <button onclick="this.closest('.modal').remove()" style="background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; transition: all 0.3s ease;" onmouseover="this.style.background='var(--primary-color)'" onmouseout="this.style.background='var(--primary-color)'"></button>
+                </div>
+                <div style="margin-top: 1rem; color: var(--gray-700)">Are you sure you want to delete <strong>${this.selectedAppointments.size}</strong> appointment(s)? This action cannot be undone.</div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button onclick="this.closest('.modal').remove()" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer;">Cancel</button>
+                    <button onclick="window.dentalApp.confirmBulkDeleteAppointments(this)" style="padding: 0.5rem 1rem; background: var(--error-color); color: var(--white); border: none; border-radius: var(--radius-md); cursor: pointer;">Delete</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    confirmBulkDeleteAppointments(buttonEl) {
+        try {
+            const toDelete = new Set(this.selectedAppointments);
+            let appointments = this.getStoredData('appointments') || [];
+            const before = appointments.length;
+            appointments = appointments.filter(a => !toDelete.has(a.id));
+            this.setStoredData('appointments', appointments);
+            this.currentAppointments = appointments;
+            // Refresh view to page 1 for simplicity
+            this.displayAppointments(appointments, 1);
+            this.selectedAppointments.clear();
+            // Close modal
+            const modal = buttonEl.closest('.modal');
+            if (modal) modal.remove();
+            this.showToast(`Deleted ${before - appointments.length} appointment(s)`, 'success');
+        } catch (e) {
+            console.error('Bulk delete appointments failed:', e);
+            this.showToast('Failed to delete appointments', 'error');
         }
     }
 
