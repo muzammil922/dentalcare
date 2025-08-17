@@ -1561,8 +1561,15 @@ class DentalClinicApp {
         this.updateBulkActionsVisibility();
     }
 
-    // Toggle select all patients
+    // Toggle select all patients (and delegate to appointments when in that tab)
     toggleSelectAllPatients(checked) {
+        // If appointment checkboxes are present and the appointment tab is active, reuse appointment bulk select
+        const isAppointmentsActive = this.currentTab === 'appointment-management' || document.getElementById('appointment-management')?.classList.contains('active');
+        if (isAppointmentsActive && document.querySelectorAll('.appointment-checkbox').length > 0) {
+            this.toggleSelectAllAppointments(checked);
+            return;
+        }
+
         const checkboxes = document.querySelectorAll('.patient-checkbox');
         const patients = this.getStoredData('patients') || [];
         
