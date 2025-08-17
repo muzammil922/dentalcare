@@ -3015,9 +3015,10 @@ class DentalClinicApp {
                     }
                     
             return `
-                <div class="appointment-row" style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; border-bottom: ${index < appointments.length - 1 ? '1px solid var(--gray-200)' : 'none'}; transition: background-color 0.2s ease; cursor: pointer;" onmouseover="this.style.backgroundColor='var(--gray-100)'" onmouseout="this.style.backgroundColor='transparent'">
-                    <!-- Entry Number & Icon -->
+                <div class="appointment-row" data-appointment-id="${appointment.id}" style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; border-bottom: ${index < appointments.length - 1 ? '1px solid var(--gray-200)' : 'none'}; transition: background-color 0.2s ease; cursor: pointer;" onmouseover="this.style.backgroundColor='var(--gray-100)'" onmouseout="this.style.backgroundColor='transparent'">
+                    <!-- Selection + Entry Number & Icon -->
                     <div style="display: flex; align-items: center; gap: 1rem; min-width: 120px;">
+                        <input type="checkbox" class="appointment-checkbox" data-appointment-id="${appointment.id}" onchange="window.dentalApp.toggleAppointmentSelection('${appointment.id}')" style="width: 14px; height: 14px; cursor: pointer; ">
                         <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: var(--font-size-sm);">${globalIndex}</div>
                         <div style="width: 50px; height: 50px; background: ${patient && patient.gender === 'Female' ? 'var(--pink-light)' : 'var(--primary-light)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${patient && patient.gender === 'Female' ? 'var(--pink-color)' : 'var(--primary-color)'}; font-size: 1.5rem;">
                             <i class="fas fa-calendar-check"></i>
