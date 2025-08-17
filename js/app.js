@@ -633,6 +633,26 @@ class DentalClinicApp {
         }
     }
 
+    // Hard rule: remove or block any appointment that resolves to unknown patient
+    removeUnknownAppointments() {
+        try {
+            const patients = this.getStoredData('patients') || [];
+            const validIds = new Set(patients.map(p => p.id));
+            const appointments = this.getStoredData('appointments') || [];
+            const filtered = appointments.filter(a => validIds.has(a.patientId));
+            if (filtered.length !== appointments.length) {
+                this.setStoredData('appointments', filtered);
+                this.currentAppointments = filtered;
+                const activeTimeFilter = document.querySelector('[data-type="appointment"].dropdown-filter-option.active');
+                const timeFilter = activeTimeFilter?.getAttribute('data-filter') || 'all';
+                this.filterAppointments(timeFilter);
+                this.showToast('Removed appointments with unknown patients', 'warning');
+            }
+        } catch (e) {
+            console.warn('removeUnknownAppointments failed:', e);
+        }
+    }
+
     // Parse strings like: "2025areesha043245...areesha@gmail.com2006-12-06inactiveAugust 2"
     parseConcatenatedPatientString(input) {
         if (typeof input !== 'string') return null;
@@ -4293,28 +4313,29 @@ class DentalClinicApp {
             const patientId = findPatientId(values);
             const rawDate = values[dateIdx];
             const rawTime = values[timeIdx];
-            const parsedDate = new Date(rawDate);
-            const dateOk = !isNaN(parsedDate.getTime());
-            const timeOk = /^\d{2}:\d{2}$/.test(rawTime);
+            const rawPriority = priorityIdx !== -1 ? values[priorityIdx] : '';
+            // Enforce rule: must have PRIORITY defined to import
+            if (!rawPriority) { skipped++; continue; }
+
+            const dateStr = this.parseFlexibleDate(rawDate);
+            const timeStr = this.convertTo24HourTime(rawTime);
+            const dateOk = !!dateStr;
+            const timeOk = !!timeStr;
 
             if (!patientId || !dateOk || !timeOk) {
                 skipped++;
                 continue;
             }
 
-            const yyyy = parsedDate.getFullYear();
-            const mm = String(parsedDate.getMonth() + 1).padStart(2, '0');
-            const dd = String(parsedDate.getDate()).padStart(2, '0');
-
             const appointment = {
                 id: this.generateId(),
                 patientId,
-                date: `${yyyy}-${mm}-${dd}`,
-                time: rawTime,
+                date: dateStr,
+                time: timeStr,
                 treatment: treatmentIdx !== -1 ? values[treatmentIdx] : 'consultation',
                 duration: durationIdx !== -1 ? parseInt(values[durationIdx]) || 60 : 60,
                 status: normalizeStatus(statusIdx !== -1 ? values[statusIdx] : 'scheduled'),
-                priority: priorityIdx !== -1 ? (values[priorityIdx] || 'normal') : 'normal',
+                priority: rawPriority || 'normal',
                 notes: notesIdx !== -1 ? values[notesIdx] : '',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
@@ -4444,6 +4465,9 @@ class DentalClinicApp {
 
         // Repair any appointments that reference missing patients
         this.repairAppointmentsWithMissingPatients();
+
+        // Remove any appointments that still reference unknown patients
+        this.removeUnknownAppointments();
     }
 
     initializeSampleData() {
