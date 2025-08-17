@@ -8730,11 +8730,11 @@ class DentalClinicApp {
         const appointmentsList = document.getElementById('appointments-list');
         if (!appointmentsList) return;
         
-        const appointmentsPerPage = 10;
-        const totalPages = Math.ceil(appointments.length / appointmentsPerPage);
-        const startIndex = (currentPage - 1) * appointmentsPerPage;
-        const endIndex = startIndex + appointmentsPerPage;
-        const currentAppointments = appointments.slice(startIndex, endIndex);
+        const perPage = this.appointmentsPerPage === 'all' ? appointments.length : (this.appointmentsPerPage || 10);
+        const totalPages = this.appointmentsPerPage === 'all' ? 1 : Math.ceil(appointments.length / perPage);
+        const startIndex = this.appointmentsPerPage === 'all' ? 0 : (currentPage - 1) * perPage;
+        const endIndex = this.appointmentsPerPage === 'all' ? appointments.length : Math.min(startIndex + perPage, appointments.length);
+        const currentAppointments = this.appointmentsPerPage === 'all' ? appointments : appointments.slice(startIndex, endIndex);
         
         // Store current page in data attribute for easy access
         appointmentsList.setAttribute('data-current-page', currentPage);
@@ -8852,17 +8852,32 @@ class DentalClinicApp {
                 }).join('')}
                 
                 <!-- Pagination Controls -->
-                <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; padding: 1rem; border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
-                    <div style="color: var(--gray-600); font-size: 0.875rem; margin-right: 1rem;">
-                        Page ${currentPage} of ${totalPages}
-                    </div>
-                    
-                    ${currentPage > 1 ? `<button onclick="window.dentalApp.displayAppointments(window.dentalApp.currentAppointments, ${currentPage - 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Previous</button>` : ''}
-                    
-                    ${this.generateSmartPagination(currentPage, totalPages, 'appointments')}
-                    
-                    ${currentPage < totalPages ? `<button onclick="window.dentalApp.displayAppointments(window.dentalApp.currentAppointments, ${currentPage + 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Next</button>` : ''}
+                ${this.appointmentsPerPage !== 'all' ? `
+                <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 2rem; padding: 1rem; border-top: 1px solid var(--gray-200); flex-wrap: wrap;\"> 
+                    <div style=\"display: flex; align-items: center; gap: 1rem;\"> 
+                        <div style=\"display: flex; align-items: center; gap: 0.5rem; color: var(--gray-600); font-size: 0.875rem;\"> 
+                            <span>Show</span> 
+                            <select id=\"appointments-entries-per-page\" style=\"padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; cursor: pointer;\" onchange=\"window.dentalApp.changeAppointmentsEntriesPerPage(this.value)\"> 
+                                <option value=\"10\" ${this.appointmentsPerPage === 10 ? 'selected' : ''}>10</option> 
+                                <option value=\"20\" ${this.appointmentsPerPage === 20 ? 'selected' : ''}>20</option> 
+                                <option value=\"50\" ${this.appointmentsPerPage === 50 ? 'selected' : ''}>50</option> 
+                                <option value=\"100\" ${this.appointmentsPerPage === 100 ? 'selected' : ''}>100</option> 
+                                <option value=\"200\" ${this.appointmentsPerPage === 200 ? 'selected' : ''}>200</option> 
+                                <option value=\"all\" ${this.appointmentsPerPage === 'all' ? 'selected' : ''}>All</option> 
+                            </select> 
+                            <span>Appointments</span> 
+                        </div> 
+                    </div> 
+                    <div style=\"display: flex; align-items: center; gap: 0.5rem;\"> 
+                        ${totalPages > 1 ? ` 
+                            ${currentPage > 1 ? `<button onclick=\"window.dentalApp.displayAppointments(window.dentalApp.currentAppointments, ${currentPage - 1})\" style=\"padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;\">Previous</button>` : ''} 
+                            ${this.generateSmartPagination(currentPage, totalPages, 'appointments')} 
+                            ${currentPage < totalPages ? `<button onclick=\"window.dentalApp.displayAppointments(window.dentalApp.currentAppointments, ${currentPage + 1})\" style=\"padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;\">Next</button>` : ''} 
+                        ` : ''} 
+                        <div style=\"color: var(--gray-600); font-size: 0.875rem; margin-left: 1rem;\">Page ${currentPage} of ${totalPages}</div> 
+                    </div> 
                 </div>
+                ` : ''}
             </div>
         `;
         
