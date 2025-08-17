@@ -4166,10 +4166,11 @@ class DentalClinicApp {
 
     initializeSampleData() {
         const patients = this.getStoredData('patients') || [];
+        let samplePatients = this.getStoredData('patients') || [];
         
         if (patients.length === 0) {
             // Create sample patients if they don't exist
-            let samplePatients = this.getStoredData('patients') || [];
+            samplePatients = this.getStoredData('patients') || [];
             if (samplePatients.length === 0) {
                 samplePatients = [
                     {
@@ -9756,10 +9757,11 @@ class DentalClinicApp {
 
     initializeSampleData() {
         const patients = this.getStoredData('patients') || [];
+        let samplePatients = this.getStoredData('patients') || [];
         
         if (patients.length === 0) {
             // Create sample patients if they don't exist
-            let samplePatients = this.getStoredData('patients') || [];
+            samplePatients = this.getStoredData('patients') || [];
             if (samplePatients.length === 0) {
                 samplePatients = [
                     {
