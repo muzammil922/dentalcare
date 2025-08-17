@@ -2586,9 +2586,9 @@ class DentalClinicApp {
                 }
             }
             
-            // Calculate new page after status change
-            const appointmentsPerPage = 10;
-            const totalPages = Math.ceil(filteredAppointments.length / appointmentsPerPage);
+            // Calculate new page after status change using current per-page setting
+            const perPage = this.appointmentsPerPage === 'all' ? filteredAppointments.length : (this.appointmentsPerPage || 10);
+            const totalPages = Math.ceil(filteredAppointments.length / perPage);
             
             // If current page is beyond the new total pages, go to the last page
             if (currentPage > totalPages && totalPages > 0) {
@@ -8360,9 +8360,9 @@ class DentalClinicApp {
                 }
             }
             
-            // Calculate new page after status change
-            const appointmentsPerPage = 10;
-            const totalPages = Math.ceil(filteredAppointments.length / appointmentsPerPage);
+            // Calculate new page after status change using current per-page setting
+            const perPage2 = this.appointmentsPerPage === 'all' ? filteredAppointments.length : (this.appointmentsPerPage || 10);
+            const totalPages = Math.ceil(filteredAppointments.length / perPage2);
             
             // If current page is beyond the new total pages, go to the last page
             if (currentPage > totalPages && totalPages > 0) {
