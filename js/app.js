@@ -4083,30 +4083,110 @@ class DentalClinicApp {
     }
 
     parseImportAppointmentsFile(content, filename) {
-        const lines = content.split('\n');
+        const lines = content.split('\n').filter(l => l.trim().length > 0);
+        if (lines.length < 2) return [];
         const headers = lines[0].split(',').map(h => h.trim());
+        const headersLower = headers.map(h => h.toLowerCase());
+
+        // Basic format validation: must contain date and time columns
+        const dateIdx = headersLower.indexOf('date');
+        const timeIdx = headersLower.indexOf('time');
+        if (dateIdx === -1 || timeIdx === -1) {
+            // Not an appointment file
+            console.warn('Import cancelled: Missing required date/time headers for appointments');
+            return [];
+        }
+
+        // Possible patient fields
+        const patientIdIdx = headersLower.indexOf('patientid') !== -1 ? headersLower.indexOf('patientid') : headersLower.indexOf('patient_id');
+        const patientNameIdx = headersLower.indexOf('patient') !== -1 ? headersLower.indexOf('patient') : headersLower.indexOf('patient name');
+        const nameIdx = headersLower.indexOf('name');
+        const emailIdx = headersLower.indexOf('email');
+        const phoneIdx = headersLower.indexOf('phone');
+        const treatmentIdx = headersLower.indexOf('treatment');
+        const durationIdx = headersLower.indexOf('duration');
+        const statusIdx = headersLower.indexOf('status');
+        const priorityIdx = headersLower.indexOf('priority');
+        const notesIdx = headersLower.indexOf('notes');
+
+        const patients = this.getStoredData('patients') || [];
+
+        const findPatientId = (rowValues) => {
+            const tryValue = (idx) => (idx !== -1 && rowValues[idx] ? rowValues[idx].trim() : '');
+            const rawId = tryValue(patientIdIdx);
+            const rawName = tryValue(patientNameIdx) || tryValue(nameIdx);
+            const rawEmail = tryValue(emailIdx);
+            const rawPhone = tryValue(phoneIdx).replace(/\D/g, '');
+
+            // Match by exact id
+            if (rawId) {
+                const byId = patients.find(p => p.id === rawId);
+                if (byId) return byId.id;
+            }
+            // Match by email
+            if (rawEmail) {
+                const byEmail = patients.find(p => (p.email || '').toLowerCase() === rawEmail.toLowerCase());
+                if (byEmail) return byEmail.id;
+            }
+            // Match by phone (digits only)
+            if (rawPhone) {
+                const byPhone = patients.find(p => (p.phone || '').replace(/\D/g, '') === rawPhone);
+                if (byPhone) return byPhone.id;
+            }
+            // Match by exact name (case-insensitive) if unique
+            if (rawName) {
+                const byName = patients.filter(p => (p.name || '').toLowerCase() === rawName.toLowerCase());
+                if (byName.length === 1) return byName[0].id;
+            }
+            return '';
+        };
+
+        const normalizeStatus = (s) => {
+            const v = (s || '').toString().toLowerCase();
+            if (['scheduled','confirmed','completed','cancelled','no-show'].includes(v)) return v;
+            return 'scheduled';
+        };
+
         const appointments = [];
-
+        let skipped = 0;
         for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
+            const values = lines[i].split(',').map(v => v.trim());
 
-            const values = line.split(',').map(v => v.trim());
+            const patientId = findPatientId(values);
+            const rawDate = values[dateIdx];
+            const rawTime = values[timeIdx];
+            const parsedDate = new Date(rawDate);
+            const dateOk = !isNaN(parsedDate.getTime());
+            const timeOk = /^\d{2}:\d{2}$/.test(rawTime);
+
+            if (!patientId || !dateOk || !timeOk) {
+                skipped++;
+                continue;
+            }
+
+            const yyyy = parsedDate.getFullYear();
+            const mm = String(parsedDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(parsedDate.getDate()).padStart(2, '0');
+
             const appointment = {
                 id: this.generateId(),
-                patientId: values[0] || '', // Assuming patient ID is in the first column
-                date: values[1] || '',
-                time: values[2] || '',
-                treatment: values[3] || '',
-                duration: values[4] || '',
-                status: values[5] || 'scheduled',
-                notes: values[6] || '',
-                createdAt: new Date().toISOString()
+                patientId,
+                date: `${yyyy}-${mm}-${dd}`,
+                time: rawTime,
+                treatment: treatmentIdx !== -1 ? values[treatmentIdx] : 'consultation',
+                duration: durationIdx !== -1 ? parseInt(values[durationIdx]) || 60 : 60,
+                status: normalizeStatus(statusIdx !== -1 ? values[statusIdx] : 'scheduled'),
+                priority: priorityIdx !== -1 ? (values[priorityIdx] || 'normal') : 'normal',
+                notes: notesIdx !== -1 ? values[notesIdx] : '',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             };
 
-            if (appointment.patientId && appointment.date && appointment.time) {
-                appointments.push(appointment);
-            }
+            appointments.push(appointment);
+        }
+
+        if (skipped > 0) {
+            console.warn(`Skipped ${skipped} appointment row(s) due to invalid format or unknown patient`);
         }
         return appointments;
     }
