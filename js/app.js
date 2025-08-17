@@ -589,6 +589,67 @@ class DentalClinicApp {
         }
     }
 
+    // Ensure appointments always point to valid patients
+    repairAppointmentsWithMissingPatients() {
+        try {
+            const patients = this.getStoredData('patients') || [];
+            const appointments = this.getStoredData('appointments') || [];
+
+            if (appointments.length === 0) return;
+
+            const validPatientIds = new Set(patients.map(p => p.id));
+            let didChange = false;
+
+            const repaired = appointments.map(apt => {
+                if (!validPatientIds.has(apt.patientId)) {
+                    // Try to map by phone/email/name if concatenated strings were accidentally saved
+                    const parsed = this.parseConcatenatedPatientString(apt.patientId);
+                    if (parsed) {
+                        const match = patients.find(p =>
+                            (parsed.email && p.email === parsed.email) ||
+                            (parsed.phone && p.phone === parsed.phone) ||
+                            (parsed.name && p.name === parsed.name)
+                        );
+                        if (match) {
+                            didChange = true;
+                            return { ...apt, patientId: match.id };
+                        }
+                    }
+                }
+                return apt;
+            });
+
+            if (didChange) {
+                this.setStoredData('appointments', repaired);
+                this.currentAppointments = repaired;
+                // Re-render current view
+                const activeTimeFilter = document.querySelector('[data-type="appointment"].dropdown-filter-option.active');
+                const timeFilter = activeTimeFilter?.getAttribute('data-filter') || 'all';
+                this.filterAppointments(timeFilter);
+                this.showToast('Fixed appointments with missing patients', 'info');
+            }
+        } catch (error) {
+            console.warn('repairAppointmentsWithMissingPatients failed:', error);
+        }
+    }
+
+    // Parse strings like: "2025areesha043245...areesha@gmail.com2006-12-06inactiveAugust 2"
+    parseConcatenatedPatientString(input) {
+        if (typeof input !== 'string') return null;
+        try {
+            const emailMatch = input.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+            const phoneMatch = input.match(/\b0\d{10,12}\b/);
+            const nameMatch = input.match(/[A-Za-z]+\s+[A-Za-z]+/);
+            return {
+                email: emailMatch ? emailMatch[0] : null,
+                phone: phoneMatch ? phoneMatch[0] : null,
+                name: nameMatch ? nameMatch[0] : null
+            };
+        } catch {
+            return null;
+        }
+    }
+
   
 
     setupMobileHandlers() {
@@ -4162,6 +4223,9 @@ class DentalClinicApp {
         
         // Initialize sample data if no patients exist
         this.initializeSampleData();
+
+        // Repair any appointments that reference missing patients
+        this.repairAppointmentsWithMissingPatients();
     }
 
     initializeSampleData() {
