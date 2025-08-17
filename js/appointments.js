@@ -452,7 +452,7 @@ class AppointmentsManager {
         const patientSelect = document.getElementById('appointment-patient');
         if (!patientSelect) return;
 
-        const patients = this.getPatients();
+        const patients = this.getPatients().filter(p => (p.status || '').toLowerCase() === 'active');
         
         patientSelect.innerHTML = '<option value="">Select Patient</option>' +
             patients.map(patient => 
