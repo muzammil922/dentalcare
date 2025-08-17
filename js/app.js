@@ -3126,6 +3126,30 @@ class DentalClinicApp {
         `;
         
         appointmentsList.innerHTML = appointmentsHTML;
+
+        // Initialize selection tracking
+        this.selectedAppointments = new Set();
+    }
+
+    // Toggle select all appointments
+    toggleSelectAllAppointments(checked) {
+        const checkboxes = document.querySelectorAll('.appointment-checkbox');
+        const appointments = this.getStoredData('appointments') || [];
+        if (checked) {
+            appointments.forEach(a => { if (a && a.id) this.selectedAppointments.add(a.id); });
+        } else {
+            this.selectedAppointments.clear();
+        }
+        checkboxes.forEach(cb => { cb.checked = checked; });
+    }
+
+    // Toggle single appointment selection
+    toggleAppointmentSelection(appointmentId) {
+        if (this.selectedAppointments.has(appointmentId)) {
+            this.selectedAppointments.delete(appointmentId);
+        } else {
+            this.selectedAppointments.add(appointmentId);
+        }
     }
 
     displayBilling(invoices, currentPage = 1) {
