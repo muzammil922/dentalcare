@@ -938,7 +938,7 @@ class BillingManager {
         if (!billingList) return;
 
         const invoices = invoicesToRender || this.invoices;
-        const patients = this.getPatients();
+        const patients = this.getPatients().filter(p => (p.status || '').toLowerCase() === 'active');
 
         if (invoices.length === 0) {
             billingList.innerHTML = `
@@ -1165,10 +1165,11 @@ class BillingManager {
         try {
             // Use the same storage system as the main app
             if (window.dentalApp) {
-                return window.dentalApp.getStoredData('patients') || [];
+                return (window.dentalApp.getStoredData('patients') || []).filter(p => (p.status || '').toLowerCase() === 'active');
             } else {
             const stored = localStorage.getItem('dentalClinic_patients');
-            return stored ? JSON.parse(stored) : [];
+            const arr = stored ? JSON.parse(stored) : [];
+            return arr.filter(p => (p.status || '').toLowerCase() === 'active');
             }
         } catch (error) {
             console.error('Error loading patients:', error);

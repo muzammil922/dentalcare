@@ -166,7 +166,7 @@ class AppointmentsManager {
         }
 
         // Ensure selected patient exists
-        const patients = this.getPatients();
+        const patients = this.getPatients().filter(p => (p.status || '').toLowerCase() === 'active');
         const patientExists = patients.some(p => p.id === appointmentData.patientId);
         if (!patientExists) {
             this.showError('Please select a valid patient');

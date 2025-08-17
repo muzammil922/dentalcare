@@ -321,7 +321,7 @@ class FeedbackManager {
         if (!feedbackList) return;
 
         const feedback = feedbackToRender || this.feedback;
-        const patients = this.getPatients();
+        const patients = this.getPatients().filter(p => (p.status || '').toLowerCase() === 'active');
 
         if (feedback.length === 0) {
             feedbackList.innerHTML = `
@@ -500,7 +500,8 @@ class FeedbackManager {
     getPatients() {
         try {
             const stored = localStorage.getItem('dentalClinic_patients');
-            return stored ? JSON.parse(stored) : [];
+            const arr = stored ? JSON.parse(stored) : [];
+            return arr.filter(p => (p.status || '').toLowerCase() === 'active');
         } catch (error) {
             console.error('Error loading patients:', error);
             return [];

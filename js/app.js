@@ -495,7 +495,7 @@ class DentalClinicApp {
     
     populatePatientDropdown() {
         const patientSelect = document.getElementById('appointment-patient');
-        const patients = this.getStoredData('patients') || [];
+        const patients = (this.getStoredData('patients') || []).filter(p => (p.status || '').toLowerCase() === 'active' || (p.status || '').toLowerCase() === 'active'.toLowerCase());
         
         if (patientSelect) {
             // Clear existing options except the first one
