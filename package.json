@@ -4,9 +4,7 @@
   "description": "A comprehensive dental clinic management system with patient management, appointment scheduling, billing, automation, and feedback collection",
   "main": "index.html",
   "scripts": {
-    "start": "next start",
-    "dev": "next dev",
-    "build": "next build",
+    "start": "echo 'Open index.html directly in browser'",
     "test": "echo 'No tests specified'",
     "lint": "echo 'No linting configured'",
     "format": "echo 'No formatting configured'"
@@ -41,10 +39,7 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "firebase": "^12.0.0",
-    "next": "^14.0.0",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "firebase": "^12.0.0"
   },
   "devDependencies": {},
   "browserslist": [
@@ -65,9 +60,4 @@
     "port": 8000
   },
   "private": false
-},
-"scripts": {
-  "start": "next start",
-  "dev": "next dev",
-  "build": "next build"
 }
