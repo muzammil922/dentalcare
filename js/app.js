@@ -2986,6 +2986,16 @@ class DentalClinicApp {
                         Showing ${startIndex + 1}-${Math.min(endIndex, appointments.length)} of ${appointments.length} appointments
                     </div>
                 </div>
+
+                <!-- Select All Header -->
+                <div style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); font-weight: 600; color: var(--gray-700);">
+                    <div style="min-width: 120px; display: flex; align-items: center; gap: 1rem;">
+                        <input type="checkbox" id="select-all-appointments" onchange="window.dentalApp.toggleSelectAllAppointments(this.checked)" style="width: 14px; height: 14px; cursor: pointer;">
+                        <span style="font-size: 0.875rem; color: var(--primary-color);">Select All</span>
+                    </div>
+                    <div style="flex: 1; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Appointment Information</div>
+                    <div style="min-width: 200px; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Actions</div>
+                </div>
                 
                 <!-- Appointment Rows -->
                 ${currentAppointments.map((appointment, index) => {
