@@ -7280,7 +7280,7 @@ class DentalClinicApp {
     
     populatePatientDropdown() {
         const patientSelect = document.getElementById('appointment-patient');
-        const patients = this.getStoredData('patients') || [];
+        const patients = (this.getStoredData('patients') || []).filter(p => (p.status || '').toLowerCase() === 'active');
         
         if (patientSelect) {
             // Clear existing options except the first one
@@ -7290,8 +7290,7 @@ class DentalClinicApp {
             patients.forEach(patient => {
                 const option = document.createElement('option');
                 option.value = patient.id;
-                const genderIcon = patient.gender === 'Female' ? '?' : patient.gender === 'Male' ? '?' : '?';
-                option.textContent = `${genderIcon} ${patient.name} - ${patient.phone}`;
+                option.textContent = `${patient.name} - ${patient.phone}`;
                 patientSelect.appendChild(option);
             });
         }

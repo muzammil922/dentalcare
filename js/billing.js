@@ -1156,8 +1156,7 @@ class BillingManager {
         
         patientSelect.innerHTML = '<option value="">Select Patient</option>' +
             patients.map(patient => {
-                const genderIcon = patient.gender === 'Female' ? '♀' : patient.gender === 'Male' ? '♂' : '⚪';
-                return `<option value="${patient.id}">${genderIcon} ${this.escapeHtml(patient.name)} - ${this.escapeHtml(patient.phone)}</option>`;
+                return `<option value="${patient.id}">${this.escapeHtml(patient.name)} - ${this.escapeHtml(patient.phone)}</option>`;
             }).join('');
     }
 
