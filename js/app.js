@@ -18754,6 +18754,60 @@ Status: ${item.status || 'In Stock'}
         return normalized;
     }
 
+    // Refresh appointment data
+    refreshAppointmentData() {
+        try {
+            // Start loading animation on the refresh button
+            const refreshBtn = document.getElementById('refresh-appointments-btn');
+            if (refreshBtn) {
+                const icon = refreshBtn.querySelector('.fa-sync-alt');
+                if (icon) {
+                    icon.style.animation = 'spin 1s linear infinite';
+                }
+            }
+
+            // Load latest appointments from storage
+            const allAppointments = this.getStoredData('appointments') || [];
+
+            // Update current cache
+            this.currentAppointments = [...allAppointments];
+
+            // Determine current active filters
+            const activeTimeFilter = document.querySelector('[data-type="appointment"].dropdown-filter-option.active');
+            const activeStatusFilter = document.querySelector('[data-type="appointment-status"].dropdown-filter-option.active');
+
+            let timeFilter = 'all';
+            let statusFilter = 'all';
+            if (activeTimeFilter) {
+                timeFilter = activeTimeFilter.getAttribute('data-filter') || 'all';
+            }
+            if (activeStatusFilter) {
+                statusFilter = activeStatusFilter.getAttribute('data-filter') || 'all';
+            }
+
+            // Re-apply filters to refresh list
+            if (statusFilter !== 'all') {
+                this.filterAppointmentsByStatus(statusFilter);
+            } else {
+                this.filterAppointments(timeFilter);
+            }
+
+            this.showToast('Appointments refreshed', 'success');
+        } catch (error) {
+            console.error('Error refreshing appointments:', error);
+            this.showToast('Error refreshing appointments', 'error');
+        } finally {
+            // Stop loading animation
+            const refreshBtn = document.getElementById('refresh-appointments-btn');
+            if (refreshBtn) {
+                const icon = refreshBtn.querySelector('.fa-sync-alt');
+                if (icon) {
+                    icon.style.animation = 'none';
+                }
+            }
+        }
+    }
+
     // Refresh patient data
     refreshPatientData() {
         try {
