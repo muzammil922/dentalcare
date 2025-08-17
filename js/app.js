@@ -3179,26 +3179,73 @@ class DentalClinicApp {
             return;
         }
 
+        // Collect selected appointment display info
+        const allAppointments = this.getStoredData('appointments') || [];
+        const patients = this.getStoredData('patients') || [];
+        const selectedInfo = [];
+        this.selectedAppointments.forEach(aptId => {
+            const apt = allAppointments.find(a => a.id === aptId);
+            if (!apt) return;
+            const patient = patients.find(p => p.id === apt.patientId);
+            const patientName = patient ? patient.name : 'Unknown Patient';
+            const when = `${apt.date || ''}${apt.time ? ' ' + apt.time : ''}`.trim();
+            selectedInfo.push(`${patientName}${when ? ' — ' + this.formatDate(apt.date) + (apt.time ? ' ' + apt.time : '') : ''}`);
+        });
+
+        const count = this.selectedAppointments.size;
+        const label = count > 1 ? 'Appointments' : 'Appointment';
+        const listHtml = selectedInfo.map(name => '<div style="padding: 0.25rem 0; color: #6b7280; font-size: 0.875rem;">• ' + this.escapeHtml(name) + '</div>').join('');
+
+        // Build centered overlay modal (same style as patients)
         const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.style.display = 'flex';
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 520px; padding: 1.5rem; border-radius: var(--radius-lg);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--primary-color)"></i>
-                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color(--gray-color);">Delete Selected Appointments</h2>
-                    </div>
-                    <button onclick="this.closest('.modal').remove()" style="background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; transition: all 0.3s ease;" onmouseover="this.style.background='var(--primary-color)'" onmouseout="this.style.background='var(--primary-color)'"></button>
-                </div>
-                <div style="margin-top: 1rem; color: var(--gray-700)">Are you sure you want to delete <strong>${this.selectedAppointments.size}</strong> appointment(s)? This action cannot be undone.</div>
-                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-                    <button onclick="this.closest('.modal').remove()" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer;">Cancel</button>
-                    <button onclick="window.dentalApp.confirmBulkDeleteAppointments(this)" style="padding: 0.5rem 1rem; background: var(--error-color); color: var(--white); border: none; border-radius: var(--radius-md); cursor: pointer;">Delete</button>
-                </div>
-            </div>
-        `;
+        modal.className = 'modal active';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;';
+        
+        modal.innerHTML = '<div style="background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: 100%; max-width: 600px; position: relative; border: 1px solid #e5e7eb; overflow: hidden;">' +
+            '<div style="padding: 1.5rem 2rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: var(--white-color);">' +
+                '<div style="display: flex; align-items: center; gap: 0.75rem;">' +
+                    '<i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--primary-color)"></i>' +
+                    '<h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color(--gray-color);">Delete Selected Appointments</h2>' +
+                '</div>' +
+                '<button onclick="this.closest(\'.modal\').remove()" style="background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; transition: all 0.3s ease;" onmouseover="this.style.background=\'var(--primary-color)\'" onmouseout="this.style.background=\'var(--primary-color)\'">×</button>' +
+            '</div>' +
+            
+            '<div style="padding: 2rem;">' +
+                '<div style="text-align: center; margin-bottom: 1.5rem;">' +
+                    '<i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>' +
+                    '<h3 style="margin: 0 0 1rem 0; color: #1f2937; font-size: 1.125rem;">Warning: This action cannot be undone!</h3>' +
+                    '<p style="margin: 0; color: #6b7280; line-height: 1.6;">' +
+                        'You are about to delete <strong>' + count + ' selected appointment(s)</strong> from the system.' +
+                    '</p>' +
+                '</div>' +
+                
+                '<div style="background: #f9fafb; padding: 1rem; border-radius: 8px;  margin-bottom: 1.5rem;">' +
+                    '<p style="margin: 0; color: #374151; font-size: 0.875rem; font-weight: 500;">' +
+                        '<strong>Appointments to be deleted:</strong> ' + count +
+                    '</p>' +
+                    '<div style="margin-top: 0.5rem; max-height: 200px; overflow-y: auto;">' +
+                        listHtml +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+            
+            '<div style="padding: 1.5rem 2rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 1rem; background: #f9fafb;">' +
+                '<button onclick="this.closest(\'.modal\').remove()" style="padding: 0.75rem 1.5rem; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.opacity=\'0.8\'" onmouseout="this.style.opacity=\'1\'">' +
+                    'Cancel' +
+                '</button>' +
+                '<button onclick="window.dentalApp.confirmBulkDeleteAppointments(this)" style="padding: 0.75rem 1.5rem; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.opacity=\'0.8\'" onmouseout="this.style.opacity=\'1\'">' +
+                    '<i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>' +
+                    'Delete ' + count + ' ' + label +
+                '</button>' +
+            '</div>' +
+        '</div>';
+
         document.body.appendChild(modal);
+
+        // Close by clicking outside the card
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
     }
 
     confirmBulkDeleteAppointments(buttonEl) {
