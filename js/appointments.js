@@ -165,6 +165,46 @@ class AppointmentsManager {
             return;
         }
 
+        // Ensure selected patient exists
+        const patients = this.getPatients();
+        const patientExists = patients.some(p => p.id === appointmentData.patientId);
+        if (!patientExists) {
+            this.showError('Please select a valid patient');
+            return;
+        }
+
+        // Validate date/time
+        const now = new Date();
+        now.setSeconds(0, 0);
+        const startDateTime = new Date(`${appointmentData.date}T${appointmentData.time}`);
+        if (isNaN(startDateTime.getTime())) {
+            this.showError('Invalid appointment date or time');
+            return;
+        }
+        if (startDateTime < now) {
+            this.showError('Appointment time cannot be in the past');
+            return;
+        }
+
+        // Validate duration
+        if (!Number.isFinite(appointmentData.duration) || appointmentData.duration <= 0) {
+            this.showError('Invalid appointment duration');
+            return;
+        }
+
+        // Prevent duplicate (same patient, same date/time, not cancelled)
+        const isDuplicate = this.appointments.some(a => {
+            if (this.isEditing && this.currentAppointment && a.id === this.currentAppointment.id) return false;
+            return a.patientId === appointmentData.patientId &&
+                   a.date === appointmentData.date &&
+                   a.time === appointmentData.time &&
+                   a.status !== 'cancelled';
+        });
+        if (isDuplicate) {
+            this.showError('An appointment for this patient already exists at the selected time');
+            return;
+        }
+
         // Check for conflicts
         if (this.hasTimeConflict(appointmentData)) {
             this.showError('This time slot conflicts with another appointment');
