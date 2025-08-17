@@ -650,6 +650,68 @@ class DentalClinicApp {
         }
     }
 
+    // Utilities for import parsing
+    parseFlexibleDate(input) {
+        if (!input) return null;
+        const s = String(input).trim().replace(/[.]/g, '-').replace(/\\/g, '-').replace(/\s+/g, ' ');
+        // ISO yyyy-mm-dd
+        const isoMatch = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+        if (isoMatch) {
+            const y = parseInt(isoMatch[1]);
+            const m = parseInt(isoMatch[2]);
+            const d = parseInt(isoMatch[3]);
+            if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+                return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            }
+        }
+        // dd/mm/yyyy or mm/dd/yyyy with '/'
+        const slash = s.match(/^(\d{1,2})[\/](\d{1,2})[\/](\d{4})$/);
+        if (slash) {
+            let d = parseInt(slash[1]);
+            let m = parseInt(slash[2]);
+            const y = parseInt(slash[3]);
+            // if first > 12 assume dd/mm/yyyy, else ambiguous -> assume mm/dd when second > 12
+            if (d > 12 || (m <= 12 && slash[2] > 12)) {
+                // d/m
+            } else if (d <= 12 && m > 12) {
+                const tmp = d; d = m; m = tmp; // swap to dd/mm
+            }
+            return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+        // dd-mm-yyyy or mm-dd-yyyy with '-'
+        const dash = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+        if (dash) {
+            let d = parseInt(dash[1]);
+            let m = parseInt(dash[2]);
+            const y = parseInt(dash[3]);
+            if (d <= 12 && m > 12) { const t = d; d = m; m = t; }
+            return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+        // Fallback to Date()
+        const parsed = new Date(s);
+        if (!isNaN(parsed.getTime())) {
+            const y = parsed.getFullYear();
+            const m = parsed.getMonth() + 1;
+            const d = parsed.getDate();
+            return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+        return null;
+    }
+
+    convertTo24HourTime(input) {
+        if (!input) return null;
+        const s = String(input).trim().toUpperCase();
+        const m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+        if (!m) return null;
+        let h = parseInt(m[1]);
+        let min = m[2] ? parseInt(m[2]) : 0;
+        const ampm = m[3];
+        if (ampm === 'PM' && h < 12) h += 12;
+        if (ampm === 'AM' && h === 12) h = 0;
+        if (h > 23 || min > 59) return null;
+        return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    }
+
   
 
     setupMobileHandlers() {
@@ -4083,6 +4145,64 @@ class DentalClinicApp {
     }
 
     parseImportAppointmentsFile(content, filename) {
+        // Support CSV or JSON array
+        if (content.trim().startsWith('[')) {
+            try {
+                const json = JSON.parse(content);
+                if (Array.isArray(json)) {
+                    // Map JSON objects using flexible patient matching
+                    const patients = this.getStoredData('patients') || [];
+                    const normalizeStatus = (s) => {
+                        const v = (s || '').toString().toLowerCase();
+                        return ['scheduled','confirmed','completed','cancelled','no-show'].includes(v) ? v : 'scheduled';
+                    };
+                    const findPatientIdFromObj = (obj) => {
+                        const byId = patients.find(p => p.id === obj.patientId);
+                        if (byId) return byId.id;
+                        if (obj.email) {
+                            const byEmail = patients.find(p => (p.email || '').toLowerCase() === String(obj.email).toLowerCase());
+                            if (byEmail) return byEmail.id;
+                        }
+                        if (obj.phone) {
+                            const digits = String(obj.phone).replace(/\D/g, '');
+                            const byPhone = patients.find(p => (p.phone || '').replace(/\D/g, '') === digits);
+                            if (byPhone) return byPhone.id;
+                        }
+                        if (obj.patient || obj.name) {
+                            const name = String(obj.patient || obj.name);
+                            const byName = patients.filter(p => (p.name || '').toLowerCase() === name.toLowerCase());
+                            if (byName.length === 1) return byName[0].id;
+                        }
+                        return '';
+                    };
+
+                    const out = [];
+                    for (const row of json) {
+                        const pid = findPatientIdFromObj(row);
+                        const dateStr = this.parseFlexibleDate(row.date || row.Date);
+                        const timeStr = this.convertTo24HourTime(row.time || row.Time);
+                        if (!pid || !dateStr || !timeStr) continue;
+                        out.push({
+                            id: this.generateId(),
+                            patientId: pid,
+                            date: dateStr,
+                            time: timeStr,
+                            treatment: row.treatment || 'consultation',
+                            duration: Number.isFinite(parseInt(row.duration)) ? parseInt(row.duration) : 60,
+                            status: normalizeStatus(row.status),
+                            priority: row.priority || 'normal',
+                            notes: row.notes || '',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        });
+                    }
+                    return out;
+                }
+            } catch (e) {
+                console.warn('JSON appointment import parse failed, falling back to CSV:', e);
+            }
+        }
+
         const lines = content.split('\n').filter(l => l.trim().length > 0);
         if (lines.length < 2) return [];
         const headers = lines[0].split(',').map(h => h.trim());
@@ -4122,6 +4242,24 @@ class DentalClinicApp {
             if (rawId) {
                 const byId = patients.find(p => p.id === rawId);
                 if (byId) return byId.id;
+            }
+            // If the cell contains a concatenated mess, try to parse it
+            if (!rawId && rawName && !emailIdx && !phoneIdx) {
+                const parsed = this.parseConcatenatedPatientString(rawName);
+                if (parsed) {
+                    if (parsed.email) {
+                        const byEmail = patients.find(p => (p.email || '').toLowerCase() === parsed.email.toLowerCase());
+                        if (byEmail) return byEmail.id;
+                    }
+                    if (parsed.phone) {
+                        const byPhone = patients.find(p => (p.phone || '').replace(/\D/g, '') === parsed.phone.replace(/\D/g, ''));
+                        if (byPhone) return byPhone.id;
+                    }
+                    if (parsed.name) {
+                        const byName = patients.filter(p => (p.name || '').toLowerCase() === parsed.name.toLowerCase());
+                        if (byName.length === 1) return byName[0].id;
+                    }
+                }
             }
             // Match by email
             if (rawEmail) {
