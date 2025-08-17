@@ -2979,11 +2979,13 @@ class DentalClinicApp {
             <div class="appointments-grid-container" style="background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 1.5rem; margin-bottom: 1rem;">
                 <!-- Count Display at the top of the grid -->
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 0 1rem 0; border-bottom: 1px solid var(--gray-200); margin-bottom: 1.5rem;">
-                    <div style="color: var(--gray-700); font-weight: 600; font-size: 1rem;">
-                        Total Appointments: <span style="color: var(--primary-color);">${appointments.length}</span>
-                    </div>
-                    <div style="color: var(--gray-600); font-size: 0.875rem;">
-                        Showing ${startIndex + 1}-${Math.min(endIndex, appointments.length)} of ${appointments.length} appointments
+                    <div style="color: var(--gray-700); font-weight: 600; font-size: 1rem;">Total Appointments: <span style="color: var(--primary-color);">${appointments.length}</span></div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="color: var(--gray-600); font-size: 0.875rem;">Showing ${startIndex + 1}-${Math.min(endIndex, appointments.length)} of ${appointments.length} appointments</div>
+                        <button id="appointments-delete-btn" onclick="window.dentalApp.showDeleteAppointmentsConfirmationModal()" style="padding: 0.5rem 1rem; background: var(--error-color); color: var(--white); border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500; transition: all 0.2s ease; display: none;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
+                            Delete Selected
+                        </button>
                     </div>
                 </div>
 
