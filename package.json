@@ -65,4 +65,9 @@
     "port": 8000
   },
   "private": false
+},
+"scripts": {
+  "start": "next start",
+  "dev": "next dev",
+  "build": "next build"
 }
