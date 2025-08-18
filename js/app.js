@@ -3324,6 +3324,7 @@ class DentalClinicApp {
                     <div style="flex: 1; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Invoice Information</div>
                     <div style="min-width: 200px; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Actions</div>
                 </div>
+                ${this.billingPerPage !== 'all' ? '' : ''}
                 
                 <!-- Invoice Rows -->
                 ${currentInvoices.map((invoice, index) => {
@@ -3490,6 +3491,32 @@ class DentalClinicApp {
             console.error('Error refreshing billing:', e);
             this.showToast('Error refreshing billing', 'error');
         }
+    }
+
+    // Load saved billing entries-per-page preference
+    loadBillingEntriesPerPagePreference() {
+        const saved = localStorage.getItem('dentalApp_billingPerPage');
+        if (saved) {
+            this.billingPerPage = saved === 'all' ? 'all' : (parseInt(saved) || 10);
+        } else {
+            this.billingPerPage = 10;
+        }
+        console.log('Loaded billing entries per page:', this.billingPerPage);
+    }
+
+    // Change billing entries per page and persist
+    changeBillingEntriesPerPage(newEntriesPerPage) {
+        if (newEntriesPerPage === 'all') {
+            this.billingPerPage = 'all';
+        } else {
+            this.billingPerPage = parseInt(newEntriesPerPage) || 10;
+        }
+        localStorage.setItem('dentalApp_billingPerPage', this.billingPerPage);
+
+        // Re-render from page 1 using current filtered data if available
+        const invoices = this.currentBilling || (this.getStoredData('invoices') || []);
+        this.displayBilling(invoices, 1);
+        this.showToast(`Now showing ${this.billingPerPage === 'all' ? 'all' : this.billingPerPage} invoices per page`, 'success');
     }
 
     // Bulk selection handlers for invoices
