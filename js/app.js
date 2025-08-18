@@ -3281,11 +3281,11 @@ class DentalClinicApp {
         console.log('Displaying billing with:', invoices.length, 'invoices, page:', currentPage);
         console.log('Invoices data:', invoices);
         
-        const invoicesPerPage = 10;
-        const totalPages = Math.ceil(invoices.length / invoicesPerPage);
-        const startIndex = (currentPage - 1) * invoicesPerPage;
-        const endIndex = startIndex + invoicesPerPage;
-        const currentInvoices = invoices.slice(startIndex, endIndex);
+        const perPage = this.billingPerPage === 'all' ? invoices.length : (this.billingPerPage || 10);
+        const totalPages = this.billingPerPage === 'all' ? 1 : Math.ceil(invoices.length / perPage);
+        const startIndex = this.billingPerPage === 'all' ? 0 : (currentPage - 1) * perPage;
+        const endIndex = this.billingPerPage === 'all' ? invoices.length : Math.min(startIndex + perPage, invoices.length);
+        const currentInvoices = this.billingPerPage === 'all' ? invoices : invoices.slice(startIndex, endIndex);
         
         // Store current page in data attribute for easy access
         billingList.setAttribute('data-current-page', currentPage);
@@ -3478,7 +3478,7 @@ class DentalClinicApp {
             // Keep page within bounds; default to 1
             const billingList = document.getElementById('billing-list');
             const currentPage = parseInt(billingList?.getAttribute('data-current-page') || '1');
-            const perPage = 10;
+            const perPage = this.billingPerPage === 'all' ? filtered.length : (this.billingPerPage || 10);
             const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
             const pageToShow = Math.min(currentPage, totalPages);
 
@@ -9371,16 +9371,27 @@ class DentalClinicApp {
         }).join('')}
         
         <!-- Pagination Controls -->
-        <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; padding: 1rem; border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
-            <div style="color: var(--gray-600); font-size: 0.875rem; margin-right: 1rem;">
-                Page ${currentPage} of ${totalPages}
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 2rem; padding: 1rem; border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--gray-600); font-size: 0.875rem;">
+                <span>Show</span>
+                <select id="billing-entries-per-page" style="padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; cursor: pointer;" onchange="window.dentalApp.changeBillingEntriesPerPage(this.value)">
+                    <option value="10" ${this.billingPerPage === 10 ? 'selected' : ''}>10</option>
+                    <option value="20" ${this.billingPerPage === 20 ? 'selected' : ''}>20</option>
+                    <option value="50" ${this.billingPerPage === 50 ? 'selected' : ''}>50</option>
+                    <option value="100" ${this.billingPerPage === 100 ? 'selected' : ''}>100</option>
+                    <option value="200" ${this.billingPerPage === 200 ? 'selected' : ''}>200</option>
+                    <option value="all" ${this.billingPerPage === 'all' ? 'selected' : ''}>All</option>
+                </select>
+                <span>Invoices</span>
             </div>
-            
-            ${currentPage > 1 ? `<button onclick="window.dentalApp.displayBilling(window.dentalApp.currentBilling, ${currentPage - 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Previous</button>` : ''}
-            
-                                ${this.generateSmartPagination(currentPage, totalPages, 'billing')}
-            
-            ${currentPage < totalPages ? `<button onclick="window.dentalApp.displayBilling(window.dentalApp.currentBilling, ${currentPage + 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Next</button>` : ''}
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                ${totalPages > 1 ? `
+                    ${currentPage > 1 ? `<button onclick="window.dentalApp.displayBilling(window.dentalApp.currentBilling, ${currentPage - 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Previous</button>` : ''}
+                    ${this.generateSmartPagination(currentPage, totalPages, 'billing')}
+                    ${currentPage < totalPages ? `<button onclick="window.dentalApp.displayBilling(window.dentalApp.currentBilling, ${currentPage + 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Next</button>` : ''}
+                ` : ''}
+                <div style="color: var(--gray-600); font-size: 0.875rem; margin-left: 1rem;">Page ${currentPage} of ${totalPages}</div>
+            </div>
         </div>
     </div>
 `;
