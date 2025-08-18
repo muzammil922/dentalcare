@@ -3447,6 +3447,8 @@ class DentalClinicApp {
         
         billingList.innerHTML = billingHTML;
         console.log('Billing display completed successfully');
+        // Initialize invoice selection tracking
+        this.selectedInvoices = new Set();
     }
 
     deleteInvoice(invoiceId) {
