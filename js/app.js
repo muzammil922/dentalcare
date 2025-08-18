@@ -22,6 +22,7 @@ class DentalClinicApp {
         this.currentAppointmentPage = 1; // Track current appointment page
         this.selectedAppointments = new Set(); // Track selected appointments for bulk actions
         this.selectedInvoices = new Set(); // Track selected invoices for bulk actions
+        this.billingPerPage = 10; // Default invoices per page
         
         this.init();
         this.startDateAutoUpdate(); // Start auto-date update
