@@ -9208,9 +9208,23 @@ class DentalClinicApp {
                     <div style="color: var(--gray-700); font-weight: 600; font-size: 1rem;">
                         Total Invoices: <span style="color: var(--primary-color);">${invoices.length}</span>
                     </div>
-                    <div style="color: var(--gray-600); font-size: 0.875rem;">
-                        Showing ${startIndex + 1}-${Math.min(endIndex, invoices.length)} of ${invoices.length} invoices
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="color: var(--gray-600); font-size: 0.875rem;">Showing ${startIndex + 1}-${Math.min(endIndex, invoices.length)} of ${invoices.length} invoices</div>
+                        <button id="invoices-delete-btn" onclick="window.dentalApp.showDeleteInvoicesConfirmationModal()" style="padding: 0.5rem 1rem; background: var(--error-color); color: var(--white); border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500; transition: all 0.2s ease; display: none;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
+                            Delete Selected
+                        </button>
                     </div>
+                </div>
+
+                <!-- Select All Header (Billing) -->
+                <div style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); font-weight: 600; color: var(--gray-700);">
+                    <div style="min-width: 120px; display: flex; align-items: center; gap: 1rem;">
+                        <input type="checkbox" id="select-all-invoices" onchange="window.dentalApp.toggleSelectAllInvoices(this.checked)" style="width: 14px; height: 14px; cursor: pointer;">
+                        <span style="font-size: 0.875rem; color: var(--primary-color);">Select All</span>
+                    </div>
+                    <div style="flex: 1; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Invoice Information</div>
+                    <div style="min-width: 200px; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Actions</div>
                 </div>
                 
                 <!-- Invoice Rows -->
@@ -9262,6 +9276,7 @@ class DentalClinicApp {
                 <div class="billing-row" style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; border-bottom: ${index < currentInvoices.length - 1 ? '1px solid var(--gray-200)' : 'none'}; transition: background-color 0.2s ease; cursor: pointer;" onmouseover="this.style.backgroundColor='var(--gray-100)'" onmouseout="this.style.backgroundColor='transparent'">
                     <!-- Entry Number & Icon -->
                     <div style="display: flex; align-items: center; gap: 1rem; min-width: 120px;">
+                        <input type="checkbox" class="invoice-checkbox" data-invoice-id="${invoice.id}" onchange="window.dentalApp.toggleInvoiceSelection('${invoice.id}')" style="width: 14px; height: 14px; cursor: pointer;">
                         <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: var(--font-size-sm);">${globalIndex}</div>
                         <div style="width: 50px; height: 50px; background: ${patient && patient.gender === 'Female' ? 'var(--pink-light)' : 'var(--primary-light)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${patient && patient.gender === 'Female' ? 'var(--pink-color)' : 'var(--primary-color)'}; font-size: 1.5rem;">
                             <i class="fas fa-file-invoice-dollar"></i>
