@@ -399,7 +399,7 @@ class DentalClinicApp {
 
         // Set current date immediately when form is loaded
         if (addDateInput) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = this.formatDateForInput(new Date());
             addDateInput.value = today;
             addDateInput.setAttribute('readonly', true);
             
@@ -538,7 +538,7 @@ class DentalClinicApp {
         setTimeout(() => {
             const addDateInput = document.getElementById('patient-add-date');
             if (addDateInput) {
-                const today = new Date().toISOString().split('T')[0];
+                const today = this.formatDateForInput(new Date());
                 addDateInput.value = today;
                 addDateInput.setAttribute('readonly', true);
             }
@@ -905,6 +905,10 @@ class DentalClinicApp {
                 const invoices = this.getStoredData('invoices') || [];
                 console.log('Initializing billing management tab with', invoices.length, 'invoices');
                 console.log('Invoices:', invoices);
+                // Load saved entries-per-page preference for billing
+                if (typeof this.loadBillingEntriesPerPagePreference === 'function') {
+                    this.loadBillingEntriesPerPagePreference();
+                }
                 this.currentBilling = invoices;
                 this.displayBilling(invoices, 1); // Always start from page 1
                 
@@ -3011,7 +3015,7 @@ class DentalClinicApp {
                 <!-- Appointment Rows -->
                 ${currentAppointments.map((appointment, index) => {
             const patient = patients.find(p => p.id === appointment.patientId);
-                    const globalIndex = index + 1;
+                    const globalIndex = startIndex + index + 1;
                     
                     // Get status color
                     let statusColor = 'var(--gray-600)';
@@ -3451,6 +3455,17 @@ class DentalClinicApp {
         console.log('Billing display completed successfully');
         // Initialize invoice selection tracking
         this.selectedInvoices = new Set();
+        
+        // Ensure entries-per-page select reflects current value and is wired up
+        const billingEntriesSelect = document.getElementById('billing-entries-per-page');
+        if (billingEntriesSelect) {
+            const desired = this.billingPerPage === 'all' ? 'all' : String(this.billingPerPage || 10);
+            if (billingEntriesSelect.value !== desired) {
+                billingEntriesSelect.value = desired;
+            }
+            // Bind change handler explicitly in case inline onchange is blocked
+            billingEntriesSelect.onchange = (e) => this.changeBillingEntriesPerPage(e.target.value);
+        }
     }
 
     deleteInvoice(invoiceId) {
@@ -3668,8 +3683,8 @@ class DentalClinicApp {
                         filteredInvoices = filteredInvoices.filter(inv => inv.status === currentFilter);
                     }
                     
-                    const invoicesPerPage = 10;
-                    const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+                    const perPageCalc = this.billingPerPage === 'all' ? filteredInvoices.length : (this.billingPerPage || 10);
+                    const totalPages = Math.ceil(filteredInvoices.length / perPageCalc);
                     let newCurrentPage = currentPage;
                     if (currentPage > totalPages && totalPages > 0) {
                         newCurrentPage = totalPages;
@@ -3691,8 +3706,8 @@ class DentalClinicApp {
                 filteredInvoices = filteredInvoices.filter(invoice => invoice.status === currentFilter);
             }
             
-            const invoicesPerPage = 10;
-            const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+            const perPageCalc2 = this.billingPerPage === 'all' ? filteredInvoices.length : (this.billingPerPage || 10);
+            const totalPages = Math.ceil(filteredInvoices.length / perPageCalc2);
             let newCurrentPage = currentPage;
             if (currentPage > totalPages && totalPages > 0) {
                 newCurrentPage = totalPages;
@@ -6117,7 +6132,7 @@ class DentalClinicApp {
                 // Set default date
                 const dateInput = document.getElementById('billing-date');
                 if (dateInput) {
-                    dateInput.value = new Date().toISOString().split('T')[0];
+                    dateInput.value = this.formatDateForInput(new Date());
                 }
                 
                 // Focus first input
@@ -7539,7 +7554,7 @@ class DentalClinicApp {
 
         // Set current date immediately when form is loaded
         if (addDateInput) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = this.formatDateForInput(new Date());
             addDateInput.value = today;
             addDateInput.setAttribute('readonly', true);
             
@@ -9113,7 +9128,7 @@ class DentalClinicApp {
                 <!-- Appointment Rows -->
                 ${currentAppointments.map((appointment, index) => {
             const patient = patients.find(p => p.id === appointment.patientId);
-                    const globalIndex = index + 1;
+                    const globalIndex = startIndex + index + 1;
                     
                     // Get status color
                     let statusColor = 'var(--gray-600)';
@@ -9247,11 +9262,11 @@ class DentalClinicApp {
         console.log('Displaying billing with:', invoices.length, 'invoices, page:', currentPage);
         console.log('Invoices data:', invoices);
         
-        const invoicesPerPage = 10;
-        const totalPages = Math.ceil(invoices.length / invoicesPerPage);
-        const startIndex = (currentPage - 1) * invoicesPerPage;
-        const endIndex = startIndex + invoicesPerPage;
-        const currentInvoices = invoices.slice(startIndex, endIndex);
+        const perPage = this.billingPerPage === 'all' ? invoices.length : (this.billingPerPage || 10);
+        const totalPages = this.billingPerPage === 'all' ? 1 : Math.ceil(invoices.length / perPage);
+        const startIndex = this.billingPerPage === 'all' ? 0 : (currentPage - 1) * perPage;
+        const endIndex = this.billingPerPage === 'all' ? invoices.length : Math.min(startIndex + perPage, invoices.length);
+        const currentInvoices = this.billingPerPage === 'all' ? invoices : invoices.slice(startIndex, endIndex);
         
         // Store current page in data attribute for easy access
         billingList.setAttribute('data-current-page', currentPage);
@@ -9425,6 +9440,15 @@ class DentalClinicApp {
         
         billingList.innerHTML = billingHTML;
         console.log('Billing display completed successfully');
+        // Sync and bind entries-per-page selector after render
+        const billingEntriesSelect2 = document.getElementById('billing-entries-per-page');
+        if (billingEntriesSelect2) {
+            const desired2 = this.billingPerPage === 'all' ? 'all' : String(this.billingPerPage || 10);
+            if (billingEntriesSelect2.value !== desired2) {
+                billingEntriesSelect2.value = desired2;
+            }
+            billingEntriesSelect2.onchange = (e) => this.changeBillingEntriesPerPage(e.target.value);
+        }
     }
 
     deleteInvoice(invoiceId) {
@@ -17025,7 +17049,7 @@ class DentalClinicApp {
                 }
                 
                 calendarHTML += `
-                    <div class="calendar-day" data-date="${date.toISOString().split('T')[0]}" style="${dayStyle}">
+                    <div class="calendar-day" data-date="${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}" style="${dayStyle}">
                         ${date.getDate()}
                     </div>
                 `;
@@ -17448,7 +17472,7 @@ class DentalClinicApp {
             }
             
             calendarHTML += `
-                <div class="calendar-day" data-date="${date.toISOString().split('T')[0]}" style="${dayStyle}">
+                <div class="calendar-day" data-date="${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}" style="${dayStyle}">
                     ${date.getDate()}
                 </div>
             `;
@@ -17616,7 +17640,8 @@ class DentalClinicApp {
                 input.id === 'billing-due-date' || 
                 input.id === 'staff-dob' || 
                 input.id === 'staff-join-date' || 
- 
+                input.id === 'patient-dob' || 
+                input.id === 'patient-add-date' || 
                 input.id === 'salary-payment-date' || 
                 input.id === 'salary-year' || 
                 input.hasAttribute('data-uses-existing-calendar')) {
