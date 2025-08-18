@@ -3455,6 +3455,108 @@ class DentalClinicApp {
         this.showDeleteInvoiceConfirmation(invoiceId);
     }
 
+    // Bulk selection handlers for invoices
+    toggleSelectAllInvoices(checked) {
+        const checkboxes = document.querySelectorAll('.invoice-checkbox');
+        const invoices = this.getStoredData('invoices') || [];
+        if (checked) {
+            invoices.forEach(inv => { if (inv && inv.id) this.selectedInvoices.add(inv.id); });
+        } else {
+            this.selectedInvoices.clear();
+        }
+        checkboxes.forEach(cb => { cb.checked = checked; });
+        this.updateInvoiceBulkActionsVisibility();
+    }
+
+    toggleInvoiceSelection(invoiceId) {
+        if (this.selectedInvoices.has(invoiceId)) {
+            this.selectedInvoices.delete(invoiceId);
+        } else {
+            this.selectedInvoices.add(invoiceId);
+        }
+        this.updateInvoiceBulkActionsVisibility();
+    }
+
+    updateInvoiceBulkActionsVisibility() {
+        const bulkDeleteBtn = document.getElementById('invoices-delete-btn');
+        if (!bulkDeleteBtn) return;
+        bulkDeleteBtn.style.display = this.selectedInvoices.size > 0 ? 'inline-block' : 'none';
+    }
+
+    showDeleteInvoicesConfirmationModal() {
+        if (!this.selectedInvoices || this.selectedInvoices.size === 0) {
+            this.showToast('No invoices selected for deletion', 'warning');
+            return;
+        }
+
+        const invoices = this.getStoredData('invoices') || [];
+        const patients = this.getStoredData('patients') || [];
+        const selectedInfo = [];
+        this.selectedInvoices.forEach(id => {
+            const inv = invoices.find(i => i.id === id);
+            if (!inv) return;
+            const patient = patients.find(p => p.id === inv.patientId);
+            const patientName = patient ? patient.name : 'Unknown Patient';
+            selectedInfo.push(`${patientName} — ${inv.id}`);
+        });
+
+        const count = this.selectedInvoices.size;
+        const label = count > 1 ? 'Invoices' : 'Invoice';
+        const listHtml = selectedInfo.map(t => '<div style="padding: 0.25rem 0; color: #6b7280; font-size: 0.875rem;">• ' + this.escapeHtml(t) + '</div>').join('');
+
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;';
+        modal.innerHTML = '<div style="background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: 100%; max-width: 600px; position: relative; border: 1px solid #e5e7eb; overflow: hidden;">' +
+            '<div style="padding: 1.5rem 2rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: var(--white-color);">' +
+                '<div style="display: flex; align-items: center; gap: 0.75rem;">' +
+                    '<i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--primary-color)"></i>' +
+                    '<h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color(--gray-color);">Delete Selected Invoices</h2>' +
+                '</div>' +
+                '<button onclick="this.closest(\'.modal\').remove()" style="background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; transition: all 0.3s ease;" onmouseover="this.style.background=\'var(--primary-color)\'" onmouseout="this.style.background=\'var(--primary-color)\'">×</button>' +
+            '</div>' +
+            '<div style="padding: 2rem;">' +
+                '<div style="text-align: center; margin-bottom: 1.5rem;">' +
+                    '<i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>' +
+                    '<h3 style="margin: 0 0 1rem 0; color: #1f2937; font-size: 1.125rem;">Warning: This action cannot be undone!</h3>' +
+                    '<p style="margin: 0; color: #6b7280; line-height: 1.6;">You are about to delete <strong>' + count + ' selected invoice(s)</strong> from the system.</p>' +
+                '</div>' +
+                '<div style="background: #f9fafb; padding: 1rem; border-radius: 8px;  margin-bottom: 1.5rem;">' +
+                    '<p style="margin: 0; color: #374151; font-size: 0.875rem; font-weight: 500;"><strong>Invoices to be deleted:</strong> ' + count + '</p>' +
+                    '<div style="margin-top: 0.5rem; max-height: 200px; overflow-y: auto;">' + listHtml + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="padding: 1.5rem 2rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 1rem; background: #f9fafb;">' +
+                '<button onclick="this.closest(\'.modal\').remove()" style="padding: 0.75rem 1.5rem; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.opacity=\'0.8\'" onmouseout="this.style.opacity=\'1\'">Cancel</button>' +
+                '<button onclick="window.dentalApp.confirmBulkDeleteInvoices(this)" style="padding: 0.75rem 1.5rem; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.opacity=\'0.8\'" onmouseout="this.style.opacity=\'1\'">' +
+                    '<i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>' +
+                    'Delete ' + count + ' ' + label +
+                '</button>' +
+            '</div>' +
+        '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    }
+
+    confirmBulkDeleteInvoices(buttonEl) {
+        try {
+            const toDelete = new Set(this.selectedInvoices);
+            let invoices = this.getStoredData('invoices') || [];
+            const before = invoices.length;
+            invoices = invoices.filter(inv => !toDelete.has(inv.id));
+            this.setStoredData('invoices', invoices);
+            this.currentBilling = invoices;
+            this.displayBilling(invoices, 1);
+            this.selectedInvoices.clear();
+            const modal = buttonEl.closest('.modal');
+            if (modal) modal.remove();
+            this.showToast(`Deleted ${before - invoices.length} invoice(s)`, 'success');
+        } catch (e) {
+            console.error('Bulk delete invoices failed:', e);
+            this.showToast('Failed to delete invoices', 'error');
+        }
+    }
+
     updateInvoiceStatus(invoiceId, newStatus) {
         console.log('updateInvoiceStatus called with:', invoiceId, newStatus);
         // Get current page for pagination maintenance
