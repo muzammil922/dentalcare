@@ -3455,6 +3455,42 @@ class DentalClinicApp {
         this.showDeleteInvoiceConfirmation(invoiceId);
     }
 
+    // Refresh billing data and re-render list
+    refreshBillingData() {
+        try {
+            const refreshBtn = document.getElementById('refresh-billing-btn');
+            const icon = refreshBtn?.querySelector('.fa-sync-alt');
+            if (icon) icon.style.animation = 'spin 0.6s linear infinite';
+
+            // Reload from storage
+            const invoices = this.getStoredData('invoices') || [];
+            this.currentBilling = invoices;
+
+            // Determine current filter if any (billing filter dropdown)
+            const activeFilter = document.querySelector('[data-type="billing"].dropdown-filter-option.active');
+            let filtered = invoices;
+            const filter = activeFilter?.getAttribute('data-filter') || 'all';
+            if (filter !== 'all') {
+                filtered = invoices.filter(inv => inv.status === filter);
+            }
+
+            // Keep page within bounds; default to 1
+            const billingList = document.getElementById('billing-list');
+            const currentPage = parseInt(billingList?.getAttribute('data-current-page') || '1');
+            const perPage = 10;
+            const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+            const pageToShow = Math.min(currentPage, totalPages);
+
+            this.displayBilling(filtered, pageToShow);
+
+            if (icon) icon.style.animation = '';
+            this.showToast('Billing refreshed', 'success');
+        } catch (e) {
+            console.error('Error refreshing billing:', e);
+            this.showToast('Error refreshing billing', 'error');
+        }
+    }
+
     // Bulk selection handlers for invoices
     toggleSelectAllInvoices(checked) {
         const checkboxes = document.querySelectorAll('.invoice-checkbox');
