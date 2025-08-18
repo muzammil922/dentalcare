@@ -828,6 +828,33 @@ class DentalClinicApp {
             targetBtn.classList.add('active');
         }
         
+        // Update headers and page title for Patient Services and Staff sections based on active tab
+        const patientTabTitleMap = {
+            'patient-management': 'Patient',
+            'appointment-management': 'Appointment',
+            'billing-management': 'Billing'
+        };
+        const staffTabTitleMap = {
+            'staff-management': 'Staff List',
+            'attendance-management': 'Attendance',
+            'salary-management': 'Salary'
+        };
+
+        const patientTitle = patientTabTitleMap[tabName] || 'Patient Services';
+        const staffTitle = staffTabTitleMap[tabName] || 'Staff Management';
+        const newTitle = patientTabTitleMap[tabName] || staffTabTitleMap[tabName] || null;
+
+        const psHeader = document.querySelector('#patient-services .patient-services-header h2');
+        if (psHeader && patientTabTitleMap[tabName]) {
+            psHeader.textContent = patientTitle;
+        }
+        const staffHeader = document.querySelector('#staff .patient-services-header h2');
+        if (staffHeader && staffTabTitleMap[tabName]) {
+            staffHeader.textContent = staffTitle;
+        }
+
+        // Keep the top page title showing the section name (set by showSection)
+
         // Initialize tab-specific functionality
         this.initializeTab(tabName);
         
@@ -7934,6 +7961,33 @@ class DentalClinicApp {
             targetBtn.classList.add('active');
         }
         
+        // Update headers and page title for Patient Services and Staff sections based on active tab
+        const patientTabTitleMap = {
+            'patient-management': 'Patient',
+            'appointment-management': 'Appointment',
+            'billing-management': 'Billing'
+        };
+        const staffTabTitleMap = {
+            'staff-management': 'Staff List',
+            'attendance-management': 'Attendance',
+            'salary-management': 'Salary'
+        };
+
+        const patientTitle = patientTabTitleMap[tabName] || 'Patient Services';
+        const staffTitle = staffTabTitleMap[tabName] || 'Staff Management';
+        const newTitle = patientTabTitleMap[tabName] || staffTabTitleMap[tabName] || null;
+
+        const psHeader = document.querySelector('#patient-services .patient-services-header h2');
+        if (psHeader && patientTabTitleMap[tabName]) {
+            psHeader.textContent = patientTitle;
+        }
+        const staffHeader = document.querySelector('#staff .patient-services-header h2');
+        if (staffHeader && staffTabTitleMap[tabName]) {
+            staffHeader.textContent = staffTitle;
+        }
+
+        // Do not change the top page title here; it shows the section name via showSection()
+
         // Initialize tab-specific functionality
         this.initializeTab(tabName);
         
