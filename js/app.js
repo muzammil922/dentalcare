@@ -2193,6 +2193,8 @@ class DentalClinicApp {
                             <i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--primary-color);"></i>
                             <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Patient Details</h2>
                         </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            
                         <button onclick="this.closest('.modal').remove()" style="
                             background: var(--primary-color);
                             color: var(--white);
@@ -2208,6 +2210,7 @@ class DentalClinicApp {
                             transition: all 0.3s ease;
                             backdrop-filter: blur(10px);
                         " onmouseover="this.style.background='var(--primary-hover)'" onmouseout="this.style.background='var(--primary-color)'">x</button>
+                        </div>
                     </div>
                     
                     <!-- Body -->
@@ -2476,303 +2479,7 @@ class DentalClinicApp {
         }
     }
 
-    printPatient(patientId) {
-        const patients = this.getStoredData('patients') || [];
-        const patient = patients.find(p => p.id === patientId);
-        
-        if (patient) {
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Patient Record - ${patient.name}</title>
-                    <style>
-                        @media print {
-                            body { margin: 0; }
-                            .no-print { display: none; }
-                        }
-                        
-                        body { 
-                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                            margin: 0; 
-                            padding: 0; 
-                            background: #f8fafc;
-                            color: #1e293b;
-                        }
-                        
-                        .container {
-                            width: 100%;
-                            margin: 60px auto 20px auto;
-                            background: white;
-                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                        }
-                        
-                        .header {
-                            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-                            color: white;
-                            padding: 2rem;
-                            text-align: center;
-                            position: relative;
-                            overflow: hidden;
-                        }
-                        
-                        .header::before {
-                            content: '';
-                            position: absolute;
-                            top: -50%;
-                            left: -50%;
-                            width: 200%;
-                            height: 200%;
-                            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-                            animation: float 6s ease-in-out infinite;
-                        }
-                        
-                        .header h1 {
-                            margin: 0;
-                            font-size: 2.5rem;
-                            font-weight: 700;
-                            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                            position: relative;
-                            z-index: 1;
-                        }
-                        
-                        .header h2 {
-                            margin: 0.5rem 0 0 0;
-                            font-size: 1.5rem;
-                            font-weight: 400;
-                            opacity: 0.9;
-                            position: relative;
-                            z-index: 1;
-                        }
-                        
-                        .clinic-info {
-                            background: rgba(255,255,255,0.1);
-                            padding: 1rem;
-                            border-radius: 12px;
-                            margin-top: 1rem;
-                            backdrop-filter: blur(10px);
-                            position: relative;
-                            z-index: 1;
-                        }
-                        
-                        .content {
-                            padding: 2rem;
-                        }
-                        
-                        .section {
-                            margin-bottom: 2rem;
-                            background: #f8fafc;
-                            border-radius: 12px;
-                            padding: 1.5rem;
-                            
-                        }
-                        
-                        .section h3 {
-                            margin: 0 0 1rem 0;
-                            color: #0284c7;
-                            font-size: 1.25rem;
-                            font-weight: 600;
-                            display: flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                        }
-                        
-                        .info-grid {
-                            display: grid;
-                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                            gap: 1rem;
-                        }
-                        
-                        .info-item {
-                            background: white;
-                            padding: 1rem;
-                            border-radius: 8px;
-                            border: 1px solid #e2e8f0;
-                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                        }
-                        
-                        .info-label {
-                            font-weight: 600;
-                            color: #475569;
-                            font-size: 0.875rem;
-                            text-transform: uppercase;
-                            letter-spacing: 0.05em;
-                            margin-bottom: 0.25rem;
-                        }
-                        
-                        .info-value {
-                            color: #1e293b;
-                            font-size: 1rem;
-                            font-weight: 500;
-                        }
-                        
-                        .highlight-box {
-                            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-                            border: 1px solid #f59e0b;
-                            border-radius: 8px;
-                            padding: 1rem;
-                            margin: 1rem 0;
-                        }
-                        
-                        .medical-history {
-                            background: #f0f9ff;
-                            border-left: 4px solid #0ea5e9;
-                        }
-                        
-                        .footer {
-                            background: #f1f5f9;
-                            padding: 1.5rem;
-                            text-align: center;
-                            border-top: 1px solid #e2e8f0;
-                        }
-                        
-                        .footer p {
-                            margin: 0;
-                            color: #64748b;
-                            font-size: 0.875rem;
-                        }
-                        
-                        @keyframes float {
-                            0%, 100% { transform: translateY(0px) rotate(0deg); }
-                            50% { transform: translateY(-20px) rotate(180deg); }
-                        }
-                        
-                        .status-badge {
-                            display: inline-block;
-                            padding: 0.25rem 0.75rem;
-                            border-radius: 20px;
-                            font-size: 0.75rem;
-                            font-weight: 600;
-                            text-transform: uppercase;
-                            letter-spacing: 0.05em;
-                        }
-                        
-                        .status-active {
-                            background: #dcfce7;
-                            color: #15803d;
-                            
-                        }
-                        
-                        .status-inactive {
-                            background: #fef2f2;
-                            color: #dc2626;
-                            
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h1>🦷 DentalCare Pro</h1>
-                            <h2>Patient Medical Record</h2>
-                            <div class="clinic-info">
-                                <strong>Professional Dental Care Services</strong><br>
-                                <small>Excellence in Oral Health</small>
-                            </div>
-                        </div>
-                        
-                        <div class="content">
-                            <div class="section">
-                                <h3>👤 Patient Information</h3>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <div class="info-label">Patient ID</div>
-                                        <div class="info-value">${patient.id}</div>
-                                    </div>
-                                    <div class="info-item">
-                                        <div class="info-label">Full Name</div>
-                                        <div class="info-value">${patient.name}</div>
-                                    </div>
-                                    <div class="info-item">
-                                        <div class="info-label">Phone Number</div>
-                                        <div class="info-value">📞 ${patient.phone || 'N/A'}</div>
-                                    </div>
-                                    <div class="info-item">
-                                        <div class="info-label">Email Address</div>
-                                        <div class="info-value">📧 ${patient.email || 'N/A'}</div>
-                                    </div>
-                                    <div class="info-item">
-                                        <div class="info-label">Date of Birth</div>
-                                        <div class="info-value">🎂 ${patient.dob || 'N/A'}</div>
-                                    </div>
-                                    <div class="info-item">
-                                        <div class="info-label">Age</div>
-                                        <div class="info-value">${this.calculateAge(patient.dob)} years</div>
-                                    </div>
-                                    <div class="info-item">
-                                        <div class="info-label">Gender</div>
-                                        <div class="info-value">${patient.gender || 'N/A'}</div>
-                                    </div>
-                                    <div class="info-item">
-                                        <div class="info-label">Status</div>
-                                        <div class="info-value">
-                                            <span class="status-badge ${(patient.status || 'active').toLowerCase() === 'active' ? 'status-active' : 'status-inactive'}">
-                                                ${patient.status || 'Active'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            ${patient.address ? `
-                            <div class="section">
-                                <h3>📍 Address Information</h3>
-                                <div class="highlight-box">
-                                    <div class="info-label">Residential Address</div>
-                                    <div class="info-value">${patient.address}</div>
-                                </div>
-                            </div>
-                            ` : ''}
-                            
-                            <div class="section medical-history">
-                                <h3>🏥 Medical History</h3>
-                                <div class="highlight-box">
-                                    ${patient.medicalHistory ? patient.medicalHistory : 'No medical history recorded for this patient.'}
-                                </div>
-                            </div>
-                            
-                            ${patient.addDate ? `
-                            <div class="section">
-                                <h3>📅 Record Information</h3>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <div class="info-label">Registration Date</div>
-                                        <div class="info-value">${this.formatDate(patient.addDate)}</div>
-                                    </div>
-                                    ${patient.updatedAt && patient.updatedAt !== patient.addDate ? `
-                                    <div class="info-item">
-                                        <div class="info-label">Last Updated</div>
-                                        <div class="info-value">${this.formatDate(patient.updatedAt)}</div>
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                            ` : ''}
-                        </div>
-                        
-                        <div class="footer">
-                            <p><strong>Generated on:</strong> ${this.formatDate(new Date())} at ${new Date().toLocaleTimeString()}</p>
-                            <p>This is an official medical record from Dental Clinic</p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            
-            // Handle print dialog cancel/close properly - keep window open like appointment print
-            printWindow.onbeforeunload = function() {
-                // This prevents the main page from closing
-                return null;
-            };
-            
-            // Add delay for better rendering and print
-            setTimeout(() => {
-                printWindow.print();
-            }, 500);
-        }
-    }
+
 
     deletePatient(patientId) {
         if (confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
@@ -3212,6 +2919,7 @@ class DentalClinicApp {
                         @media print {
                             body { margin: 0; }
                             .no-print { display: none; }
+                            #printButtonContainer { display: none; }
                         }
                         
                         body { 
@@ -3420,8 +3128,8 @@ class DentalClinicApp {
                 align-items: center;
                 gap: 8px;
             " onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'">
-                <i class="fas fa-print"></i>
-                Print Invoice
+                
+                Print Appointment
             </div>
                     <div class="container">
                         <div class="header">
@@ -3529,13 +3237,12 @@ class DentalClinicApp {
             `);
             
             printWindow.document.close();
-            console.log('Print window content written, calling print...');
+            printWindow.focus();
             
-            // Add a small delay to ensure content is loaded
-            setTimeout(() => {
-                printWindow.print();
-                console.log('Print command executed');
-            }, 100);
+            // Don't auto-print, let user click the print button
+            
+            console.log('Appointment opened in new window with print button');
+            this.showToast('Appointment opened in new window', 'success');
             
         } catch (error) {
             console.error('Error in printAppointment:', error);
@@ -9567,7 +9274,6 @@ class DentalClinicApp {
             console.log('Found patient for printing:', patient);
             
             const printWindow = window.open('', '_blank');
-            
             if (!printWindow) {
                 this.showToast('Please allow popups to print', 'error');
                 return;
@@ -9582,6 +9288,7 @@ class DentalClinicApp {
                         @media print {
                             body { margin: 0; }
                             .no-print { display: none; }
+                            #printButtonContainer { display: none; }
                         }
                         
                         @keyframes float {
@@ -9599,7 +9306,7 @@ class DentalClinicApp {
                         
                         .container {
                             width: 100%;
-                            margin: 60px auto 20px auto;
+                            margin: 0px auto 20px auto;
                             background: white;
                             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                         }
@@ -9751,6 +9458,29 @@ class DentalClinicApp {
                     </style>
                 </head>
                 <body>
+                <!-- Print Button (Top Right Corner) -->
+            <div id="printButtonContainer" style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                background: #059669;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            " onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'">
+                <i class="fas fa-print"></i>
+                Print Patient
+                </div>
                     <div class="container">
                         <div class="header">
                             <h1>🦷 DentalCare Pro</h1>
@@ -9858,9 +9588,7 @@ class DentalClinicApp {
             };
             
             // Add delay for better rendering and print
-            setTimeout(() => {
-                printWindow.print();
-            }, 500);
+            printWindow.focus();
             
         } catch (error) {
             console.error('Error printing patient record:', error);
@@ -11108,7 +10836,6 @@ class DentalClinicApp {
                 align-items: center;
                 gap: 8px;
             " onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'">
-                <i class="fas fa-print"></i>
                 Print Invoice
             </div>
             
