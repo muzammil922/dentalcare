@@ -2483,65 +2483,294 @@ class DentalClinicApp {
         if (patient) {
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
+                <!DOCTYPE html>
                 <html>
                 <head>
                     <title>Patient Record - ${patient.name}</title>
                     <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        .header { text-align: center; margin-bottom: 30px; }
-                        .patient-info { margin-bottom: 20px; }
-                        .info-row { margin: 10px 0; }
-                        .label { font-weight: bold; }
-                        .medical-history { margin-top: 20px; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                        
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background: #f8fafc;
+                            color: #1e293b;
+                        }
+                        
+                        .container {
+                            width: 100%;
+                            margin: 0 auto;
+                            background: white;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .header {
+                            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                            color: white;
+                            padding: 2rem;
+                            text-align: center;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        .header::before {
+                            content: '';
+                            position: absolute;
+                            top: -50%;
+                            left: -50%;
+                            width: 200%;
+                            height: 200%;
+                            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                            animation: float 6s ease-in-out infinite;
+                        }
+                        
+                        .header h1 {
+                            margin: 0;
+                            font-size: 2.5rem;
+                            font-weight: 700;
+                            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .header h2 {
+                            margin: 0.5rem 0 0 0;
+                            font-size: 1.5rem;
+                            font-weight: 400;
+                            opacity: 0.9;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .clinic-info {
+                            background: rgba(255,255,255,0.1);
+                            padding: 1rem;
+                            border-radius: 12px;
+                            margin-top: 1rem;
+                            backdrop-filter: blur(10px);
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .content {
+                            padding: 2rem;
+                        }
+                        
+                        .section {
+                            margin-bottom: 2rem;
+                            background: #f8fafc;
+                            border-radius: 12px;
+                            padding: 1.5rem;
+                            
+                        }
+                        
+                        .section h3 {
+                            margin: 0 0 1rem 0;
+                            color: #0ea5e9;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        }
+                        
+                        .info-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
+                        }
+                        
+                        .info-item {
+                            background: white;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border: 1px solid #e2e8f0;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        }
+                        
+                        .info-label {
+                            font-weight: 600;
+                            color: #475569;
+                            font-size: 0.875rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            margin-bottom: 0.25rem;
+                        }
+                        
+                        .info-value {
+                            color: #1e293b;
+                            font-size: 1rem;
+                            font-weight: 500;
+                        }
+                        
+                        .highlight-box {
+                            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                            border: 1px solid #f59e0b;
+                            border-radius: 8px;
+                            padding: 1rem;
+                            margin: 1rem 0;
+                        }
+                        
+                        .medical-history {
+                            background: #f0f9ff;
+                            border-left: 4px solid #0ea5e9;
+                        }
+                        
+                        .footer {
+                            background: #f1f5f9;
+                            padding: 1.5rem;
+                            text-align: center;
+                            border-top: 1px solid #e2e8f0;
+                        }
+                        
+                        .footer p {
+                            margin: 0;
+                            color: #64748b;
+                            font-size: 0.875rem;
+                        }
+                        
+                        @keyframes float {
+                            0%, 100% { transform: translateY(0px) rotate(0deg); }
+                            50% { transform: translateY(-20px) rotate(180deg); }
+                        }
+                        
+                        .status-badge {
+                            display: inline-block;
+                            padding: 0.25rem 0.75rem;
+                            border-radius: 20px;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                        }
+                        
+                        .status-active {
+                            background: #dcfce7;
+                            color: #166534;
+                            border: 1px solid #bbf7d0;
+                        }
+                        
+                        .status-inactive {
+                            background: #fef2f2;
+                            color: #991b1b;
+                            border: 1px solid #fecaca;
+                        }
                     </style>
                 </head>
                 <body>
-                    <div class="header">
-                        <h1>Patient Record</h1>
-                        <h2>${patient.name}</h2>
-                    </div>
-                    <div class="patient-info">
-                        <div class="info-row">
-                            <span class="label">Patient ID:</span> ${patient.id}
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Name:</span> ${patient.name}
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Phone:</span> 
-                            <div class="patient-phone-display" style="background: #e2e8f0; color: #1e40af; padding: 0.5rem 1rem; border-radius: var(--radius-full); font-weight: 600; font-size: 0.875rem; display: inline-block; width: fit-content; text-align: left; letter-spacing: 0.025em; border: 1px solid #cbd5e1;">
-                                <i class="fas fa-phone" style="margin-right: 0.5rem; font-size: 0.75rem;"></i>
-                                ${patient.phone || 'N/A'}
+                    <div class="container">
+                        <div class="header">
+                            <h1>🦷 Dental Clinic</h1>
+                            <h2>Patient Medical Record</h2>
+                            <div class="clinic-info">
+                                <strong>Professional Dental Care Services</strong><br>
+                                <small>Excellence in Oral Health</small>
                             </div>
                         </div>
-                        <div class="info-row">
-                            <span class="label">Email:</span> ${patient.email || 'N/A'}
+                        
+                        <div class="content">
+                            <div class="section">
+                                <h3>👤 Patient Information</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">Patient ID</div>
+                                        <div class="info-value">${patient.id}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Full Name</div>
+                                        <div class="info-value">${patient.name}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Phone Number</div>
+                                        <div class="info-value">📞 ${patient.phone || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Email Address</div>
+                                        <div class="info-value">📧 ${patient.email || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Date of Birth</div>
+                                        <div class="info-value">🎂 ${patient.dob || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Age</div>
+                                        <div class="info-value">${this.calculateAge(patient.dob)} years</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Gender</div>
+                                        <div class="info-value">${patient.gender || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Status</div>
+                                        <div class="info-value">
+                                            <span class="status-badge ${(patient.status || 'active').toLowerCase() === 'active' ? 'status-active' : 'status-inactive'}">
+                                                ${patient.status || 'Active'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${patient.address ? `
+                            <div class="section">
+                                <h3>📍 Address Information</h3>
+                                <div class="highlight-box">
+                                    <div class="info-label">Residential Address</div>
+                                    <div class="info-value">${patient.address}</div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="section medical-history">
+                                <h3>🏥 Medical History</h3>
+                                <div class="highlight-box">
+                                    ${patient.medicalHistory ? patient.medicalHistory : 'No medical history recorded for this patient.'}
+                                </div>
+                            </div>
+                            
+                            ${patient.addDate ? `
+                            <div class="section">
+                                <h3>📅 Record Information</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">Registration Date</div>
+                                        <div class="info-value">${this.formatDate(patient.addDate)}</div>
+                                    </div>
+                                    ${patient.updatedAt && patient.updatedAt !== patient.addDate ? `
+                                    <div class="info-item">
+                                        <div class="info-label">Last Updated</div>
+                                        <div class="info-value">${this.formatDate(patient.updatedAt)}</div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
-                        <div class="info-row">
-                            <span class="label">Date of Birth:</span> ${patient.dob || 'N/A'}
+                        
+                        <div class="footer">
+                            <p><strong>Generated on:</strong> ${this.formatDate(new Date())} at ${new Date().toLocaleTimeString()}</p>
+                            <p>This is an official medical record from Dental Clinic</p>
                         </div>
-                        <div class="info-row">
-                            <span class="label">Age:</span> ${this.calculateAge(patient.dob)} years
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Gender:</span> ${patient.gender || 'N/A'}
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Address:</span> ${patient.address || 'N/A'}
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Status:</span> ${patient.status || 'Active'}
-                        </div>
-                    </div>
-                    <div class="medical-history">
-                        <h3>Medical History</h3>
-                        <p>${patient.medicalHistory || 'No medical history recorded'}</p>
                     </div>
                 </body>
                 </html>
             `);
             printWindow.document.close();
-            printWindow.print();
+            
+            // Handle print dialog cancel/close properly - keep window open like appointment print
+            printWindow.onbeforeunload = function() {
+                // This prevents the main page from closing
+                return null;
+            };
+            
+            // Add delay for better rendering and print
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
         }
     }
 
@@ -2936,56 +3165,357 @@ class DentalClinicApp {
     }
 
     printAppointment(appointmentId) {
-        const appointments = this.getStoredData('appointments') || [];
-        const appointment = appointments.find(apt => apt.id === appointmentId);
-        const patients = this.getStoredData('patients') || [];
-        const patient = patients.find(p => p.id === appointment?.patientId);
+        console.log('printAppointment called with ID:', appointmentId);
         
-        if (appointment && patient) {
+        try {
+            const appointments = this.getStoredData('appointments') || [];
+            console.log('All appointments:', appointments);
+            
+            const appointment = appointments.find(apt => apt.id === appointmentId);
+            console.log('Found appointment:', appointment);
+            
+            if (!appointment) {
+                console.error('Appointment not found with ID:', appointmentId);
+                this.showToast('Appointment not found', 'error');
+                return;
+            }
+            
+            const patients = this.getStoredData('patients') || [];
+            console.log('All patients:', patients);
+            
+            const patient = patients.find(p => p.id === appointment.patientId);
+            console.log('Found patient:', patient);
+            
+            if (!patient) {
+                console.error('Patient not found for appointment:', appointment);
+                this.showToast('Patient not found for this appointment', 'error');
+                return;
+            }
+            
+            console.log('Opening print window...');
             const printWindow = window.open('', '_blank');
+            
+            if (!printWindow) {
+                console.error('Failed to open print window - popup blocked?');
+                this.showToast('Print window blocked. Please allow popups and try again.', 'error');
+                return;
+            }
+            
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Appointment Details</title>
+                    <title>Appointment Details - ${patient.name}</title>
                     <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        .header { text-align: center; margin-bottom: 30px; }
-                        .details { margin-bottom: 20px; }
-                        .detail-row { margin: 10px 0; }
-                        .label { font-weight: bold; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                        
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background: #f8fafc;
+                            color: #1e293b;
+                        }
+                        
+                        .container {
+                            width: 100%;
+                            margin: 0 auto;
+                            // border-radius: 800px;
+                            background: white;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .header {
+                            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                            color: #dbeafe;
+                            padding: 2rem;
+                            text-align: center;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        .header::before {
+                            content: '';
+                            position: absolute;
+                            top: -50%;
+                            left: -50%;
+                            width: 200%;
+                            height: 200%;
+                            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                            animation: float 6s ease-in-out infinite;
+                        }
+                        
+                        .header h1 {
+                            margin: 0;
+                            font-size: 2.5rem;
+                            font-weight: 700;
+                            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .header h2 {
+                            margin: 0.5rem 0 0 0;
+                            font-size: 1.5rem;
+                            font-weight: 400;
+                            opacity: 0.9;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .clinic-info {
+                            background: rgba(255,255,255,0.1);
+                            padding: 1rem;
+                            border-radius: 12px;
+                            margin-top: 1rem;
+                            backdrop-filter: blur(10px);
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .content {
+                            padding: 2rem;
+                        }
+                        
+                        .section {
+                            margin-bottom: 2rem;
+                            background: #f8fafc;
+                            border-radius: 12px;
+                            padding: 1.5rem;
+                            
+                        }
+                        
+                        .section h3 {
+                            margin: 0 0 1rem 0;
+                            color: #0ea5e9;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        }
+                        
+                        .info-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
+                        }
+                        
+                        .info-item {
+                            background: white;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border: 1px solid #e2e8f0;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        }
+                        
+                        .info-label {
+                            font-weight: 600;
+                            color: #475569;
+                            font-size: 0.875rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            margin-bottom: 0.25rem;
+                        }
+                        
+                        .info-value {
+                            color: #1e293b;
+                            font-size: 1rem;
+                            font-weight: 500;
+                        }
+                        
+                        .highlight-box {
+                            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 0%);
+                            border: 1px solid #f59e0b;
+                            border-radius: 8px;
+                            padding: 1rem;
+                            margin: 1rem 0;
+                        }
+                        
+                        .appointment-details {
+                            background: #f0f9ff;
+                            
+                        }
+                        
+                        .patient-info {
+                            background: #f0fdf4;
+                            
+                        }
+                        
+                        .footer {
+                            background: #f1f5f9;
+                            padding: 1.5rem;
+                            text-align: center;
+                            border-top: 1px solid #e2e8f0;
+                        }
+                        
+                        .footer p {
+                            margin: 0;
+                            color: #64748b;
+                            font-size: 0.875rem;
+                        }
+                        
+                        @keyframes float {
+                            0%, 100% { transform: translateY(0px) rotate(0deg); }
+                            50% { transform: translateY(-20px) rotate(180deg); }
+                        }
+                        
+                        .status-badge {
+                            display: inline-block;
+                            padding: 0.25rem 0.75rem;
+                            border-radius: 20px;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                        }
+                        
+                        .status-scheduled {
+                            background: #dbeafe;
+                            color: #1e40af;
+                            border: 1px solid #93c5fd;
+                        }
+                        
+                        .status-confirmed {
+                            background: #dcfce7;
+                            color: #166534;
+                            border: 1px solid #bbf7d0;
+                        }
+                        
+                        .status-completed {
+                            background: #fef3c7;
+                            color: #92400e;
+                            border: 1px solid #fde68a;
+                        }
+                        
+                        .status-cancelled {
+                            background: #fef2f2;
+                            color: #991b1b;
+                            border: 1px solid #fecaca;
+                        }
                     </style>
                 </head>
                 <body>
-                    <div class="header">
-                        <h1>Dental Clinic Appointment</h1>
-                        <p>Appointment ID: ${appointment.id}</p>
-                    </div>
-                    <div class="details">
-                        <div class="detail-row">
-                            <span class="label">Patient Name:</span> ${patient.name}
+                    <div class="container">
+                        <div class="header">
+                            <h1>🦷 Dental Clinic</h1>
+                            <h2>Appointment Details</h2>
+                            <div class="clinic-info">
+                                <strong>Professional Dental Care Services</strong><br>
+                                <small>Excellence in Oral Health</small>
+                            </div>
                         </div>
-                        <div class="detail-row">
-                            <span class="label">Date:</span> ${this.formatDate(appointment.date)}
+                        
+                        <div class="content">
+                            <div class="section appointment-details">
+                                <h3>📅 Appointment Information</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">Appointment ID</div>
+                                        <div class="info-value">${appointment.id}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Date</div>
+                                        <div class="info-value">📅 ${this.formatDate(appointment.date)}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Time</div>
+                                        <div class="info-value">🕐 ${appointment.time}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Duration</div>
+                                        <div class="info-value">⏱️ ${appointment.duration || 60} minutes</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Treatment Type</div>
+                                        <div class="info-value">🦷 ${appointment.treatment || 'General Consultation'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Status</div>
+                                        <div class="info-value">
+                                            <span class="status-badge status-${(appointment.status || 'scheduled').toLowerCase()}">
+                                                ${appointment.status || 'Scheduled'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="section patient-info">
+                                <h3>👤 Patient Information</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">Patient Name</div>
+                                        <div class="info-value">${patient.name}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Phone Number</div>
+                                        <div class="info-value">📞 ${patient.phone || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Email Address</div>
+                                        <div class="info-value">📧 ${patient.email || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Gender</div>
+                                        <div class="info-value">${patient.gender || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Age</div>
+                                        <div class="info-value">${this.calculateAge(patient.dob)} years</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Address</div>
+                                        <div class="info-value">📍 ${patient.address || 'N/A'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${appointment.notes ? `
+                            <div class="section">
+                                <h3>📝 Additional Notes</h3>
+                                <div class="highlight-box">
+                                    <div class="info-label">Appointment Notes</div>
+                                    <div class="info-value">${appointment.notes}</div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${appointment.priority ? `
+                            <div class="section">
+                                <h3>⚡ Priority Information</h3>
+                                <div class="highlight-box">
+                                    <div class="info-label">Priority Level</div>
+                                    <div class="info-value">${appointment.priority}</div>
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
-                        <div class="detail-row">
-                            <span class="label">Time:</span> ${appointment.time}
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Duration:</span> ${appointment.duration || 60} minutes
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Treatment:</span> ${appointment.treatment || 'General Consultation'}
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Status:</span> ${appointment.status || 'Scheduled'}
+                        
+                        <div class="footer">
+                            <p><strong>Generated on:</strong> ${this.formatDate(new Date())} at ${new Date().toLocaleTimeString()}</p>
+                            <p>This is an official appointment record from Dental Clinic</p>
                         </div>
                     </div>
                 </body>
                 </html>
             `);
+            
             printWindow.document.close();
-            printWindow.print();
+            console.log('Print window content written, calling print...');
+            
+            // Add a small delay to ensure content is loaded
+            setTimeout(() => {
+                printWindow.print();
+                console.log('Print command executed');
+            }, 100);
+            
+        } catch (error) {
+            console.error('Error in printAppointment:', error);
+            this.showToast('Error printing appointment: ' + error.message, 'error');
         }
     }
 
@@ -4109,84 +4639,427 @@ class DentalClinicApp {
         console.log('Found invoice for printing:', invoice);
         console.log('Found patient for printing:', patient);
         
-        // Create print-friendly content
+        // Create print-friendly content with enhanced UI
         const printContent = `
-            <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem;">
-                <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem;">
-                    <h1 style="color: #333; margin: 0;">Dental Clinic Invoice</h1>
-                    <p style="color: #666; margin: 0.5rem 0;">Professional Dental Services</p>
+            <div style="
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                max-width: 800px; 
+                margin: 0 auto; 
+                background: white;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            ">
+                <!-- Header Section -->
+                <div style="
+                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                    color: white;
+                    padding: 2rem;
+                    text-align: center;
+                    position: relative;
+                    overflow: hidden;
+                ">
+                    <div style="
+                        position: absolute;
+                        top: -50%;
+                        left: -50%;
+                        width: 200%;
+                        height: 200%;
+                        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                        animation: float 6s ease-in-out infinite;
+                    "></div>
+                    
+                    <h1 style="
+                        margin: 0;
+                        font-size: 2.5rem;
+                        font-weight: 700;
+                        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                        position: relative;
+                        z-index: 1;
+                    ">🦷 Dental Clinic</h1>
+                    <h2 style="
+                        margin: 0.5rem 0 0 0;
+                        font-size: 1.5rem;
+                        font-weight: 400;
+                        opacity: 0.9;
+                        position: relative;
+                        z-index: 1;
+                    ">Professional Invoice</h2>
+                    
+                    <div style="
+                        background: rgba(255,255,255,0.1);
+                        padding: 1rem;
+                        border-radius: 12px;
+                        margin-top: 1rem;
+                        backdrop-filter: blur(10px);
+                        position: relative;
+                        z-index: 1;
+                    ">
+                        <strong>Excellence in Dental Care</strong>
+                    </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                    <div>
-                        <h3 style="color: #333; margin-bottom: 1rem;">Invoice Details</h3>
-                        <p><strong>Invoice ID:</strong> ${invoice.id}</p>
-                        <p><strong>Invoice Number:</strong> ${invoice.invoiceNumber}</p>
-                        <p><strong>Date:</strong> ${this.formatDate(invoice.date)}</p>
-                        <p><strong>Due Date:</strong> ${this.formatDate(invoice.dueDate)}</p>
-                        <p><strong>Status:</strong> ${(() => {
-                            if (invoice.status === 'paid') return 'paid';
-                            if (invoice.status === 'unpaid') {
-                                const dueDate = new Date(invoice.dueDate || invoice.date);
-                                const today = new Date();
-                                return dueDate < today ? 'overdue' : 'unpaid';
-                            }
-                            return invoice.status || 'unpaid';
-                        })()}</p>
-                        <p><strong>Payment Method:</strong> ${invoice.paymentMethod}</p>
+                <!-- Invoice Details Section -->
+                <div style="padding: 2rem;">
+                    <div style="
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 2rem;
+                        margin-bottom: 2rem;
+                    ">
+                        <!-- Invoice Information -->
+                        <div style="
+                            background: #f0fdf4;
+                            border-radius: 12px;
+                            padding: 1.5rem;
+                            border-left: 4px solid #059669;
+                        ">
+                            <h3 style="
+                                margin: 0 0 1rem 0;
+                                color: #059669;
+                                font-size: 1.25rem;
+                                font-weight: 600;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            ">📋 Invoice Details</h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Invoice ID:</span>
+                                    <span style="color: #059669; font-weight: 600;">${invoice.id}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Invoice #:</span>
+                                    <span style="color: #059669; font-weight: 600;">${invoice.invoiceNumber || 'N/A'}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Date:</span>
+                                    <span style="color: #059669; font-weight: 600;">${this.formatDate(invoice.date)}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Due Date:</span>
+                                    <span style="color: #059669; font-weight: 600;">${this.formatDate(invoice.dueDate)}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Status:</span>
+                                    <span style="
+                                        color: white;
+                                        background: ${(() => {
+                                            if (invoice.status === 'paid') return '#059669';
+                                            if (invoice.status === 'unpaid') {
+                                                const dueDate = new Date(invoice.dueDate || invoice.date);
+                                                const today = new Date();
+                                                return dueDate < today ? '#dc2626' : '#d97706';
+                                            }
+                                            return '#d97706';
+                                        })()};
+                                        padding: 0.25rem 0.75rem;
+                                        border-radius: 20px;
+                                        font-size: 0.75rem;
+                                        font-weight: 600;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.05em;
+                                    ">${(() => {
+                                        if (invoice.status === 'paid') return '✅ Paid';
+                                        if (invoice.status === 'unpaid') {
+                                            const dueDate = new Date(invoice.dueDate || invoice.date);
+                                            const today = new Date();
+                                            return dueDate < today ? '❌ Overdue' : '⏳ Unpaid';
+                                        }
+                                        return invoice.status || 'Unpaid';
+                                    })()}</span>
+                                </div>
+                                ${invoice.paymentMethod ? `
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Payment Method:</span>
+                                    <span style="color: #059669; font-weight: 600;">${invoice.paymentMethod}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Patient Information -->
+                        <div style="
+                            background: #f0f9ff;
+                            border-radius: 12px;
+                            padding: 1.5rem;
+                            border-left: 4px solid #0ea5e9;
+                        ">
+                            <h3 style="
+                                margin: 0 0 1rem 0;
+                                color: #0ea5e9;
+                                font-size: 1.25rem;
+                                font-weight: 600;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            ">👤 Patient Information</h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #bae6fd;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Name:</span>
+                                    <span style="color: #0ea5e9; font-weight: 600;">${patient ? patient.name : 'Unknown'}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #bae6fd;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Phone:</span>
+                                    <span style="color: #0ea5e9; font-weight: 600;">📞 ${patient ? patient.phone : 'N/A'}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #bae6fd;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Email:</span>
+                                    <span style="color: #0ea5e9; font-weight: 600;">📧 ${patient ? patient.email : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h3 style="color: #333; margin-bottom: 1rem;">Patient Information</h3>
-                        <p><strong>Name:</strong> ${patient ? patient.name : 'Unknown'}</p>
-                        <p><strong>Phone:</strong> ${patient ? patient.phone : 'N/A'}</p>
-                        <p><strong>Email:</strong> ${patient ? patient.email : 'N/A'}</p>
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 2rem;">
-                    <h3 style="color: #333; margin-bottom: 1rem;">Treatments</h3>
-                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-                        <thead>
-                            <tr style="background: #f5f5f5;">
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Treatment</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${invoice.treatments?.map(treatment => `
-                                <tr>
-                                    <td style="border: 1px solid #ddd; padding: 0.75rem;">${treatment.type}</td>
-                                    <td style="border: 1px solid #ddd; padding: 0.75rem; text-align: right;">Rs. ${treatment.amount}</td>
+                    
+                    <!-- Treatments Section -->
+                    <div style="
+                        background: #f8fafc;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 2rem;
+                        border-left: 4px solid #8b5cf6;
+                    ">
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #8b5cf6;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">🦷 Treatments & Services</h3>
+                        
+                        <table style="
+                            width: 100%;
+                            border-collapse: collapse;
+                            background: white;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        ">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                                    <th style="
+                                        border: none;
+                                        padding: 1rem;
+                                        text-align: left;
+                                        font-weight: 600;
+                                        font-size: 0.875rem;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.05em;
+                                    ">Treatment</th>
+                                    <th style="
+                                        border: none;
+                                        padding: 1rem;
+                                        text-align: right;
+                                        font-weight: 600;
+                                        font-size: 0.875rem;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.05em;
+                                    ">Amount (PKR)</th>
                                 </tr>
-                            `).join('') || '<tr><td colspan="2" style="border: 1px solid #ddd; padding: 0.75rem; text-align: center;">No treatments found</td></tr>'}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${invoice.treatments?.map(treatment => `
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="
+                                            border: none;
+                                            padding: 1rem;
+                                            color: #374151;
+                                            font-weight: 500;
+                                        ">${treatment.type}</td>
+                                        <td style="
+                                            border: none;
+                                            padding: 1rem;
+                                            text-align: right;
+                                            color: #8b5cf6;
+                                            font-weight: 600;
+                                        ">Rs. ${treatment.amount}</td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="2" style="border: none; padding: 1rem; text-align: center; color: #6b7280; font-style: italic;">No treatments found</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Financial Summary -->
+                    <div style="
+                        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                        border: 1px solid #f59e0b;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 2rem;
+                    ">
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #92400e;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">💰 Financial Summary</h3>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 0.75rem;
+                                background: white;
+                                border-radius: 6px;
+                                border: 1px solid #fbbf24;
+                            ">
+                                <span style="color: #92400e; font-weight: 600;">Subtotal:</span>
+                                <span style="color: #92400e; font-weight: 600;">Rs. ${invoice.subtotal || 0}</span>
+                            </div>
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 0.75rem;
+                                background: white;
+                                border-radius: 6px;
+                                border: 1px solid #fbbf24;
+                            ">
+                                <span style="color: #92400e; font-weight: 600;">Total Discount:</span>
+                                <span style="color: #059669; font-weight: 600;">- Rs. ${invoice.totalDiscount || 0}</span>
+                            </div>
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 1rem;
+                                background: white;
+                                border-radius: 6px;
+                                border: 2px solid #f59e0b;
+                                font-weight: bold;
+                                font-size: 1.2rem;
+                            ">
+                                <span style="color: #92400e;">Total Amount:</span>
+                                <span style="color: #92400e; font-size: 1.3rem;">Rs. ${invoice.total || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    ${invoice.notes ? `
+                    <div style="
+                        background: #f0f9ff;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 2rem;
+                        border-left: 4px solid #0ea5e9;
+                    ">
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #0ea5e9;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">📝 Additional Notes</h3>
+                        <div style="
+                            background: white;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border: 1px solid #bae6fd;
+                            color: #374151;
+                            line-height: 1.6;
+                        ">${invoice.notes}</div>
+                    </div>
+                    ` : ''}
                 </div>
                 
-                <div style="background: #f9f9f9; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span><strong>Subtotal:</strong></span>
-                        <span>Rs. ${invoice.subtotal}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span><strong>Total Discount:</strong></span>
-                        <span>Rs. ${invoice.totalDiscount}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; border-top: 1px solid #ddd; padding-top: 0.5rem;">
-                        <span>Total Amount:</span>
-                        <span>Rs. ${invoice.total}</span>
-                    </div>
-                </div>
-                
-                ${invoice.notes ? `
-                    <div style="margin-bottom: 2rem;">
-                        <h3 style="color: #333; margin-bottom: 1rem;">Notes</h3>
-                        <p style="background: #f9f9f9; padding: 1rem; border-radius: 8px;">${invoice.notes}</p>
-                    </div>
-                ` : ''}
-                
-                <div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #333;">
-                    <p style="color: #666; margin: 0;">Thank you for choosing our dental services!</p>
+                <!-- Footer -->
+                <div style="
+                    background: #f1f5f9;
+                    padding: 2rem;
+                    text-align: center;
+                    border-top: 1px solid #e2e8f0;
+                ">
+                    <p style="
+                        margin: 0 0 0.5rem 0;
+                        color: #64748b;
+                        font-size: 1rem;
+                        font-weight: 500;
+                    ">Thank you for choosing our dental services! 🦷✨</p>
+                    <p style="
+                        margin: 0;
+                        color: #94a3b8;
+                        font-size: 0.875rem;
+                    ">Generated on: ${this.formatDate(new Date())} at ${new Date().toLocaleTimeString()}</p>
                 </div>
             </div>
         `;
@@ -4201,6 +5074,10 @@ class DentalClinicApp {
                         body { margin: 0; padding: 0; }
                         @media print {
                             body { margin: 0; }
+                        }
+                        @keyframes float {
+                            0%, 100% { transform: translateY(0px) rotate(0deg); }
+                            50% { transform: translateY(-20px) rotate(180deg); }
                         }
                     </style>
                 </head>
@@ -8620,67 +9497,320 @@ class DentalClinicApp {
   
 
     printPatient(patientId) {
-        const patients = this.getStoredData('patients') || [];
-        const patient = patients.find(p => p.id === patientId);
+        console.log('Printing patient with ID:', patientId);
         
-        if (patient) {
+        try {
+            const patients = this.getStoredData('patients') || [];
+            const patient = patients.find(p => p.id === patientId);
+            
+            if (!patient) {
+                this.showToast('Patient not found', 'error');
+                return;
+            }
+            
+            console.log('Found patient for printing:', patient);
+            
             const printWindow = window.open('', '_blank');
+            
+            if (!printWindow) {
+                this.showToast('Please allow popups to print', 'error');
+                return;
+            }
+            
             printWindow.document.write(`
+                <!DOCTYPE html>
                 <html>
                 <head>
                     <title>Patient Record - ${patient.name}</title>
                     <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        .header { text-align: center; margin-bottom: 30px; }
-                        .patient-info { margin-bottom: 20px; }
-                        .info-row { margin: 10px 0; }
-                        .label { font-weight: bold; }
-                        .medical-history { margin-top: 20px; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                        
+                        @keyframes float {
+                            0%, 100% { transform: translateY(0px) rotate(0deg); }
+                            50% { transform: translateY(-20px) rotate(180deg); }
+                        }
+                        
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background: #f8fafc;
+                            color: #1e293b;
+                        }
+                        
+                        .container {
+                            width: 100%;
+                            margin: 0 auto;
+                            background: white;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .header {
+                            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                            color: white;
+                            padding: 2rem;
+                            text-align: center;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        .header::before {
+                            content: '';
+                            position: absolute;
+                            top: -50%;
+                            left: -50%;
+                            width: 200%;
+                            height: 200%;
+                            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                            animation: float 6s ease-in-out infinite;
+                        }
+                        
+                        .header h1 {
+                            margin: 0;
+                            font-size: 2.5rem;
+                            font-weight: 700;
+                            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .header h2 {
+                            margin: 0.5rem 0 0 0;
+                            font-size: 1.5rem;
+                            font-weight: 400;
+                            opacity: 0.9;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .clinic-info {
+                            background: rgba(255,255,255,0.1);
+                            padding: 1rem;
+                            border-radius: 12px;
+                            margin-top: 1rem;
+                            backdrop-filter: blur(10px);
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .content {
+                            padding: 2rem;
+                        }
+                        
+                        .section {
+                            margin-bottom: 2rem;
+                            background: #f8fafc;
+                            border-radius: 12px;
+                            padding: 1.5rem;
+                            border-left: 4px solid #0ea5e9;
+                        }
+                        
+                        .section h3 {
+                            margin: 0 0 1rem 0;
+                            color: #0ea5e9;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        }
+                        
+                        .info-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
+                        }
+                        
+                        .info-item {
+                            background: white;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border: 1px solid #e2e8f0;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        }
+                        
+                        .info-label {
+                            font-weight: 600;
+                            color: #475569;
+                            font-size: 0.875rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            margin-bottom: 0.25rem;
+                        }
+                        
+                        .info-value {
+                            color: #1e293b;
+                            font-size: 1rem;
+                            font-weight: 500;
+                        }
+                        
+                        .highlight-box {
+                            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                            border: 1px solid #f59e0b;
+                            border-radius: 8px;
+                            padding: 1rem;
+                            margin: 1rem 0;
+                        }
+                        
+                        .medical-history {
+                            background: #f0f9ff;
+                            border-left: 4px solid #0ea5e9;
+                        }
+                        
+                        .footer {
+                            background: #f1f5f9;
+                            padding: 1.5rem;
+                            text-align: center;
+                            border-top: 1px solid #e2e8f0;
+                        }
+                        
+                        .footer p {
+                            margin: 0;
+                            color: #64748b;
+                            font-size: 0.875rem;
+                        }
+                        
+                        .status-badge {
+                            display: inline-block;
+                            padding: 0.25rem 0.75rem;
+                            border-radius: 20px;
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                        }
+                        
+                        .status-active {
+                            background: #dcfce7;
+                            color: #166534;
+                            border: 1px solid #bbf7d0;
+                        }
+                        
+                        .status-inactive {
+                            background: #fef2f2;
+                            color: #991b1b;
+                            border: 1px solid #fecaca;
+                        }
                     </style>
                 </head>
                 <body>
-                    <div class="header">
-                        <h1>Patient Record</h1>
-                        <h2>${patient.name}</h2>
-                    </div>
-                    <div class="patient-info">
-                        <div class="info-row">
-                            <span class="label">Patient ID:</span> ${patient.id}
+                    <div class="container">
+                        <div class="header">
+                            <h1>🦷 Dental Clinic</h1>
+                            <h2>Patient Medical Record</h2>
+                            <div class="clinic-info">
+                                <strong>Professional Dental Care Services</strong><br>
+                                <small>Excellence in Oral Health</small>
+                            </div>
                         </div>
-                        <div class="info-row">
-                            <span class="label">Name:</span> ${patient.name}
+                        
+                        <div class="content">
+                            <div class="section">
+                                <h3>👤 Patient Information</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">Patient ID</div>
+                                        <div class="info-value">${patient.id}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Full Name</div>
+                                        <div class="info-value">${patient.name}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Phone Number</div>
+                                        <div class="info-value">📞 ${patient.phone || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Email Address</div>
+                                        <div class="info-value">📧 ${patient.email || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Date of Birth</div>
+                                        <div class="info-value">🎂 ${patient.dob || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Age</div>
+                                        <div class="info-value">${this.calculateAge(patient.dob)} years</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Gender</div>
+                                        <div class="info-value">${patient.gender || 'N/A'}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Status</div>
+                                        <div class="info-value">
+                                            <span class="status-badge ${(patient.status || 'active').toLowerCase() === 'active' ? 'status-active' : 'status-inactive'}">
+                                                ${patient.status || 'Active'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${patient.address ? `
+                            <div class="section">
+                                <h3>📍 Address Information</h3>
+                                <div class="highlight-box">
+                                    <div class="info-label">Residential Address</div>
+                                    <div class="info-value">${patient.address}</div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="section medical-history">
+                                <h3>🏥 Medical History</h3>
+                                <div class="highlight-box">
+                                    ${patient.medicalHistory ? patient.medicalHistory : 'No medical history recorded for this patient.'}
+                                </div>
+                            </div>
+                            
+                            ${patient.addDate ? `
+                            <div class="section">
+                                <h3>📅 Record Information</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">Registration Date</div>
+                                        <div class="info-value">${this.formatDate(patient.addDate)}</div>
+                                    </div>
+                                    ${patient.updatedAt && patient.updatedAt !== patient.addDate ? `
+                                    <div class="info-item">
+                                        <div class="info-label">Last Updated</div>
+                                        <div class="info-value">${this.formatDate(patient.updatedAt)}</div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
-                        <div class="info-row">
-                            <span class="label">Phone:</span> ${patient.phone}
+                        
+                        <div class="footer">
+                            <p><strong>Generated on:</strong> ${this.formatDate(new Date())} at ${new Date().toLocaleTimeString()}</p>
+                            <p>This is an official medical record from Dental Clinic</p>
                         </div>
-                        <div class="info-row">
-                            <span class="label">Email:</span> ${patient.email || 'N/A'}
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Date of Birth:</span> ${patient.dob || 'N/A'}
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Age:</span> ${this.calculateAge(patient.dob)} years
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Gender:</span> ${patient.gender || 'N/A'}
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Address:</span> ${patient.address || 'N/A'}
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Status:</span> ${patient.status || 'active'}
-                        </div>
-                    </div>
-                    <div class="medical-history">
-                        <h3>Medical History</h3>
-                        <p>${patient.medicalHistory || 'No medical history recorded'}</p>
                     </div>
                 </body>
                 </html>
             `);
+            
             printWindow.document.close();
-            printWindow.print();
+            
+            // Handle print dialog cancel/close properly - keep window open like appointment print
+            printWindow.onbeforeunload = function() {
+                // This prevents the main page from closing
+                return null;
+            };
+            
+            // Add delay for better rendering and print
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+            
+        } catch (error) {
+            console.error('Error printing patient record:', error);
+            this.showToast('Error printing patient record', 'error');
         }
     }
 
@@ -9074,59 +10204,6 @@ class DentalClinicApp {
         }
     }
 
-    printAppointment(appointmentId) {
-        const appointments = this.getStoredData('appointments') || [];
-        const appointment = appointments.find(apt => apt.id === appointmentId);
-        const patients = this.getStoredData('patients') || [];
-        const patient = patients.find(p => p.id === appointment?.patientId);
-        
-        if (appointment && patient) {
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Appointment Details</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        .header { text-align: center; margin-bottom: 30px; }
-                        .details { margin-bottom: 20px; }
-                        .detail-row { margin: 10px 0; }
-                        .label { font-weight: bold; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Dental Clinic Appointment</h1>
-                        <p>Appointment ID: ${appointment.id}</p>
-                    </div>
-                    <div class="details">
-                        <div class="detail-row">
-                            <span class="label">Patient Name:</span> ${patient.name}
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Date:</span> ${this.formatDate(appointment.date)}
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Time:</span> ${appointment.time}
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Duration:</span> ${appointment.duration || 60} minutes
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Treatment:</span> ${appointment.treatment || 'General Consultation'}
-                        </div>
-                        <div class="detail-row">
-                            <span class="label">Status:</span> ${appointment.status || 'Scheduled'}
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
-        }
-    }
 
     deleteAppointment(appointmentId) {
         this.showDeleteAppointmentConfirmation(appointmentId);
@@ -9955,84 +11032,427 @@ class DentalClinicApp {
         console.log('Found invoice for printing:', invoice);
         console.log('Found patient for printing:', patient);
         
-        // Create print-friendly content
+        // Create print-friendly content with enhanced UI
         const printContent = `
-            <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem;">
-                <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem;">
-                    <h1 style="color: #333; margin: 0;">Dental Clinic Invoice</h1>
-                    <p style="color: #666; margin: 0.5rem 0;">Professional Dental Services</p>
+            <div style="
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                max-width: 800px; 
+                margin: 0 auto; 
+                background: white;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            ">
+                <!-- Header Section -->
+                <div style="
+                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                    color: white;
+                    padding: 2rem;
+                    text-align: center;
+                    position: relative;
+                    overflow: hidden;
+                ">
+                    <div style="
+                        position: absolute;
+                        top: -50%;
+                        left: -50%;
+                        width: 200%;
+                        height: 200%;
+                        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                        animation: float 6s ease-in-out infinite;
+                    "></div>
+                    
+                    <h1 style="
+                        margin: 0;
+                        font-size: 2.5rem;
+                        font-weight: 700;
+                        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                        position: relative;
+                        z-index: 1;
+                    ">🦷 Dental Clinic</h1>
+                    <h2 style="
+                        margin: 0.5rem 0 0 0;
+                        font-size: 1.5rem;
+                        font-weight: 400;
+                        opacity: 0.9;
+                        position: relative;
+                        z-index: 1;
+                    ">Professional Invoice</h2>
+                    
+                    <div style="
+                        background: rgba(255,255,255,0.1);
+                        padding: 1rem;
+                        border-radius: 12px;
+                        margin-top: 1rem;
+                        backdrop-filter: blur(10px);
+                        position: relative;
+                        z-index: 1;
+                    ">
+                        <strong>Excellence in Dental Care</strong>
+                    </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                    <div>
-                        <h3 style="color: #333; margin-bottom: 1rem;">Invoice Details</h3>
-                        <p><strong>Invoice ID:</strong> ${invoice.id}</p>
-                        <p><strong>Invoice Number:</strong> ${invoice.invoiceNumber}</p>
-                        <p><strong>Date:</strong> ${this.formatDate(invoice.date)}</p>
-                        <p><strong>Due Date:</strong> ${this.formatDate(invoice.dueDate)}</p>
-                        <p><strong>Status:</strong> ${(() => {
-                            if (invoice.status === 'paid') return 'paid';
-                            if (invoice.status === 'unpaid') {
-                                const dueDate = new Date(invoice.dueDate || invoice.date);
-                                const today = new Date();
-                                return dueDate < today ? 'overdue' : 'unpaid';
-                            }
-                            return invoice.status || 'unpaid';
-                        })()}</p>
-                        <p><strong>Payment Method:</strong> ${invoice.paymentMethod}</p>
+                <!-- Invoice Details Section -->
+                <div style="padding: 2rem;">
+                    <div style="
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 2rem;
+                        margin-bottom: 2rem;
+                    ">
+                        <!-- Invoice Information -->
+                        <div style="
+                            background: #f0fdf4;
+                            border-radius: 12px;
+                            padding: 1.5rem;
+                            border-left: 4px solid #059669;
+                        ">
+                            <h3 style="
+                                margin: 0 0 1rem 0;
+                                color: #059669;
+                                font-size: 1.25rem;
+                                font-weight: 600;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            ">📋 Invoice Details</h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Invoice ID:</span>
+                                    <span style="color: #059669; font-weight: 600;">${invoice.id}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Invoice #:</span>
+                                    <span style="color: #059669; font-weight: 600;">${invoice.invoiceNumber || 'N/A'}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Date:</span>
+                                    <span style="color: #059669; font-weight: 600;">${this.formatDate(invoice.date)}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Due Date:</span>
+                                    <span style="color: #059669; font-weight: 600;">${this.formatDate(invoice.dueDate)}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Status:</span>
+                                    <span style="
+                                        color: white;
+                                        background: ${(() => {
+                                            if (invoice.status === 'paid') return '#059669';
+                                            if (invoice.status === 'unpaid') {
+                                                const dueDate = new Date(invoice.dueDate || invoice.date);
+                                                const today = new Date();
+                                                return dueDate < today ? '#dc2626' : '#d97706';
+                                            }
+                                            return '#d97706';
+                                        })()};
+                                        padding: 0.25rem 0.75rem;
+                                        border-radius: 20px;
+                                        font-size: 0.75rem;
+                                        font-weight: 600;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.05em;
+                                    ">${(() => {
+                                        if (invoice.status === 'paid') return '✅ Paid';
+                                        if (invoice.status === 'unpaid') {
+                                            const dueDate = new Date(invoice.dueDate || invoice.date);
+                                            const today = new Date();
+                                            return dueDate < today ? '❌ Overdue' : '⏳ Unpaid';
+                                        }
+                                        return invoice.status || 'Unpaid';
+                                    })()}</span>
+                                </div>
+                                ${invoice.paymentMethod ? `
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #d1fae5;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Payment Method:</span>
+                                    <span style="color: #059669; font-weight: 600;">${invoice.paymentMethod}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Patient Information -->
+                        <div style="
+                            background: #f0f9ff;
+                            border-radius: 12px;
+                            padding: 1.5rem;
+                            border-left: 4px solid #0ea5e9;
+                        ">
+                            <h3 style="
+                                margin: 0 0 1rem 0;
+                                color: #0ea5e9;
+                                font-size: 1.25rem;
+                                font-weight: 600;
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+                            ">👤 Patient Information</h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #bae6fd;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Name:</span>
+                                    <span style="color: #0ea5e9; font-weight: 600;">${patient ? patient.name : 'Unknown'}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #bae6fd;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Phone:</span>
+                                    <span style="color: #0ea5e9; font-weight: 600;">📞 ${patient ? patient.phone : 'N/A'}</span>
+                                </div>
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    padding: 0.5rem;
+                                    background: white;
+                                    border-radius: 6px;
+                                    border: 1px solid #bae6fd;
+                                ">
+                                    <span style="color: #374151; font-weight: 600;">Email:</span>
+                                    <span style="color: #0ea5e9; font-weight: 600;">📧 ${patient ? patient.email : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h3 style="color: #333; margin-bottom: 1rem;">Patient Information</h3>
-                        <p><strong>Name:</strong> ${patient ? patient.name : 'Unknown'}</p>
-                        <p><strong>Phone:</strong> ${patient ? patient.phone : 'N/A'}</p>
-                        <p><strong>Email:</strong> ${patient ? patient.email : 'N/A'}</p>
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 2rem;">
-                    <h3 style="color: #333; margin-bottom: 1rem;">Treatments</h3>
-                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-                        <thead>
-                            <tr style="background: #f5f5f5;">
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Treatment</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${invoice.treatments?.map(treatment => `
-                                <tr>
-                                    <td style="border: 1px solid #ddd; padding: 0.75rem;">${treatment.type}</td>
-                                    <td style="border: 1px solid #ddd; padding: 0.75rem; text-align: right;">Rs. ${treatment.amount}</td>
+                    
+                    <!-- Treatments Section -->
+                    <div style="
+                        background: #f8fafc;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 2rem;
+                        border-left: 4px solid #8b5cf6;
+                    ">
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #8b5cf6;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">🦷 Treatments & Services</h3>
+                        
+                        <table style="
+                            width: 100%;
+                            border-collapse: collapse;
+                            background: white;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        ">
+                            <thead>
+                                <tr style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                                    <th style="
+                                        border: none;
+                                        padding: 1rem;
+                                        text-align: left;
+                                        font-weight: 600;
+                                        font-size: 0.875rem;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.05em;
+                                    ">Treatment</th>
+                                    <th style="
+                                        border: none;
+                                        padding: 1rem;
+                                        text-align: right;
+                                        font-weight: 600;
+                                        font-size: 0.875rem;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.05em;
+                                    ">Amount (PKR)</th>
                                 </tr>
-                            `).join('') || '<tr><td colspan="2" style="border: 1px solid #ddd; padding: 0.75rem; text-align: center;">No treatments found</td></tr>'}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${invoice.treatments?.map(treatment => `
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="
+                                            border: none;
+                                            padding: 1rem;
+                                            color: #374151;
+                                            font-weight: 500;
+                                        ">${treatment.type}</td>
+                                        <td style="
+                                            border: none;
+                                            padding: 1rem;
+                                            text-align: right;
+                                            color: #8b5cf6;
+                                            font-weight: 600;
+                                        ">Rs. ${treatment.amount}</td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="2" style="border: none; padding: 1rem; text-align: center; color: #6b7280; font-style: italic;">No treatments found</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Financial Summary -->
+                    <div style="
+                        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                        border: 1px solid #f59e0b;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 2rem;
+                    ">
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #92400e;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">💰 Financial Summary</h3>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 0.75rem;
+                                background: white;
+                                border-radius: 6px;
+                                border: 1px solid #fbbf24;
+                            ">
+                                <span style="color: #92400e; font-weight: 600;">Subtotal:</span>
+                                <span style="color: #92400e; font-weight: 600;">Rs. ${invoice.subtotal || 0}</span>
+                            </div>
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 0.75rem;
+                                background: white;
+                                border-radius: 6px;
+                                border: 1px solid #fbbf24;
+                            ">
+                                <span style="color: #92400e; font-weight: 600;">Total Discount:</span>
+                                <span style="color: #059669; font-weight: 600;">- Rs. ${invoice.totalDiscount || 0}</span>
+                            </div>
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 1rem;
+                                background: white;
+                                border-radius: 6px;
+                                border: 2px solid #f59e0b;
+                                font-weight: bold;
+                                font-size: 1.2rem;
+                            ">
+                                <span style="color: #92400e;">Total Amount:</span>
+                                <span style="color: #92400e; font-size: 1.3rem;">Rs. ${invoice.total || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    ${invoice.notes ? `
+                    <div style="
+                        background: #f0f9ff;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                        margin-bottom: 2rem;
+                        border-left: 4px solid #0ea5e9;
+                    ">
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #0ea5e9;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">📝 Additional Notes</h3>
+                        <div style="
+                            background: white;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border: 1px solid #bae6fd;
+                            color: #374151;
+                            line-height: 1.6;
+                        ">${invoice.notes}</div>
+                    </div>
+                    ` : ''}
                 </div>
                 
-                <div style="background: #f9f9f9; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span><strong>Subtotal:</strong></span>
-                        <span>Rs. ${invoice.subtotal}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span><strong>Total Discount:</strong></span>
-                        <span>Rs. ${invoice.totalDiscount}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; border-top: 1px solid #ddd; padding-top: 0.5rem;">
-                        <span>Total Amount:</span>
-                        <span>Rs. ${invoice.total}</span>
-                    </div>
-                </div>
-                
-                ${invoice.notes ? `
-                    <div style="margin-bottom: 2rem;">
-                        <h3 style="color: #333; margin-bottom: 1rem;">Notes</h3>
-                        <p style="background: #f9f9f9; padding: 1rem; border-radius: 8px;">${invoice.notes}</p>
-                    </div>
-                ` : ''}
-                
-                <div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #333;">
-                    <p style="color: #666; margin: 0;">Thank you for choosing our dental services!</p>
+                <!-- Footer -->
+                <div style="
+                    background: #f1f5f9;
+                    padding: 2rem;
+                    text-align: center;
+                    border-top: 1px solid #e2e8f0;
+                ">
+                    <p style="
+                        margin: 0 0 0.5rem 0;
+                        color: #64748b;
+                        font-size: 1rem;
+                        font-weight: 500;
+                    ">Thank you for choosing our dental services! 🦷✨</p>
+                    <p style="
+                        margin: 0;
+                        color: #94a3b8;
+                        font-size: 0.875rem;
+                    ">Generated on: ${this.formatDate(new Date())} at ${new Date().toLocaleTimeString()}</p>
                 </div>
             </div>
         `;
@@ -10047,6 +11467,10 @@ class DentalClinicApp {
                         body { margin: 0; padding: 0; }
                         @media print {
                             body { margin: 0; }
+                        }
+                        @keyframes float {
+                            0%, 100% { transform: translateY(0px) rotate(0deg); }
+                            50% { transform: translateY(-20px) rotate(180deg); }
                         }
                     </style>
                 </head>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Print Function</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-button { 
+            padding: 10px 20px; 
+            margin: 10px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        .test-button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Test Print Function</h1>
+    
+    <button class="test-button" onclick="testPrintFunction()">Test Print Function</button>
+    <button class="test-button" onclick="testDentalApp()">Test DentalApp Object</button>
+    <button class="test-button" onclick="testPrintAppointment()">Test Print Appointment</button>
+    
+    <div id="output"></div>
+    
+    <script>
+        function testPrintFunction() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>Testing print function...</p>';
+            
+            if (typeof window.dentalApp !== 'undefined') {
+                output.innerHTML += '<p style="color: green;">✓ dentalApp object exists</p>';
+                output.innerHTML += '<p>dentalApp type: ' + typeof window.dentalApp + '</p>';
+                
+                if (typeof window.dentalApp.printAppointment === 'function') {
+                    output.innerHTML += '<p style="color: green;">✓ printAppointment function exists</p>';
+                } else {
+                    output.innerHTML += '<p style="color: red;">✗ printAppointment function does not exist</p>';
+                }
+            } else {
+                output.innerHTML += '<p style="color: red;">✗ dentalApp object does not exist</p>';
+            }
+        }
+        
+        function testDentalApp() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>Testing dentalApp object...</p>';
+            
+            console.log('Window object:', window);
+            console.log('dentalApp:', window.dentalApp);
+            
+            if (window.dentalApp) {
+                output.innerHTML += '<p style="color: green;">✓ dentalApp found in window object</p>';
+                output.innerHTML += '<p>dentalApp methods: ' + Object.getOwnPropertyNames(Object.getPrototypeOf(window.dentalApp)).join(', ') + '</p>';
+            } else {
+                output.innerHTML += '<p style="color: red;">✗ dentalApp not found in window object</p>';
+            }
+        }
+        
+        function testPrintAppointment() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>Testing printAppointment function...</p>';
+            
+            if (window.dentalApp && typeof window.dentalApp.printAppointment === 'function') {
+                try {
+                    // Test with a dummy appointment ID
+                    window.dentalApp.printAppointment('test-123');
+                    output.innerHTML += '<p style="color: green;">✓ printAppointment function executed successfully</p>';
+                } catch (error) {
+                    output.innerHTML += '<p style="color: red;">✗ Error executing printAppointment: ' + error.message + '</p>';
+                }
+            } else {
+                output.innerHTML += '<p style="color: red;">✗ Cannot test printAppointment - function not available</p>';
+            }
+        }
+        
+        // Check if dentalApp is available when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const output = document.getElementById('output');
+                output.innerHTML += '<p>Page loaded. Checking dentalApp...</p>';
+                
+                if (window.dentalApp) {
+                    output.innerHTML += '<p style="color: green;">✓ dentalApp available after page load</p>';
+                } else {
+                    output.innerHTML += '<p style="color: red;">✗ dentalApp not available after page load</p>';
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
