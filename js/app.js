@@ -2503,7 +2503,7 @@ class DentalClinicApp {
                         
                         .container {
                             width: 100%;
-                            margin: 0 auto;
+                            margin: 60px auto 20px auto;
                             background: white;
                             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                         }
@@ -2570,7 +2570,7 @@ class DentalClinicApp {
                         
                         .section h3 {
                             margin: 0 0 1rem 0;
-                            color: #0ea5e9;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -2650,21 +2650,21 @@ class DentalClinicApp {
                         
                         .status-active {
                             background: #dcfce7;
-                            color: #166534;
-                            border: 1px solid #bbf7d0;
+                            color: #15803d;
+                            
                         }
                         
                         .status-inactive {
                             background: #fef2f2;
-                            color: #991b1b;
-                            border: 1px solid #fecaca;
+                            color: #dc2626;
+                            
                         }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1>🦷 Dental Clinic</h1>
+                            <h1>🦷 DentalCare Pro</h1>
                             <h2>Patient Medical Record</h2>
                             <div class="clinic-info">
                                 <strong>Professional Dental Care Services</strong><br>
@@ -3206,6 +3206,8 @@ class DentalClinicApp {
                 <html>
                 <head>
                     <title>Appointment Details - ${patient.name}</title>
+                     
+            
                     <style>
                         @media print {
                             body { margin: 0; }
@@ -3222,15 +3224,14 @@ class DentalClinicApp {
                         
                         .container {
                             width: 100%;
-                            margin: 0 auto;
-                            // border-radius: 800px;
+                            margin: 0px auto 20px auto;
                             background: white;
                             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                         }
                         
                         .header {
-                            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-                            color: #dbeafe;
+                            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+                            color: white;
                             padding: 2rem;
                             text-align: center;
                             position: relative;
@@ -3282,15 +3283,20 @@ class DentalClinicApp {
                         
                         .section {
                             margin-bottom: 2rem;
-                            background: #f8fafc;
+                            // background: #f0f9ff;
                             border-radius: 12px;
                             padding: 1.5rem;
                             
                         }
-                        
+                        .additional-notes{
+                        background: #f0f9ff;
+                        }
+                        .priority-info{
+                        background: #f0f9ff;
+                        }
                         .section h3 {
                             margin: 0 0 1rem 0;
-                            color: #0ea5e9;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -3328,8 +3334,9 @@ class DentalClinicApp {
                         }
                         
                         .highlight-box {
-                            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 0%);
-                            border: 1px solid #f59e0b;
+                            background: white;
+                            border: 1px solid var(--gray-200);
+                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
                             border-radius: 8px;
                             padding: 1rem;
                             margin: 1rem 0;
@@ -3337,12 +3344,10 @@ class DentalClinicApp {
                         
                         .appointment-details {
                             background: #f0f9ff;
-                            
                         }
                         
                         .patient-info {
-                            background: #f0fdf4;
-                            
+                            background: #f0f9ff;
                         }
                         
                         .footer {
@@ -3374,34 +3379,53 @@ class DentalClinicApp {
                         }
                         
                         .status-scheduled {
-                            background: #dbeafe;
-                            color: #1e40af;
-                            border: 1px solid #93c5fd;
+                            background: #e0f2fe;
+                            color: #0891b2;
                         }
                         
                         .status-confirmed {
                             background: #dcfce7;
-                            color: #166534;
-                            border: 1px solid #bbf7d0;
+                            color: #15803d;
                         }
                         
                         .status-completed {
                             background: #fef3c7;
-                            color: #92400e;
-                            border: 1px solid #fde68a;
+                            color: #d97706;
                         }
                         
                         .status-cancelled {
                             background: #fef2f2;
-                            color: #991b1b;
-                            border: 1px solid #fecaca;
+                            color: #dc2626;
                         }
                     </style>
                 </head>
                 <body>
+                 <!-- Print Button (Top Right Corner) -->
+            <div id="printButtonContainer" style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                background: #059669;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            " onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'">
+                <i class="fas fa-print"></i>
+                Print Invoice
+            </div>
                     <div class="container">
                         <div class="header">
-                            <h1>🦷 Dental Clinic</h1>
+                            <h1>🦷 DentalCare Pro</h1>
                             <h2>Appointment Details</h2>
                             <div class="clinic-info">
                                 <strong>Professional Dental Care Services</strong><br>
@@ -3411,7 +3435,7 @@ class DentalClinicApp {
                         
                         <div class="content">
                             <div class="section appointment-details">
-                                <h3>📅 Appointment Information</h3>
+                                <h3>Appointment Information</h3>
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <div class="info-label">Appointment ID</div>
@@ -3419,7 +3443,7 @@ class DentalClinicApp {
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Date</div>
-                                        <div class="info-value">📅 ${this.formatDate(appointment.date)}</div>
+                                        <div class="info-value">${this.formatDate(appointment.date)}</div>
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Time</div>
@@ -3431,7 +3455,7 @@ class DentalClinicApp {
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Treatment Type</div>
-                                        <div class="info-value">🦷 ${appointment.treatment || 'General Consultation'}</div>
+                                        <div class="info-value">${appointment.treatment || 'General Consultation'}</div>
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Status</div>
@@ -3445,7 +3469,7 @@ class DentalClinicApp {
                             </div>
                             
                             <div class="section patient-info">
-                                <h3>👤 Patient Information</h3>
+                                <h3>Patient Information</h3>
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <div class="info-label">Patient Name</div>
@@ -3453,11 +3477,11 @@ class DentalClinicApp {
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Phone Number</div>
-                                        <div class="info-value">📞 ${patient.phone || 'N/A'}</div>
+                                        <div class="info-value">${patient.phone || 'N/A'}</div>
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Email Address</div>
-                                        <div class="info-value">📧 ${patient.email || 'N/A'}</div>
+                                        <div class="info-value">${patient.email || 'N/A'}</div>
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Gender</div>
@@ -3469,14 +3493,14 @@ class DentalClinicApp {
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Address</div>
-                                        <div class="info-value">📍 ${patient.address || 'N/A'}</div>
+                                        <div class="info-value">${patient.address || 'N/A'}</div>
                                     </div>
                                 </div>
                             </div>
                             
                             ${appointment.notes ? `
-                            <div class="section">
-                                <h3>📝 Additional Notes</h3>
+                            <div class="section additional-notes">
+                                <h3>Additional Notes</h3>
                                 <div class="highlight-box">
                                     <div class="info-label">Appointment Notes</div>
                                     <div class="info-value">${appointment.notes}</div>
@@ -3485,8 +3509,8 @@ class DentalClinicApp {
                             ` : ''}
                             
                             ${appointment.priority ? `
-                            <div class="section">
-                                <h3>⚡ Priority Information</h3>
+                            <div class="section priority-info">
+                                <h3>Priority Information</h3>
                                 <div class="highlight-box">
                                     <div class="info-label">Priority Level</div>
                                     <div class="info-value">${appointment.priority}</div>
@@ -4641,16 +4665,40 @@ class DentalClinicApp {
         
         // Create print-friendly content with enhanced UI
         const printContent = `
+            <!-- Print Button (Top Right Corner) -->
+            <div id="printButtonContainer" style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                background: #059669;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            " onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'">
+                <i class="fas fa-print"></i>
+                Print Invoice
+            </div>
+            
             <div style="
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                max-width: 800px; 
-                margin: 0 auto; 
+                width: 100%;
+                margin: 60px auto 20px auto; 
                 background: white;
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             ">
                 <!-- Header Section -->
                 <div style="
-                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
                     color: white;
                     padding: 2rem;
                     text-align: center;
@@ -4674,7 +4722,7 @@ class DentalClinicApp {
                         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
                         position: relative;
                         z-index: 1;
-                    ">🦷 Dental Clinic</h1>
+                    ">🦷 DentalCare Pro</h1>
                     <h2 style="
                         margin: 0.5rem 0 0 0;
                         font-size: 1.5rem;
@@ -4710,7 +4758,6 @@ class DentalClinicApp {
                             background: #f0fdf4;
                             border-radius: 12px;
                             padding: 1.5rem;
-                            border-left: 4px solid #059669;
                         ">
                             <h3 style="
                                 margin: 0 0 1rem 0;
@@ -4782,15 +4829,14 @@ class DentalClinicApp {
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Status:</span>
                                     <span style="
-                                        color: white;
-                                        background: ${(() => {
-                                            if (invoice.status === 'paid') return '#059669';
+                                        ${(() => {
+                                            if (invoice.status === 'paid') return 'background: #dcfce7; color: #15803d;';
                                             if (invoice.status === 'unpaid') {
                                                 const dueDate = new Date(invoice.dueDate || invoice.date);
                                                 const today = new Date();
-                                                return dueDate < today ? '#dc2626' : '#d97706';
+                                                return dueDate < today ? 'background: #fef2f2; color: #dc2626;' : 'background: #fef3c7; color: #d97706;';
                                             }
-                                            return '#d97706';
+                                            return 'background: #fef3c7; color: #d97706;';
                                         })()};
                                         padding: 0.25rem 0.75rem;
                                         border-radius: 20px;
@@ -4830,11 +4876,11 @@ class DentalClinicApp {
                             background: #f0f9ff;
                             border-radius: 12px;
                             padding: 1.5rem;
-                            border-left: 4px solid #0ea5e9;
+                            
                         ">
                             <h3 style="
                                 margin: 0 0 1rem 0;
-                                color: #0ea5e9;
+                                color: #0284c7;
                                 font-size: 1.25rem;
                                 font-weight: 600;
                                 display: flex;
@@ -4853,7 +4899,7 @@ class DentalClinicApp {
                                     border: 1px solid #bae6fd;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Name:</span>
-                                    <span style="color: #0ea5e9; font-weight: 600;">${patient ? patient.name : 'Unknown'}</span>
+                                    <span style="color: #0284c7; font-weight: 600;">${patient ? patient.name : 'Unknown'}</span>
                                 </div>
                                 <div style="
                                     display: flex;
@@ -4865,7 +4911,7 @@ class DentalClinicApp {
                                     border: 1px solid #bae6fd;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Phone:</span>
-                                    <span style="color: #0ea5e9; font-weight: 600;">📞 ${patient ? patient.phone : 'N/A'}</span>
+                                    <span style="color: #0284c7; font-weight: 600;">📞 ${patient ? patient.phone : 'N/A'}</span>
                                 </div>
                                 <div style="
                                     display: flex;
@@ -4877,7 +4923,7 @@ class DentalClinicApp {
                                     border: 1px solid #bae6fd;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Email:</span>
-                                    <span style="color: #0ea5e9; font-weight: 600;">📧 ${patient ? patient.email : 'N/A'}</span>
+                                    <span style="color: #0284c7; font-weight: 600;">📧 ${patient ? patient.email : 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
@@ -4885,7 +4931,7 @@ class DentalClinicApp {
                     
                     <!-- Treatments Section -->
                     <div style="
-                        background: #f8fafc;
+                        background: #f0fdf4;
                         border-radius: 12px;
                         padding: 1.5rem;
                         margin-bottom: 2rem;
@@ -4910,7 +4956,7 @@ class DentalClinicApp {
                             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                         ">
                             <thead>
-                                <tr style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                                <tr style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white;">
                                     <th style="
                                         border: none;
                                         padding: 1rem;
@@ -4955,7 +5001,7 @@ class DentalClinicApp {
                     
                     <!-- Financial Summary -->
                     <div style="
-                        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                        background: #f0fdf4;
                         border: 1px solid #f59e0b;
                         border-radius: 12px;
                         padding: 1.5rem;
@@ -5023,7 +5069,7 @@ class DentalClinicApp {
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #0ea5e9;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -5069,11 +5115,25 @@ class DentalClinicApp {
         printWindow.document.write(`
             <html>
                 <head>
-                    <title>Invoice - ${invoice.id}</title>
+                    <title>Invoice - ${invoice.invoiceNumber || invoice.id}</title>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
                     <style>
-                        body { margin: 0; padding: 0; }
+                        body { 
+                            margin: 0; 
+                            padding: 0; 
+                            background: #f8fafc;
+                            min-height: 100vh;
+                        }
                         @media print {
-                            body { margin: 0; }
+                            body { 
+                                margin: 0; 
+                                background: white;
+                            }
+                            #printButtonContainer {
+                                display: none !important;
+                            }
                         }
                         @keyframes float {
                             0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -5089,14 +5149,10 @@ class DentalClinicApp {
         printWindow.document.close();
         printWindow.focus();
         
-        // Wait for content to load then print
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 500);
+        // Don't auto-print, let user click the print button
         
-        console.log('Print window opened');
-        this.showToast('Print window opened', 'success');
+        console.log('Invoice opened in new window with print button');
+        this.showToast('Invoice opened in new window', 'success');
     }
 
     importPatients() {
@@ -9543,13 +9599,13 @@ class DentalClinicApp {
                         
                         .container {
                             width: 100%;
-                            margin: 0 auto;
+                            margin: 60px auto 20px auto;
                             background: white;
                             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                         }
                         
                         .header {
-                            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
                             color: white;
                             padding: 2rem;
                             text-align: center;
@@ -9605,12 +9661,11 @@ class DentalClinicApp {
                             background: #f8fafc;
                             border-radius: 12px;
                             padding: 1.5rem;
-                            border-left: 4px solid #0ea5e9;
                         }
                         
                         .section h3 {
                             margin: 0 0 1rem 0;
-                            color: #0ea5e9;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -9657,7 +9712,6 @@ class DentalClinicApp {
                         
                         .medical-history {
                             background: #f0f9ff;
-                            border-left: 4px solid #0ea5e9;
                         }
                         
                         .footer {
@@ -9685,21 +9739,21 @@ class DentalClinicApp {
                         
                         .status-active {
                             background: #dcfce7;
-                            color: #166534;
-                            border: 1px solid #bbf7d0;
+                            color: #15803d;
+                            
                         }
                         
                         .status-inactive {
                             background: #fef2f2;
-                            color: #991b1b;
-                            border: 1px solid #fecaca;
+                            color: #dc2626;
+                            
                         }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1>🦷 Dental Clinic</h1>
+                            <h1>🦷 DentalCare Pro</h1>
                             <h2>Patient Medical Record</h2>
                             <div class="clinic-info">
                                 <strong>Professional Dental Care Services</strong><br>
@@ -11034,16 +11088,40 @@ class DentalClinicApp {
         
         // Create print-friendly content with enhanced UI
         const printContent = `
+            <!-- Print Button (Top Right Corner) -->
+            <div id="printButtonContainer" style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                background: #059669;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            " onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'">
+                <i class="fas fa-print"></i>
+                Print Invoice
+            </div>
+            
             <div style="
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                max-width: 800px; 
-                margin: 0 auto; 
+                width: 100%; 
+                margin: 0px auto 20px auto; 
                 background: white;
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             ">
                 <!-- Header Section -->
                 <div style="
-                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
                     color: white;
                     padding: 2rem;
                     text-align: center;
@@ -11067,7 +11145,7 @@ class DentalClinicApp {
                         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
                         position: relative;
                         z-index: 1;
-                    ">🦷 Dental Clinic</h1>
+                    ">🦷 DentalCare Pro</h1>
                     <h2 style="
                         margin: 0.5rem 0 0 0;
                         font-size: 1.5rem;
@@ -11100,20 +11178,20 @@ class DentalClinicApp {
                     ">
                         <!-- Invoice Information -->
                         <div style="
-                            background: #f0fdf4;
+                            background: #f0f9ff;
                             border-radius: 12px;
                             padding: 1.5rem;
-                            border-left: 4px solid #059669;
+                            
                         ">
                             <h3 style="
                                 margin: 0 0 1rem 0;
-                                color: #059669;
+                                color: #0284c7;
                                 font-size: 1.25rem;
                                 font-weight: 600;
                                 display: flex;
                                 align-items: center;
                                 gap: 0.5rem;
-                            ">📋 Invoice Details</h3>
+                            ">Invoice Details</h3>
                             
                             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                                 <div style="
@@ -11126,7 +11204,7 @@ class DentalClinicApp {
                                     border: 1px solid #d1fae5;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Invoice ID:</span>
-                                    <span style="color: #059669; font-weight: 600;">${invoice.id}</span>
+                                    <span style="color: #4b5563; font-weight: 600;">${invoice.id}</span>
                                 </div>
                                 <div style="
                                     display: flex;
@@ -11138,7 +11216,7 @@ class DentalClinicApp {
                                     border: 1px solid #d1fae5;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Invoice #:</span>
-                                    <span style="color: #059669; font-weight: 600;">${invoice.invoiceNumber || 'N/A'}</span>
+                                    <span style="color: #4b5563; font-weight: 600;">${invoice.invoiceNumber || 'N/A'}</span>
                                 </div>
                                 <div style="
                                     display: flex;
@@ -11150,7 +11228,7 @@ class DentalClinicApp {
                                     border: 1px solid #d1fae5;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Date:</span>
-                                    <span style="color: #059669; font-weight: 600;">${this.formatDate(invoice.date)}</span>
+                                    <span style="color: #4b5563; font-weight: 600;">${this.formatDate(invoice.date)}</span>
                                 </div>
                                 <div style="
                                     display: flex;
@@ -11162,7 +11240,7 @@ class DentalClinicApp {
                                     border: 1px solid #d1fae5;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Due Date:</span>
-                                    <span style="color: #059669; font-weight: 600;">${this.formatDate(invoice.dueDate)}</span>
+                                    <span style="color: #4b5563; font-weight: 600;">${this.formatDate(invoice.dueDate)}</span>
                                 </div>
                                 <div style="
                                     display: flex;
@@ -11175,15 +11253,14 @@ class DentalClinicApp {
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Status:</span>
                                     <span style="
-                                        color: white;
-                                        background: ${(() => {
-                                            if (invoice.status === 'paid') return '#059669';
+                                        ${(() => {
+                                            if (invoice.status === 'paid') return 'background: #dcfce7; color: #15803d;';
                                             if (invoice.status === 'unpaid') {
                                                 const dueDate = new Date(invoice.dueDate || invoice.date);
                                                 const today = new Date();
-                                                return dueDate < today ? '#dc2626' : '#d97706';
+                                                return dueDate < today ? 'background: #fef2f2; color: #dc2626;' : 'background: #fef3c7; color: #d97706;';
                                             }
-                                            return '#d97706';
+                                            return 'background: #fef3c7; color: #d97706;';
                                         })()};
                                         padding: 0.25rem 0.75rem;
                                         border-radius: 20px;
@@ -11212,7 +11289,7 @@ class DentalClinicApp {
                                     border: 1px solid #d1fae5;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Payment Method:</span>
-                                    <span style="color: #059669; font-weight: 600;">${invoice.paymentMethod}</span>
+                                    <span style="color: #4b5563; font-weight: 600;">${invoice.paymentMethod}</span>
                                 </div>
                                 ` : ''}
                             </div>
@@ -11223,17 +11300,16 @@ class DentalClinicApp {
                             background: #f0f9ff;
                             border-radius: 12px;
                             padding: 1.5rem;
-                            border-left: 4px solid #0ea5e9;
                         ">
                             <h3 style="
                                 margin: 0 0 1rem 0;
-                                color: #0ea5e9;
+                                color: #0284c7;
                                 font-size: 1.25rem;
                                 font-weight: 600;
                                 display: flex;
                                 align-items: center;
                                 gap: 0.5rem;
-                            ">👤 Patient Information</h3>
+                            ">Patient Information</h3>
                             
                             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                                 <div style="
@@ -11246,7 +11322,7 @@ class DentalClinicApp {
                                     border: 1px solid #bae6fd;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Name:</span>
-                                    <span style="color: #0ea5e9; font-weight: 600;">${patient ? patient.name : 'Unknown'}</span>
+                                    <span style="color: #4b5563; font-weight: 600;">${patient ? patient.name : 'Unknown'}</span>
                                 </div>
                                 <div style="
                                     display: flex;
@@ -11258,7 +11334,7 @@ class DentalClinicApp {
                                     border: 1px solid #bae6fd;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Phone:</span>
-                                    <span style="color: #0ea5e9; font-weight: 600;">📞 ${patient ? patient.phone : 'N/A'}</span>
+                                    <span style="color: #4b5563; font-weight: 600;">${patient ? patient.phone : 'N/A'}</span>
                                 </div>
                                 <div style="
                                     display: flex;
@@ -11270,7 +11346,7 @@ class DentalClinicApp {
                                     border: 1px solid #bae6fd;
                                 ">
                                     <span style="color: #374151; font-weight: 600;">Email:</span>
-                                    <span style="color: #0ea5e9; font-weight: 600;">📧 ${patient ? patient.email : 'N/A'}</span>
+                                    <span style="color: #4b5563; font-weight: 600;">${patient ? patient.email : 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
@@ -11278,21 +11354,21 @@ class DentalClinicApp {
                     
                     <!-- Treatments Section -->
                     <div style="
-                        background: #f8fafc;
+                        background: #f0f9ff;
                         border-radius: 12px;
                         padding: 1.5rem;
                         margin-bottom: 2rem;
-                        border-left: 4px solid #8b5cf6;
+                        
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #8b5cf6;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
                             align-items: center;
                             gap: 0.5rem;
-                        ">🦷 Treatments & Services</h3>
+                        ">Treatments & Services</h3>
                         
                         <table style="
                             width: 100%;
@@ -11303,7 +11379,7 @@ class DentalClinicApp {
                             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                         ">
                             <thead>
-                                <tr style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                                <tr style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white;">
                                     <th style="
                                         border: none;
                                         padding: 1rem;
@@ -11348,21 +11424,21 @@ class DentalClinicApp {
                     
                     <!-- Financial Summary -->
                     <div style="
-                        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-                        border: 1px solid #f59e0b;
+                        background: #f0f9ff;
+                        border: 1px solid var(--gray-200);
                         border-radius: 12px;
                         padding: 1.5rem;
                         margin-bottom: 2rem;
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #92400e;
+                            color: #374151;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
                             align-items: center;
                             gap: 0.5rem;
-                        ">💰 Financial Summary</h3>
+                        ">Financial Summary</h3>
                         
                         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                             <div style="
@@ -11372,10 +11448,10 @@ class DentalClinicApp {
                                 padding: 0.75rem;
                                 background: white;
                                 border-radius: 6px;
-                                border: 1px solid #fbbf24;
+                                border: 1px solid #e0f2fe;
                             ">
-                                <span style="color: #92400e; font-weight: 600;">Subtotal:</span>
-                                <span style="color: #92400e; font-weight: 600;">Rs. ${invoice.subtotal || 0}</span>
+                                <span style="color: #4b5563; font-weight: 600;">Subtotal:</span>
+                                <span style="color: #4b5563; font-weight: 600;">Rs. ${invoice.subtotal || 0}</span>
                             </div>
                             <div style="
                                 display: flex;
@@ -11384,10 +11460,10 @@ class DentalClinicApp {
                                 padding: 0.75rem;
                                 background: white;
                                 border-radius: 6px;
-                                border: 1px solid #fbbf24;
+                                border: 1px solid #e0f2fe;
                             ">
-                                <span style="color: #92400e; font-weight: 600;">Total Discount:</span>
-                                <span style="color: #059669; font-weight: 600;">- Rs. ${invoice.totalDiscount || 0}</span>
+                                <span style="color: #14b8a6; font-weight: 600;">Total Discount:</span>
+                                <span style="color: #14b8a6; font-weight: 600;">- Rs. ${invoice.totalDiscount || 0}</span>
                             </div>
                             <div style="
                                 display: flex;
@@ -11396,12 +11472,12 @@ class DentalClinicApp {
                                 padding: 1rem;
                                 background: white;
                                 border-radius: 6px;
-                                border: 2px solid #f59e0b;
+                                border: 2px solid #e0f2fe;
                                 font-weight: bold;
                                 font-size: 1.2rem;
                             ">
-                                <span style="color: #92400e;">Total Amount:</span>
-                                <span style="color: #92400e; font-size: 1.3rem;">Rs. ${invoice.total || 0}</span>
+                                <span style="color: #374151; font-weight: bold;">Total Amount:</span>
+                                <span style="color: #374151; font-size: 1.3rem; font-weight: bold;">Rs. ${invoice.total || 0}</span>
                             </div>
                         </div>
                     </div>
@@ -11409,27 +11485,25 @@ class DentalClinicApp {
                     ${invoice.notes ? `
                     <div style="
                         background: #f0f9ff;
+                        border: 1px solid #e2e8f0;
                         border-radius: 12px;
                         padding: 1.5rem;
                         margin-bottom: 2rem;
-                        border-left: 4px solid #0ea5e9;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #0ea5e9;
+                            color: #374151;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
                             align-items: center;
                             gap: 0.5rem;
-                        ">📝 Additional Notes</h3>
+                        ">Additional Notes</h3>
                         <div style="
-                            background: white;
-                            padding: 1rem;
-                            border-radius: 8px;
-                            border: 1px solid #bae6fd;
-                            color: #374151;
+                            color: #4b5563;
                             line-height: 1.6;
+                            font-size: 0.95rem;
                         ">${invoice.notes}</div>
                     </div>
                     ` : ''}
@@ -11447,7 +11521,7 @@ class DentalClinicApp {
                         color: #64748b;
                         font-size: 1rem;
                         font-weight: 500;
-                    ">Thank you for choosing our dental services! 🦷✨</p>
+                    ">Thank you for choosing our dental services!</p>
                     <p style="
                         margin: 0;
                         color: #94a3b8;
@@ -11462,11 +11536,25 @@ class DentalClinicApp {
         printWindow.document.write(`
             <html>
                 <head>
-                    <title>Invoice - ${invoice.id}</title>
+                    <title>Invoice - ${invoice.invoiceNumber || invoice.id}</title>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
                     <style>
-                        body { margin: 0; padding: 0; }
+                        body { 
+                            margin: 0; 
+                            padding: 0; 
+                            background: #f8fafc;
+                            min-height: 100vh;
+                        }
                         @media print {
-                            body { margin: 0; }
+                            body { 
+                                margin: 0; 
+                                background: white;
+                            }
+                            #printButtonContainer {
+                                display: none !important;
+                            }
                         }
                         @keyframes float {
                             0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -11482,14 +11570,10 @@ class DentalClinicApp {
         printWindow.document.close();
         printWindow.focus();
         
-        // Wait for content to load then print
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 500);
+        // Don't auto-print, let user click the print button
         
-        console.log('Print window opened');
-        this.showToast('Print window opened', 'success');
+        console.log('Invoice opened in new window with print button');
+        this.showToast('Invoice opened in new window', 'success');
     }
 
     importPatients() {

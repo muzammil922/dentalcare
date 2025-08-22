@@ -12,13 +12,13 @@
   
   /* Secondary Colors */
   --secondary-color: #64748b;
-  --secondary-hover: #475569;
+  --secondary-hover: #334155;
   --secondary-light: #f1f5f9;
   
   /* Success, Warning, Error */
   --success-color: #10b981;
   --success-light: #d1fae5;
-  --warning-color: #f59e0b;
+  --warning-color: #fbbf24;
   --warning-light: #fef3c7;
   --error-color: #ef4444;
   --danger-color: #ef4444;
