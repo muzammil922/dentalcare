@@ -2940,8 +2940,8 @@ class DentalClinicApp {
                         }
                         
                         .header {
-                            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-                            color: white;
+                            background: #dbeafe;
+                            color: #2563eb;
                             padding: 2rem;
                             text-align: center;
                             position: relative;
@@ -3006,7 +3006,7 @@ class DentalClinicApp {
                         }
                         .section h3 {
                             margin: 0 0 1rem 0;
-                            color: #0284c7;
+                            color: #2563eb;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -9520,8 +9520,8 @@ class DentalClinicApp {
                         }
                         
                         .header {
-                            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-                            color: white;
+                            background: #dbeafe;
+                            color: #2563eb;
                             padding: 2rem;
                             text-align: center;
                             position: relative;
@@ -9580,7 +9580,7 @@ class DentalClinicApp {
                         
                         .section h3 {
                             margin: 0 0 1rem 0;
-                            color: #0284c7;
+                            color: #2563eb;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -9761,7 +9761,7 @@ class DentalClinicApp {
                             
                             ${patient.addDate ? `
                             <div class="section">
-                                <h3>📅 Record Information</h3>
+                                <h3>Record Information</h3>
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <div class="info-label">Registration Date</div>
@@ -11057,8 +11057,8 @@ class DentalClinicApp {
             ">
                 <!-- Header Section -->
                 <div style="
-                    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-                    color: white;
+                    background: #dbeafe;
+                    color: #2563eb;
                     padding: 2rem;
                     text-align: center;
                     position: relative;
@@ -11115,7 +11115,7 @@ class DentalClinicApp {
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #0284c7;
+                            color: #2563eb;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -11295,7 +11295,7 @@ class DentalClinicApp {
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #0284c7;
+                            color: #2563eb;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -11452,7 +11452,7 @@ class DentalClinicApp {
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #0284c7;
+                            color: #2563eb;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -11469,7 +11469,7 @@ class DentalClinicApp {
                             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                         ">
                             <thead>
-                                <tr style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white;">
+                                <tr style="background: #2563eb; color: white;">
                                     <th style="
                                         border: none;
                                         padding: 1rem;
@@ -11521,7 +11521,7 @@ class DentalClinicApp {
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #0284c7;
+                            color: #2563eb;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -11580,7 +11580,7 @@ class DentalClinicApp {
                                 background: white;
                                 padding: 1rem;
                                 border-radius: 8px;
-                                border: 2px solid #0284c7;
+                                border: 2px solid #2563eb;
                                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                             ">
                                 <div style="
@@ -11592,7 +11592,7 @@ class DentalClinicApp {
                                     margin-bottom: 0.25rem;
                                 ">Total Amount</div>
                                 <div style="
-                                    color: #0284c7;
+                                    color: #2563eb;
                                     font-size: 1.3rem;
                                     font-weight: bold;
                                 ">Rs. ${invoice.total || 0}</div>
@@ -11609,7 +11609,7 @@ class DentalClinicApp {
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #0284c7;
+                            color: #2563eb7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
