@@ -2918,8 +2918,10 @@ class DentalClinicApp {
                     <style>
                         @media print {
                             body { margin: 0; }
-                            .no-print { display: none; }
-                            #printButtonContainer { display: none; }
+                            .no-print { display: none !important; }
+                            #printButtonContainer { display: none !important; }
+                            div[id="printButtonContainer"] { display: none !important; }
+                            .print-button { display: none !important; }
                         }
                         
                         body { 
@@ -2991,16 +2993,16 @@ class DentalClinicApp {
                         
                         .section {
                             margin-bottom: 2rem;
-                            // background: #f0f9ff;
+                            background: #f8fafc;
                             border-radius: 12px;
                             padding: 1.5rem;
                             
                         }
                         .additional-notes{
-                        background: #f0f9ff;
+                        background: #f8fafc;
                         }
                         .priority-info{
-                        background: #f0f9ff;
+                        background: #f8fafc;
                         }
                         .section h3 {
                             margin: 0 0 1rem 0;
@@ -3051,15 +3053,15 @@ class DentalClinicApp {
                         }
                         
                         .appointment-details {
-                            background: #f0f9ff;
+                            background: #f8fafc;
                         }
                         
                         .patient-info {
-                            background: #f0f9ff;
+                            background: #f8fafc;
                         }
                         
                         .footer {
-                            background: #f1f5f9;
+                            background: #f8fafc;
                             padding: 1.5rem;
                             text-align: center;
                             border-top: 1px solid #e2e8f0;
@@ -3109,7 +3111,7 @@ class DentalClinicApp {
                 </head>
                 <body>
                  <!-- Print Button (Top Right Corner) -->
-            <div id="printButtonContainer" style="
+            <div id="printButtonContainer" class="no-print" style="
                 position: fixed;
                 top: 20px;
                 right: 20px;
@@ -4373,7 +4375,7 @@ class DentalClinicApp {
         // Create print-friendly content with enhanced UI
         const printContent = `
             <!-- Print Button (Top Right Corner) -->
-            <div id="printButtonContainer" style="
+            <div id="printButtonContainer" class="no-print" style="
                 position: fixed;
                 top: 20px;
                 right: 20px;
@@ -4452,89 +4454,134 @@ class DentalClinicApp {
                     </div>
                 </div>
                 
-                <!-- Invoice Details Section -->
+                <!-- Content Section -->
                 <div style="padding: 2rem;">
+                    <!-- Invoice Details Section -->
                     <div style="
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 2rem;
                         margin-bottom: 2rem;
+                        background: #f0f9ff;
+                        border-radius: 12px;
+                        padding: 1.5rem;
                     ">
-                        <!-- Invoice Information -->
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #0284c7;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">📋 Invoice Details</h3>
+                        
                         <div style="
-                            background: #f0fdf4;
-                            border-radius: 12px;
-                            padding: 1.5rem;
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
                         ">
-                            <h3 style="
-                                margin: 0 0 1rem 0;
-                                color: #059669;
-                                font-size: 1.25rem;
-                                font-weight: 600;
-                                display: flex;
-                                align-items: center;
-                                gap: 0.5rem;
-                            ">📋 Invoice Details</h3>
-                            
-                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Invoice ID:</span>
-                                    <span style="color: #059669; font-weight: 600;">${invoice.id}</span>
-                                </div>
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Invoice ID</div>
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Invoice #:</span>
-                                    <span style="color: #059669; font-weight: 600;">${invoice.invoiceNumber || 'N/A'}</span>
-                                </div>
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${invoice.id}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Date:</span>
-                                    <span style="color: #059669; font-weight: 600;">${this.formatDate(invoice.date)}</span>
-                                </div>
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Invoice #</div>
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Due Date:</span>
-                                    <span style="color: #059669; font-weight: 600;">${this.formatDate(invoice.dueDate)}</span>
-                                </div>
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${invoice.invoiceNumber || 'N/A'}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Date</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${this.formatDate(invoice.date)}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Due Date</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${this.formatDate(invoice.dueDate)}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Status</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
                                 ">
-                                    <span style="color: #374151; font-weight: 600;">Status:</span>
                                     <span style="
                                         ${(() => {
                                             if (invoice.status === 'paid') return 'background: #dcfce7; color: #15803d;';
@@ -4551,6 +4598,7 @@ class DentalClinicApp {
                                         font-weight: 600;
                                         text-transform: uppercase;
                                         letter-spacing: 0.05em;
+                                        display: inline-block;
                                     ">${(() => {
                                         if (invoice.status === 'paid') return '✅ Paid';
                                         if (invoice.status === 'unpaid') {
@@ -4561,92 +4609,200 @@ class DentalClinicApp {
                                         return invoice.status || 'Unpaid';
                                     })()}</span>
                                 </div>
-                                ${invoice.paymentMethod ? `
-                                <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Payment Method:</span>
-                                    <span style="color: #059669; font-weight: 600;">${invoice.paymentMethod}</span>
-                                </div>
-                                ` : ''}
                             </div>
+                            ${invoice.paymentMethod ? `
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Payment Method</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${invoice.paymentMethod}</div>
+                            </div>
+                            ` : ''}
                         </div>
+                    </div>
+                    
+                    <!-- Patient Information Section -->
+                    <div style="
+                        margin-bottom: 2rem;
+                        background: #f0f9ff;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                    ">
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #0284c7;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">👤 Patient Information</h3>
                         
-                        <!-- Patient Information -->
                         <div style="
-                            background: #f0f9ff;
-                            border-radius: 12px;
-                            padding: 1.5rem;
-                            
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
                         ">
-                            <h3 style="
-                                margin: 0 0 1rem 0;
-                                color: #0284c7;
-                                font-size: 1.25rem;
-                                font-weight: 600;
-                                display: flex;
-                                align-items: center;
-                                gap: 0.5rem;
-                            ">👤 Patient Information</h3>
-                            
-                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #bae6fd;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Name:</span>
-                                    <span style="color: #0284c7; font-weight: 600;">${patient ? patient.name : 'Unknown'}</span>
-                                </div>
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Patient Name</div>
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #bae6fd;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Phone:</span>
-                                    <span style="color: #0284c7; font-weight: 600;">📞 ${patient ? patient.phone : 'N/A'}</span>
-                                </div>
-                                <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #bae6fd;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Email:</span>
-                                    <span style="color: #0284c7; font-weight: 600;">📧 ${patient ? patient.email : 'N/A'}</span>
-                                </div>
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient ? patient.name : 'Unknown'}</div>
                             </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Phone Number</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient ? patient.phone : 'N/A'}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Email Address</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient ? patient.email : 'N/A'}</div>
+                            </div>
+                            ${patient && patient.gender ? `
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Gender</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient.gender}</div>
+                            </div>
+                            ` : ''}
+                            ${patient && patient.dob ? `
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Age</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${this.calculateAge(patient.dob)} years</div>
+                            </div>
+                            ` : ''}
+                            ${patient && patient.address ? `
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Address</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient.address}</div>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
                     
                     <!-- Treatments Section -->
                     <div style="
-                        background: #f0fdf4;
+                        margin-bottom: 2rem;
+                        background: #f0f9ff;
                         border-radius: 12px;
                         padding: 1.5rem;
-                        margin-bottom: 2rem;
-                        border-left: 4px solid #8b5cf6;
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #8b5cf6;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -4697,7 +4853,7 @@ class DentalClinicApp {
                                             border: none;
                                             padding: 1rem;
                                             text-align: right;
-                                            color: #8b5cf6;
+                                            color: #0284c7;
                                             font-weight: 600;
                                         ">Rs. ${treatment.amount}</td>
                                     </tr>
@@ -4708,15 +4864,14 @@ class DentalClinicApp {
                     
                     <!-- Financial Summary -->
                     <div style="
-                        background: #f0fdf4;
-                        border: 1px solid #f59e0b;
+                        margin-bottom: 2rem;
+                        background: #f0f9ff;
                         border-radius: 12px;
                         padding: 1.5rem;
-                        margin-bottom: 2rem;
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #92400e;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -4724,55 +4879,83 @@ class DentalClinicApp {
                             gap: 0.5rem;
                         ">💰 Financial Summary</h3>
                         
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
+                        ">
                             <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                padding: 0.75rem;
                                 background: white;
-                                border-radius: 6px;
-                                border: 1px solid #fbbf24;
-                            ">
-                                <span style="color: #92400e; font-weight: 600;">Subtotal:</span>
-                                <span style="color: #92400e; font-weight: 600;">Rs. ${invoice.subtotal || 0}</span>
-                            </div>
-                            <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                padding: 0.75rem;
-                                background: white;
-                                border-radius: 6px;
-                                border: 1px solid #fbbf24;
-                            ">
-                                <span style="color: #92400e; font-weight: 600;">Total Discount:</span>
-                                <span style="color: #059669; font-weight: 600;">- Rs. ${invoice.totalDiscount || 0}</span>
-                            </div>
-                            <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
                                 padding: 1rem;
-                                background: white;
-                                border-radius: 6px;
-                                border: 2px solid #f59e0b;
-                                font-weight: bold;
-                                font-size: 1.2rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                             ">
-                                <span style="color: #92400e;">Total Amount:</span>
-                                <span style="color: #92400e; font-size: 1.3rem;">Rs. ${invoice.total || 0}</span>
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Subtotal</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">Rs. ${invoice.subtotal || 0}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Total Discount</div>
+                                <div style="
+                                    color: #059669;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">- Rs. ${invoice.totalDiscount || 0}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 2px solid #0284c7;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Total Amount</div>
+                                <div style="
+                                    color: #0284c7;
+                                    font-size: 1.3rem;
+                                    font-weight: bold;
+                                ">Rs. ${invoice.total || 0}</div>
                             </div>
                         </div>
                     </div>
                 
                     ${invoice.notes ? `
                     <div style="
+                        margin-bottom: 2rem;
                         background: #f0f9ff;
                         border-radius: 12px;
                         padding: 1.5rem;
-                        margin-bottom: 2rem;
-                        border-left: 4px solid #0ea5e9;
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
@@ -4787,10 +4970,24 @@ class DentalClinicApp {
                             background: white;
                             padding: 1rem;
                             border-radius: 8px;
-                            border: 1px solid #bae6fd;
-                            color: #374151;
-                            line-height: 1.6;
-                        ">${invoice.notes}</div>
+                            border: 1px solid #e2e8f0;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        ">
+                            <div style="
+                                font-weight: 600;
+                                color: #475569;
+                                font-size: 0.875rem;
+                                text-transform: uppercase;
+                                letter-spacing: 0.05em;
+                                margin-bottom: 0.25rem;
+                            ">Invoice Notes</div>
+                            <div style="
+                                color: #1e293b;
+                                font-size: 1rem;
+                                font-weight: 500;
+                                line-height: 1.6;
+                            ">${invoice.notes}</div>
+                        </div>
                     </div>
                     ` : ''}
                 </div>
@@ -4840,6 +5037,15 @@ class DentalClinicApp {
                             }
                             #printButtonContainer {
                                 display: none !important;
+                            }
+                            div[id="printButtonContainer"] { 
+                                display: none !important; 
+                            }
+                            .print-button { 
+                                display: none !important; 
+                            }
+                            .no-print { 
+                                display: none !important; 
                             }
                         }
                         @keyframes float {
@@ -9287,8 +9493,10 @@ class DentalClinicApp {
                     <style>
                         @media print {
                             body { margin: 0; }
-                            .no-print { display: none; }
-                            #printButtonContainer { display: none; }
+                            .no-print { display: none !important; }
+                            #printButtonContainer { display: none !important; }
+                            div[id="printButtonContainer"] { display: none !important; }
+                            .print-button { display: none !important; }
                         }
                         
                         @keyframes float {
@@ -9410,19 +9618,19 @@ class DentalClinicApp {
                         }
                         
                         .highlight-box {
-                            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-                            border: 1px solid #f59e0b;
+                        background: white;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                             border-radius: 8px;
                             padding: 1rem;
                             margin: 1rem 0;
                         }
                         
                         .medical-history {
-                            background: #f0f9ff;
+                            background: #f8fafc;
                         }
                         
                         .footer {
-                            background: #f1f5f9;
+                            background: #f8fafc;
                             padding: 1.5rem;
                             text-align: center;
                             border-top: 1px solid #e2e8f0;
@@ -9459,7 +9667,7 @@ class DentalClinicApp {
                 </head>
                 <body>
                 <!-- Print Button (Top Right Corner) -->
-            <div id="printButtonContainer" style="
+            <div id="printButtonContainer" class="no-print" style="
                 position: fixed;
                 top: 20px;
                 right: 20px;
@@ -9493,7 +9701,7 @@ class DentalClinicApp {
                         
                         <div class="content">
                             <div class="section">
-                                <h3>👤 Patient Information</h3>
+                                <h3>Patient Information</h3>
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <div class="info-label">Patient ID</div>
@@ -9505,15 +9713,15 @@ class DentalClinicApp {
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Phone Number</div>
-                                        <div class="info-value">📞 ${patient.phone || 'N/A'}</div>
+                                        <div class="info-value">${patient.phone || 'N/A'}</div>
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Email Address</div>
-                                        <div class="info-value">📧 ${patient.email || 'N/A'}</div>
+                                        <div class="info-value">${patient.email || 'N/A'}</div>
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Date of Birth</div>
-                                        <div class="info-value">🎂 ${patient.dob || 'N/A'}</div>
+                                        <div class="info-value">${patient.dob || 'N/A'}</div>
                                     </div>
                                     <div class="info-item">
                                         <div class="info-label">Age</div>
@@ -9536,7 +9744,7 @@ class DentalClinicApp {
                             
                             ${patient.address ? `
                             <div class="section">
-                                <h3>📍 Address Information</h3>
+                                <h3>Address Information</h3>
                                 <div class="highlight-box">
                                     <div class="info-label">Residential Address</div>
                                     <div class="info-value">${patient.address}</div>
@@ -9545,7 +9753,7 @@ class DentalClinicApp {
                             ` : ''}
                             
                             <div class="section medical-history">
-                                <h3>🏥 Medical History</h3>
+                                <h3>Medical History</h3>
                                 <div class="highlight-box">
                                     ${patient.medicalHistory ? patient.medicalHistory : 'No medical history recorded for this patient.'}
                                 </div>
@@ -10798,6 +11006,7 @@ class DentalClinicApp {
         }
     }
 
+    
     printInvoice(invoiceId) {
         console.log('printInvoice called with:', invoiceId);
         const invoices = this.getStoredData('invoices') || [];
@@ -10817,7 +11026,7 @@ class DentalClinicApp {
         // Create print-friendly content with enhanced UI
         const printContent = `
             <!-- Print Button (Top Right Corner) -->
-            <div id="printButtonContainer" style="
+            <div id="printButtonContainer" class="no-print" style="
                 position: fixed;
                 top: 20px;
                 right: 20px;
@@ -10836,12 +11045,12 @@ class DentalClinicApp {
                 align-items: center;
                 gap: 8px;
             " onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'">
-                Print Invoice
+            Print Invoice
             </div>
             
             <div style="
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                width: 100%; 
+                width: 100%;
                 margin: 0px auto 20px auto; 
                 background: white;
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -10895,90 +11104,134 @@ class DentalClinicApp {
                     </div>
                 </div>
                 
-                <!-- Invoice Details Section -->
+                <!-- Content Section -->
                 <div style="padding: 2rem;">
+                    <!-- Invoice Details Section -->
                     <div style="
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 2rem;
                         margin-bottom: 2rem;
+                        background: #f8fafc;
+                        border-radius: 12px;
+                        padding: 1.5rem;
                     ">
-                        <!-- Invoice Information -->
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #0284c7;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">Invoice Details</h3>
+                        
                         <div style="
-                            background: #f0f9ff;
-                            border-radius: 12px;
-                            padding: 1.5rem;
-                            
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
                         ">
-                            <h3 style="
-                                margin: 0 0 1rem 0;
-                                color: #0284c7;
-                                font-size: 1.25rem;
-                                font-weight: 600;
-                                display: flex;
-                                align-items: center;
-                                gap: 0.5rem;
-                            ">Invoice Details</h3>
-                            
-                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Invoice ID:</span>
-                                    <span style="color: #4b5563; font-weight: 600;">${invoice.id}</span>
-                                </div>
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Invoice ID</div>
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Invoice #:</span>
-                                    <span style="color: #4b5563; font-weight: 600;">${invoice.invoiceNumber || 'N/A'}</span>
-                                </div>
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${invoice.id}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Date:</span>
-                                    <span style="color: #4b5563; font-weight: 600;">${this.formatDate(invoice.date)}</span>
-                                </div>
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Invoice #</div>
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Due Date:</span>
-                                    <span style="color: #4b5563; font-weight: 600;">${this.formatDate(invoice.dueDate)}</span>
-                                </div>
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${invoice.invoiceNumber || 'N/A'}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Date</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${this.formatDate(invoice.date)}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Due Date</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${this.formatDate(invoice.dueDate)}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Status</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
                                 ">
-                                    <span style="color: #374151; font-weight: 600;">Status:</span>
                                     <span style="
                                         ${(() => {
                                             if (invoice.status === 'paid') return 'background: #dcfce7; color: #15803d;';
@@ -10995,6 +11248,7 @@ class DentalClinicApp {
                                         font-weight: 600;
                                         text-transform: uppercase;
                                         letter-spacing: 0.05em;
+                                        display: inline-block;
                                     ">${(() => {
                                         if (invoice.status === 'paid') return '✅ Paid';
                                         if (invoice.status === 'unpaid') {
@@ -11005,87 +11259,196 @@ class DentalClinicApp {
                                         return invoice.status || 'Unpaid';
                                     })()}</span>
                                 </div>
-                                ${invoice.paymentMethod ? `
-                                <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #d1fae5;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Payment Method:</span>
-                                    <span style="color: #4b5563; font-weight: 600;">${invoice.paymentMethod}</span>
-                                </div>
-                                ` : ''}
                             </div>
+                            ${invoice.paymentMethod ? `
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Payment Method</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${invoice.paymentMethod}</div>
+                            </div>
+                            ` : ''}
                         </div>
+                    </div>
+                    
+                    <!-- Patient Information Section -->
+                    <div style="
+                        margin-bottom: 2rem;
+                        background: #f8fafc;
+                        border-radius: 12px;
+                        padding: 1.5rem;
+                    ">
+                        <h3 style="
+                            margin: 0 0 1rem 0;
+                            color: #0284c7;
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">Patient Information</h3>
                         
-                        <!-- Patient Information -->
                         <div style="
-                            background: #f0f9ff;
-                            border-radius: 12px;
-                            padding: 1.5rem;
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
                         ">
-                            <h3 style="
-                                margin: 0 0 1rem 0;
-                                color: #0284c7;
-                                font-size: 1.25rem;
-                                font-weight: 600;
-                                display: flex;
-                                align-items: center;
-                                gap: 0.5rem;
-                            ">Patient Information</h3>
-                            
-                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #bae6fd;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Name:</span>
-                                    <span style="color: #4b5563; font-weight: 600;">${patient ? patient.name : 'Unknown'}</span>
-                                </div>
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Patient Name</div>
                                 <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #bae6fd;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Phone:</span>
-                                    <span style="color: #4b5563; font-weight: 600;">${patient ? patient.phone : 'N/A'}</span>
-                                </div>
-                                <div style="
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    padding: 0.5rem;
-                                    background: white;
-                                    border-radius: 6px;
-                                    border: 1px solid #bae6fd;
-                                ">
-                                    <span style="color: #374151; font-weight: 600;">Email:</span>
-                                    <span style="color: #4b5563; font-weight: 600;">${patient ? patient.email : 'N/A'}</span>
-                                </div>
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient ? patient.name : 'Unknown'}</div>
                             </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Phone Number</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient ? patient.phone : 'N/A'}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Email Address</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient ? patient.email : 'N/A'}</div>
+                            </div>
+                            ${patient && patient.gender ? `
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Gender</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient.gender}</div>
+                            </div>
+                            ` : ''}
+                            ${patient && patient.dob ? `
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Age</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${this.calculateAge(patient.dob)} years</div>
+                            </div>
+                            ` : ''}
+                            ${patient && patient.address ? `
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Address</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">${patient.address}</div>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
                     
                     <!-- Treatments Section -->
                     <div style="
-                        background: #f0f9ff;
+                        margin-bottom: 2rem;
+                        background: #f8fafc;
                         border-radius: 12px;
                         padding: 1.5rem;
-                        margin-bottom: 2rem;
-                        
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
@@ -11140,7 +11503,7 @@ class DentalClinicApp {
                                             border: none;
                                             padding: 1rem;
                                             text-align: right;
-                                            color: #8b5cf6;
+                                            color: #0284c7;
                                             font-weight: 600;
                                         ">Rs. ${treatment.amount}</td>
                                     </tr>
@@ -11151,15 +11514,14 @@ class DentalClinicApp {
                     
                     <!-- Financial Summary -->
                     <div style="
-                        background: #f0f9ff;
-                        border: 1px solid var(--gray-200);
+                        margin-bottom: 2rem;
+                        background: #f8fafc;
                         border-radius: 12px;
                         padding: 1.5rem;
-                        margin-bottom: 2rem;
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #374151;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -11167,60 +11529,87 @@ class DentalClinicApp {
                             gap: 0.5rem;
                         ">Financial Summary</h3>
                         
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 1rem;
+                        ">
                             <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                padding: 0.75rem;
                                 background: white;
-                                border-radius: 6px;
-                                border: 1px solid #e0f2fe;
-                            ">
-                                <span style="color: #4b5563; font-weight: 600;">Subtotal:</span>
-                                <span style="color: #4b5563; font-weight: 600;">Rs. ${invoice.subtotal || 0}</span>
-                            </div>
-                            <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                padding: 0.75rem;
-                                background: white;
-                                border-radius: 6px;
-                                border: 1px solid #e0f2fe;
-                            ">
-                                <span style="color: #14b8a6; font-weight: 600;">Total Discount:</span>
-                                <span style="color: #14b8a6; font-weight: 600;">- Rs. ${invoice.totalDiscount || 0}</span>
-                            </div>
-                            <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
                                 padding: 1rem;
-                                background: white;
-                                border-radius: 6px;
-                                border: 2px solid #e0f2fe;
-                                font-weight: bold;
-                                font-size: 1.2rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                             ">
-                                <span style="color: #374151; font-weight: bold;">Total Amount:</span>
-                                <span style="color: #374151; font-size: 1.3rem; font-weight: bold;">Rs. ${invoice.total || 0}</span>
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Subtotal</div>
+                                <div style="
+                                    color: #1e293b;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">Rs. ${invoice.subtotal || 0}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 1px solid #e2e8f0;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Total Discount</div>
+                                <div style="
+                                    color: #059669;
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                ">- Rs. ${invoice.totalDiscount || 0}</div>
+                            </div>
+                            <div style="
+                                background: white;
+                                padding: 1rem;
+                                border-radius: 8px;
+                                border: 2px solid #0284c7;
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                            ">
+                                <div style="
+                                    font-weight: 600;
+                                    color: #475569;
+                                    font-size: 0.875rem;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.05em;
+                                    margin-bottom: 0.25rem;
+                                ">Total Amount</div>
+                                <div style="
+                                    color: #0284c7;
+                                    font-size: 1.3rem;
+                                    font-weight: bold;
+                                ">Rs. ${invoice.total || 0}</div>
                             </div>
                         </div>
                     </div>
                 
                     ${invoice.notes ? `
                     <div style="
-                        background: #f0f9ff;
-                        border: 1px solid #e2e8f0;
+                        margin-bottom: 2rem;
+                        background: #f8fafc;
                         border-radius: 12px;
                         padding: 1.5rem;
-                        margin-bottom: 2rem;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                     ">
                         <h3 style="
                             margin: 0 0 1rem 0;
-                            color: #374151;
+                            color: #0284c7;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
@@ -11228,17 +11617,34 @@ class DentalClinicApp {
                             gap: 0.5rem;
                         ">Additional Notes</h3>
                         <div style="
-                            color: #4b5563;
-                            line-height: 1.6;
-                            font-size: 0.95rem;
-                        ">${invoice.notes}</div>
+                            background: white;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border: 1px solid #e2e8f0;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        ">
+                            <div style="
+                                font-weight: 600;
+                                color: #475569;
+                                font-size: 0.875rem;
+                                text-transform: uppercase;
+                                letter-spacing: 0.05em;
+                                margin-bottom: 0.25rem;
+                            ">Invoice Notes</div>
+                            <div style="
+                                color: #1e293b;
+                                font-size: 1rem;
+                                font-weight: 500;
+                                line-height: 1.6;
+                            ">${invoice.notes}</div>
+                        </div>
                     </div>
                     ` : ''}
                 </div>
                 
                 <!-- Footer -->
                 <div style="
-                    background: #f1f5f9;
+                    background: #f8fafc;
                     padding: 2rem;
                     text-align: center;
                     border-top: 1px solid #e2e8f0;
@@ -11281,6 +11687,15 @@ class DentalClinicApp {
                             }
                             #printButtonContainer {
                                 display: none !important;
+                            }
+                            div[id="printButtonContainer"] { 
+                                display: none !important; 
+                            }
+                            .print-button { 
+                                display: none !important; 
+                            }
+                            .no-print { 
+                                display: none !important; 
                             }
                         }
                         @keyframes float {
