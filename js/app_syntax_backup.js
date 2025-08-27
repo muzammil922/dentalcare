@@ -1,4 +1,4 @@
-﻿// Main Application Controller
+﻿﻿// Main Application Controller
 class DentalClinicApp {
     constructor() {
         this.currentSection = 'dashboard';
@@ -1475,9 +1475,6 @@ class DentalClinicApp {
                                 <div class="patient-avatar" style="width: 40px; height: 40px; background: var(--primary-light); border-radius:var(--radius-lg); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--primary-color); font-size: var(--font-size-sm); flex-shrink: 0;">
                                     ${globalIndex + 1}
                                 </div>
-                                 <div style="width: 50px; height: 50px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.5rem;">
-                                    <i class="fas fa-user" style="font-size: 1rem;"></i>
-                                </div>
                             </div>
                             <!-- Patient Info -->
                             <div class="patient-info" style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
@@ -2316,6 +2313,7 @@ class DentalClinicApp {
                                         <span style="color: var(--gray-600); font-weight: 500; font-size: 0.875rem;">Gender</span>
                                         <span style="color: var(--primary-color); font-weight: 600; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
                                             <i class="fas ${patient.gender === 'Female' ? 'fa-venus' : patient.gender === 'Male' ? 'fa-mars' : 'fa-user'}" style="font-size: 1rem;"></i>
+                                            ${patient.gender || 'N/A'}
                                         </span>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius-md);">
@@ -7089,17 +7087,7 @@ class DentalClinicApp {
         const ageInput = document.getElementById('staff-age');
         
         if (dobInput && ageInput) {
-            console.log('Setting up staff age calculation...');
-            
-            // Remove existing event listeners to prevent duplicates
-            if (this.staffAgeCalculationHandler) {
-                dobInput.removeEventListener('change', this.staffAgeCalculationHandler);
-                dobInput.removeEventListener('input', this.staffAgeCalculationHandler);
-            }
-            
-            // Create the handler function with proper binding
-            this.staffAgeCalculationHandler = (event) => {
-                console.log('Date of birth changed:', event.target.value);
+            dobInput.addEventListener('change', () => {
                 if (dobInput.value) {
                     const birthDate = new Date(dobInput.value);
                     const today = new Date();
@@ -7110,21 +7098,11 @@ class DentalClinicApp {
                         age--;
                     }
                     
-                    ageInput.value = age;
-                    console.log('Calculated age:', age);
+                    ageInput.value = age + ' years';
                 } else {
                     ageInput.value = '';
-                    console.log('Date cleared, age field cleared');
                 }
-            };
-            
-            // Add both change and input event listeners for better compatibility
-            dobInput.addEventListener('change', this.staffAgeCalculationHandler);
-            dobInput.addEventListener('input', this.staffAgeCalculationHandler);
-            
-            console.log('Staff age calculation setup completed');
-        } else {
-            console.error('Staff DOB or Age input elements not found');
+            });
         }
     }
 
@@ -13757,17 +13735,7 @@ class DentalClinicApp {
         const ageInput = document.getElementById('staff-age');
         
         if (dobInput && ageInput) {
-            console.log('Setting up staff age calculation (duplicate function)...');
-            
-            // Remove existing event listeners to prevent duplicates
-            if (this.staffAgeCalculationHandler) {
-                dobInput.removeEventListener('change', this.staffAgeCalculationHandler);
-                dobInput.removeEventListener('input', this.staffAgeCalculationHandler);
-            }
-            
-            // Create the handler function with proper binding
-            this.staffAgeCalculationHandler = (event) => {
-                console.log('Date of birth changed (duplicate):', event.target.value);
+            dobInput.addEventListener('change', () => {
                 if (dobInput.value) {
                     const birthDate = new Date(dobInput.value);
                     const today = new Date();
@@ -13778,21 +13746,11 @@ class DentalClinicApp {
                         age--;
                     }
                     
-                    ageInput.value = age;
-                    console.log('Calculated age (duplicate):', age);
+                    ageInput.value = age + ' years';
                 } else {
                     ageInput.value = '';
-                    console.log('Date cleared, age field cleared (duplicate)');
                 }
-            };
-            
-            // Add both change and input event listeners for better compatibility
-            dobInput.addEventListener('change', this.staffAgeCalculationHandler);
-            dobInput.addEventListener('input', this.staffAgeCalculationHandler);
-            
-            console.log('Staff age calculation setup completed (duplicate)');
-        } else {
-            console.error('Staff DOB or Age input elements not found (duplicate)');
+            });
         }
     }
 
@@ -15854,9 +15812,6 @@ class DentalClinicApp {
                     <div style="display: flex; align-items: center; gap: 1rem; min-width: 120px;">
                         <input type="checkbox" class="staff-checkbox" data-staff-id="${staffMember.id || 'unknown'}" onchange="window.dentalApp.toggleStaffSelection('${staffMember.id || 'unknown'}')" style="width: 14px; height: 14px; cursor: pointer;">
                         <div style="width: 40px; height: 40px; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: var(--font-size-sm);">${globalIndex}</div>
-                         <div style="width: 50px; height: 50px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.5rem;">
-                                    <i class="fas fa-user" style="font-size: 1rem;"></i>
-                                </div>
                     </div>
                     
                     <!-- Staff Details (Left Block) -->
@@ -15864,12 +15819,7 @@ class DentalClinicApp {
                         <div style="background: var(--primary-light); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: var(--radius-lg); font-weight: 600; font-size: var(--font-size-sm);">${this.capitalizeWords(staffMember.name || 'Unknown')}</div>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
                             <div style="background: var(--primary-light); color: var(--primary-color); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: var(--font-size-xs); font-weight: 500; width: fit-content;">${staffMember.age || 'N/A'}</div>
-                        
-                            <div style="width: 15px; height: 15px; background: ${staffMember.gender === 'Female' ? 'var(--pink-light)' : 'var(--primary-light)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${staffMember.gender === 'Female' ? 'var(--pink-color)' : 'var(--primary-color)'}; font-size: 1rem; padding: 15px;">
-                            <i class="fas fa-${staffMember.gender === 'Female' ? 'venus' : 'mars'}"></i>
                         </div>
-                        </div>
-                        
                     </div>
                     
                     <!-- Staff Details (Middle Block) -->
@@ -15877,7 +15827,12 @@ class DentalClinicApp {
                         <div style="background: var(--primary-light); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: var(--radius-lg); font-size: var(--font-size-sm); font-weight: 500;">
                             <i class="fas fa-briefcase" style="margin-right: 0.5rem;"></i>${this.capitalizeWords(staffMember.role || 'N/A')}
                         </div>
-                        
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <div style="width: 15px; height: 15px; background: ${staffMember.gender === 'Female' ? 'var(--pink-light)' : 'var(--primary-light)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${staffMember.gender === 'Female' ? 'var(--pink-color)' : 'var(--primary-color)'}; font-size: 1rem; padding: 15px;">
+                                <i class="fas fa-${staffMember.gender === 'Female' ? 'venus' : 'mars'}"></i>
+                            </div>
+                            <span style="background: var(--primary-light); color: var(--primary-color); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: var(--font-size-xs); font-weight: 500;">${staffMember.gender || 'N/A'}</span>
+                        </div>
                         <div style="background: var(--primary-light); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: var(--radius-lg); font-size: var(--font-size-sm); font-weight: 500;">
                             <i class="fas fa-phone" style="margin-right: 0.5rem;"></i>${staffMember.phone || 'N/A'}
                         </div>
@@ -16652,13 +16607,12 @@ class DentalClinicApp {
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fas fa-user" style="margin-right: 0.5rem;"></i>${this.capitalizeWords(staffName)}
                                 </div>
+                                ${staffMember && staffMember.gender ? `<div style="display: flex; align-items: center; gap: 0.5rem; font-size: var(--font-size-sm); opacity: 0.8;"><i class="fas fa-${staffMember.gender.toLowerCase() === 'male' ? 'mars' : 'venus'}" style="margin-right: 0.25rem;"></i>${staffMember.gender}</div>` : ''}
                             </div>
                             <div style="display: inline-flex; align-items: center; gap: 0.5rem; width: fit-content;">
                                 <span style="background: var(--primary-light); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: var(--radius-lg); font-size: var(--font-size-sm); font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; width: fit-content;">
                                     <i class="fas fa-briefcase"></i>${this.capitalizeWords(staffRole)}
                                 </span>
-                                ${staffMember && staffMember.gender ? `<span style="background: var(--primary-light); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: var(--radius-lg); font-size: var(--font-size-sm); font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; width: fit-content;"><i class="fas fa-${staffMember.gender.toLowerCase() === 'male' ? 'mars' : 'venus'}"></i></span>` : ''}
-
                             </div>
                         </div>
                     </div>
@@ -16707,7 +16661,17 @@ class DentalClinicApp {
                 <!-- Pagination Controls and Entries Dropdown at Bottom -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding: 1rem; border-top: 1px solid var(--gray-200); flex-wrap: wrap; gap: 1rem;">
                     <!-- Pagination Controls (Left) -->
-                   
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <div style="color: var(--gray-600); font-size: 0.875rem; margin-right: 1rem;">
+                            Page ${currentPage} of ${totalPages}
+                        </div>
+                        
+                        ${currentPage > 1 ? `<button onclick="window.dentalApp.displaySalary(window.dentalApp.currentSalaries, ${currentPage - 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Previous</button>` : ''}
+                        
+                        ${this.generateSmartPagination(currentPage, totalPages, 'salary')}
+                        
+                        ${currentPage < totalPages ? `<button onclick="window.dentalApp.displaySalary(window.dentalApp.currentSalaries, ${currentPage + 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Next</button>` : ''}
+                    </div>
                     
                     <!-- Show Entries Dropdown (Bottom-Right) -->
                     <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--gray-600); font-size: 0.875rem;">
@@ -16719,19 +16683,6 @@ class DentalClinicApp {
                             <option value="100">100</option>
                         </select>
                         <span>entries</span>
-                    </div>
-
-
-                     <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                        <div style="color: var(--gray-600); font-size: 0.875rem; margin-right: 1rem;">
-                            Page ${currentPage} of ${totalPages}
-                        </div>
-                        
-                        ${currentPage > 1 ? `<button onclick="window.dentalApp.displaySalary(window.dentalApp.currentSalaries, ${currentPage - 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Previous</button>` : ''}
-                        
-                        ${this.generateSmartPagination(currentPage, totalPages, 'salary')}
-                        
-                        ${currentPage < totalPages ? `<button onclick="window.dentalApp.displaySalary(window.dentalApp.currentSalaries, ${currentPage + 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Next</button>` : ''}
                     </div>
                 </div>
             </div>

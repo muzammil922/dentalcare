@@ -1706,7 +1706,7 @@ textarea:focus {
     padding: 1rem !important;
     background: var(--white) !important;
     border-radius: var(--radius-lg) !important;
-    box-shadow: var(--shadow-sm) !important;
+    box-shadow: var(--shadow-md);
 }
 
 .attendance-filters {

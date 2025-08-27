@@ -919,6 +919,16 @@
                             <button class="btn btn-primary" id="add-new-staff-btn">
                                 <i class="fas fa-plus"></i> Add New Staff
                             </button>
+                            
+                            <!-- Import Button for Staff -->
+                            <button class="import-btn" id="import-staff-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Import CSV, Excel, or JSON files" onclick="window.dentalApp.importStaff()">
+                                <i class="fas fa-download" style="font-size: 1rem;"></i>
+                            </button>
+                            
+                            <!-- Refresh Button for Staff -->
+                            <button class="refresh-btn" id="refresh-staff-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Refresh staff data" onclick="window.dentalApp.refreshStaffData()">
+                                <i class="fas fa-sync-alt" style="font-size: 1rem;"></i>
+                            </button>
                         </div>
                     </div>
                     <!-- Staff List -->
@@ -927,6 +937,10 @@
                             <input type="text" id="staff-search" placeholder="Search staff...">
                             <i class="fas fa-search"></i>
                         </div>
+                        
+                        <!-- Delete Selected Button - Positioned above table, below search bar -->
+                       
+                        
                         <div id="staff-list" class="staff-list">
                             <!-- Staff will be loaded here -->
                         </div>
@@ -1054,6 +1068,16 @@
                             <button class="btn btn-primary" id="add-new-salary-btn">
                                 <i class="fas fa-plus"></i> Create Salary
                             </button>
+                            
+                            <!-- Import Button for Salary -->
+                            <button class="import-btn" id="import-salary-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Import CSV, Excel, or JSON files" onclick="window.dentalApp.importSalary()">
+                                <i class="fas fa-download" style="font-size: 1rem;"></i>
+                            </button>
+                            
+                            <!-- Refresh Button for Salary -->
+                            <button class="refresh-btn" id="refresh-salary-btn" style="width: 40px; height: 40px; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'" title="Refresh salary data" onclick="window.dentalApp.refreshSalaryData()">
+                                <i class="fas fa-sync-alt" style="font-size: 1rem;"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -1063,6 +1087,11 @@
                             <input type="text" id="salary-search" placeholder="Search salary records...">
                             <i class="fas fa-search"></i>
                         </div>
+                        
+                        <!-- List Header with Total Records and Counters -->
+                       
+
+                        
                         <div id="salary-list" class="salary-list">
                             <!-- Salary records will be loaded here -->
                         </div>
@@ -1135,6 +1164,12 @@
                                     <select id="salary-staff" name="staffId" required>
                                         <option value="">Select a staff member</option>
                                     </select>
+                                </div>
+
+                                <!-- Gender Section (Auto-detected) -->
+                                <div class="form-group">
+                                    <label for="salary-gender">Gender</label>
+                                    <input type="text" id="salary-gender" name="gender" readonly placeholder="Auto-detected from staff data">
                                 </div>
 
                                 <!-- Attendance Section -->
