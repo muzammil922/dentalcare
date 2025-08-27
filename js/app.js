@@ -17844,138 +17844,110 @@ class DentalClinicApp {
         const salaries = this.getStoredData('salaries') || [];
         const salary = salaries.find(s => s.id === salaryId);
         const staff = this.getStoredData('staff') || [];
-        const staffMember = staff.find(s => s.id === salary?.staffId);
-        
-        if (salary) {
-            // Create print window content
-            const printContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Salary Invoice - ${staffMember ? staffMember.name : 'Unknown'}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-                        .invoice-title { font-size: 24px; font-weight: bold; color: #2563eb; margin-bottom: 10px; }
-                        .invoice-subtitle { font-size: 16px; color: #666; }
-                        .info-section { margin-bottom: 30px; }
-                        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-                        .info-card { background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #2563eb; }
-                        .info-title { font-weight: bold; color: #2563eb; margin-bottom: 10px; }
-                        .financial-details { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-                        .amount-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-                        .total-row { border-top: 2px solid #333; padding-top: 10px; font-weight: bold; font-size: 18px; }
-                        .attendance-summary { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-                        .attendance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-                        .attendance-item { text-align: center; }
-                        .attendance-value { font-size: 20px; font-weight: bold; color: #2563eb; }
-                        .footer { margin-top: 40px; text-align: center; color: #666; font-size: 14px; }
-                        @media print { body { margin: 0; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="invoice-title">DentalCare Pro</div>
-                        <div class="invoice-subtitle">Salary Invoice</div>
-                    </div>
-                    
-                    <div class="info-section">
-                        <div class="info-grid">
-                            <div class="info-card">
-                                <div class="info-title">Staff Information</div>
-                                <p><strong>Name:</strong> ${staffMember ? staffMember.name : 'Unknown'}</p>
-                                <p><strong>Role:</strong> ${staffMember ? staffMember.role : 'N/A'}</p>
-                                <p><strong>Phone:</strong> ${staffMember ? staffMember.phone : 'N/A'}</p>
-                            </div>
-                            <div class="info-card">
-                                <div class="info-title">Salary Information</div>
-                                <p><strong>Month:</strong> ${salary.month || 'N/A'}</p>
-                                <p><strong>Status:</strong> ${salary.status || 'pending'}</p>
-                                <p><strong>Payment Date:</strong> ${salary.paymentDate || 'Not specified'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="financial-details">
-                        <h3 style="color: #2563eb; margin-bottom: 15px;">Financial Details</h3>
-                        <div class="amount-row">
-                            <span>Basic Salary:</span>
-                            <span>${this.formatCurrency(salary.basicSalary || 0)}</span>
-                        </div>
-                        <div class="amount-row">
-                            <span>Total Allowance:</span>
-                            <span>${this.formatCurrency(salary.totalAllowance || 0)}</span>
-                        </div>
-                        <div class="amount-row">
-                            <span>Total Deduction:</span>
-                            <span>${this.formatCurrency(salary.totalDeduction || 0)}</span>
-                        </div>
-                        <div class="amount-row total-row">
-                            <span>Net Salary:</span>
-                            <span>${this.formatCurrency(salary.netSalary || salary.amount || 0)}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="attendance-summary">
-                        <h3 style="color: #2563eb; margin-bottom: 15px;">Attendance Summary</h3>
-                        <div class="attendance-grid">
-                            <div class="attendance-item">
-                                <div class="attendance-value">${salary.workingDays || 0}</div>
-                                <div>Working Days</div>
-                            </div>
-                            <div class="attendance-item">
-                                <div class="attendance-value">${salary.presentDays || 0}</div>
-                                <div>Present Days</div>
-                            </div>
-                            <div class="attendance-item">
-                                <div class="attendance-value">${salary.absentDays || 0}</div>
-                                <div>Absent Days</div>
-                            </div>
-                            <div class="attendance-item">
-                                <div class="attendance-value">${salary.leaveDays || 0}</div>
-                                <div>Leave Days</div>
-                            </div>
-                            <div class="attendance-item">
-                                <div class="attendance-value">${salary.lateDays || 0}</div>
-                                <div>Late Days</div>
-                            </div>
-                            <div class="attendance-item">
-                                <div class="attendance-value">${salary.halfLeaveDays || 0}</div>
-                                <div>Half Days</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${salary.notes ? `
-                    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="color: #2563eb; margin-bottom: 15px;">Notes</h3>
-                        <p style="color: #666; line-height: 1.6;">${salary.notes}</p>
-                    </div>
-                    ` : ''}
-                    
-                    <div class="footer">
-                        <p>Generated on ${this.formatDate(new Date())} at ${new Date().toLocaleTimeString()}</p>
-                        <p>DentalCare Pro - Professional Dental Management System</p>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            // Open print window
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            
-            // Wait for content to load then print
-            printWindow.onload = function() {
-                printWindow.print();
-                printWindow.close();
-            };
-            
-            this.showToast('Print window opened', 'success');
-        } else {
+        const staffMember = salary ? staff.find(s => s.id === salary.staffId) : null;
+
+        if (!salary) {
             this.showToast('Salary record not found', 'error');
+            return;
         }
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            this.showToast('Print window blocked. Please allow popups and try again.', 'error');
+            return;
+        }
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Salary Slip - ${staffMember ? staffMember.name : 'Unknown'}</title>
+                <style>
+                    @media print {
+                        body { margin: 0; }
+                        .no-print, #printButtonContainer, .print-button { display: none !important; }
+                    }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #f8fafc; color: #1e293b; }
+                    .container { width: 100%; margin: 0 auto 20px auto; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #fff; padding: 2rem; text-align: center; position: relative; overflow: hidden; }
+                    .header h1 { margin: 0; font-size: 2.5rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative; z-index: 1; }
+                    .header h2 { margin: .5rem 0 0 0; font-size: 1.5rem; font-weight: 400; opacity: .9; position: relative; z-index: 1; }
+                    .content { padding: 2rem; }
+                    .section { margin-bottom: 2rem; background: #f0f9ff; border-radius: 12px; padding: 1.5rem; }
+                    .section h3 { margin: 0 0 1rem 0; color: #0284c7; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; }
+                    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+                    .info-item { background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                    .info-label { font-weight: 600; color: #475569; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .25rem; }
+                    .info-value { color: #1e293b; font-size: 1rem; font-weight: 500; }
+                    .footer { background: #f1f5f9; padding: 1.5rem; text-align: center; border-top: 1px solid #e2e8f0; }
+                    .footer p { margin: 0; color: #64748b; font-size: .875rem; }
+                    .amount-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+                    .total-row { border-top: 2px solid #334155; padding-top: 10px; font-weight: 700; font-size: 18px; }
+                </style>
+            </head>
+            <body>
+                <div id="printButtonContainer" class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: #059669; color: #fff; padding: 12px 24px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(5,150,105,.4); font-weight: 600; transition: all .3s ease; border: none; display: flex; align-items: center; gap: 8px;" onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'"><span>Print Salary Slip</span></div>
+                <div class="container">
+                    <div class="header">
+                        <h1>🦷 DentalCare Pro</h1>
+                        <h2>Salary Slip</h2>
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 12px; margin-top: 1rem;">
+                            <strong>Professional Payroll</strong><br />
+                            <small>Excellence in Team Management</small>
+                        </div>
+                    </div>
+                    <div class="content">
+                        <div class="section">
+                            <h3>Staff Information</h3>
+                            <div class="info-grid">
+                                <div class="info-item"><div class="info-label">Staff Name</div><div class="info-value">${staffMember ? staffMember.name : 'Unknown'}</div></div>
+                                <div class="info-item"><div class="info-label">Role</div><div class="info-value">${staffMember ? (staffMember.role || 'N/A') : 'N/A'}</div></div>
+                                <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${staffMember ? (staffMember.phone || 'N/A') : 'N/A'}</div></div>
+                                <div class="info-item"><div class="info-label">Join Date</div><div class="info-value">${staffMember && staffMember.joinDate ? this.formatDate(staffMember.joinDate) : 'N/A'}</div></div>
+                            </div>
+                        </div>
+                        <div class="section">
+                            <h3>Salary Information</h3>
+                            <div class="info-grid">
+                                <div class="info-item"><div class="info-label">Month</div><div class="info-value">${this.formatMonthName(salary.month)} ${salary.year || ''}</div></div>
+                                <div class="info-item"><div class="info-label">Status</div><div class="info-value">${this.capitalizeWords(salary.status || 'pending')}</div></div>
+                                <div class="info-item"><div class="info-label">Payment Date</div><div class="info-value">${salary.paymentDate ? this.formatDate(salary.paymentDate) : 'Not specified'}</div></div>
+                            </div>
+                        </div>
+                        <div class="section">
+                            <h3>Financial Details</h3>
+                            <div class="info-item">
+                                <div class="amount-row"><span>Basic Salary</span><span>${this.formatCurrency(salary.basicSalary || 0)}</span></div>
+                                <div class="amount-row"><span>Total Allowance</span><span>${this.formatCurrency(salary.totalAllowance || 0)}</span></div>
+                                <div class="amount-row"><span>Total Deduction</span><span>${this.formatCurrency(salary.totalDeduction || 0)}</span></div>
+                                <div class="amount-row total-row"><span>Net Salary</span><span>${this.formatCurrency(salary.netSalary || salary.amount || 0)}</span></div>
+                            </div>
+                        </div>
+                        <div class="section">
+                            <h3>Attendance Summary</h3>
+                            <div class="info-grid">
+                                <div class="info-item"><div class="info-label">Working Days</div><div class="info-value">${salary.workingDays || 0}</div></div>
+                                <div class="info-item"><div class="info-label">Present Days</div><div class="info-value">${salary.presentDays || 0}</div></div>
+                                <div class="info-item"><div class="info-label">Absent Days</div><div class="info-value">${salary.absentDays || 0}</div></div>
+                                <div class="info-item"><div class="info-label">Leave Days</div><div class="info-value">${salary.leaveDays || 0}</div></div>
+                                <div class="info-item"><div class="info-label">Late Days</div><div class="info-value">${salary.lateDays || 0}</div></div>
+                                <div class="info-item"><div class="info-label">Half Days</div><div class="info-value">${salary.halfLeaveDays || 0}</div></div>
+                            </div>
+                        </div>
+                        ${salary.notes ? `<div class="section"><h3>📝 Notes</h3><div class="info-item"><div class="info-value">${salary.notes}</div></div></div>` : ''}
+                    </div>
+                    <div class="footer">
+                        <p><strong>Generated on:</strong> ${this.formatDate(new Date())} at ${new Date().toLocaleTimeString()}</p>
+                        <p>This is an official salary slip from DentalCare Pro</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `);
+
+        printWindow.document.close();
+        printWindow.focus();
+        this.showToast('Salary slip opened in new window', 'success');
     }
 
     deleteSalary(salaryId) {
@@ -21983,7 +21955,7 @@ Status: ${item.status || 'In Stock'}
                         
                         <div class="content">
                             <div class="section">
-                                <h3>👤 Staff Information</h3>
+                                <h3>Staff Information</h3>
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <div class="info-label">Staff ID</div>
@@ -22030,7 +22002,7 @@ Status: ${item.status || 'In Stock'}
                             
                             ${staffMember.address ? `
                             <div class="section">
-                                <h3>📍 Address Information</h3>
+                                <h3>Address Information</h3>
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <div class="info-label">Address</div>
