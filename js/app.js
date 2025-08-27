@@ -20357,23 +20357,36 @@ Status: ${item.status || 'In Stock'}
         // Update tab buttons
         const overviewBtns = document.querySelectorAll('.inventory-overview .overview-btn');
         overviewBtns.forEach(btn => {
-            btn.classList.remove('active');
+            // Only the current tab should be filled/active
             if (btn.dataset.tab === tabName) {
                 btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
             }
         });
 
         // Show/hide content sections
         const inventoryContainer = document.querySelector('.inventory-container');
+        const inventoryGrid = document.querySelector('.inventory-grid');
+        const inventoryActions = document.querySelector('.inventory-overview-btn-container');
         const usageSection = document.getElementById('usage-section');
 
         if (tabName === 'overview') {
             if (inventoryContainer) inventoryContainer.style.display = 'block';
+            if (inventoryGrid) inventoryGrid.style.display = 'grid';
+            if (inventoryActions) inventoryActions.style.display = 'flex';
             if (usageSection) usageSection.style.display = 'none';
+            // Update header title to current tab name
+            const header = document.querySelector('#inventory .section-header h2');
+            if (header) header.textContent = 'Inventory';
         } else if (tabName === 'usage') {
             if (inventoryContainer) inventoryContainer.style.display = 'none';
+            if (inventoryGrid) inventoryGrid.style.display = 'none';
+            if (inventoryActions) inventoryActions.style.display = 'none';
             if (usageSection) usageSection.style.display = 'block';
             this.loadUsageData();
+            const header = document.querySelector('#inventory .section-header h2');
+            if (header) header.textContent = 'Usage';
         }
     }
 
