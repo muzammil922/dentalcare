@@ -4,6 +4,7 @@ class AppointmentsManager {
         this.appointments = [];
         this.currentAppointment = null;
         this.isEditing = false;
+        this.isSaving = false;
         
         this.init();
     }
@@ -24,13 +25,14 @@ class AppointmentsManager {
             });
         }
 
-        // Appointment form submission
+        // Appointment form submission (guard against multiple bindings)
         const appointmentForm = document.getElementById('appointment-form');
-        if (appointmentForm) {
+        if (appointmentForm && !appointmentForm.dataset.listenerBound) {
             appointmentForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.saveAppointment();
             });
+            appointmentForm.dataset.listenerBound = 'true';
         }
 
         // Modal close handlers
@@ -142,9 +144,25 @@ class AppointmentsManager {
         this.isEditing = false;
     }
 
+    // Ensure in-memory list matches latest storage before any write
+    refreshFromStorage() {
+        try {
+            const stored = localStorage.getItem('dentalClinic_appointments');
+            this.appointments = stored ? JSON.parse(stored) : [];
+        } catch (error) {
+            console.error('Error refreshing appointments from storage:', error);
+        }
+    }
+
     saveAppointment() {
+        if (this.isSaving) {
+            return;
+        }
         const form = document.getElementById('appointment-form');
         if (!form) return;
+        this.isSaving = true;
+        // Sync with latest storage to avoid resurrecting deleted items
+        this.refreshFromStorage();
 
         const formData = new FormData(form);
         const appointmentData = {
@@ -211,6 +229,12 @@ class AppointmentsManager {
             return;
         }
 
+        // Disable submit to prevent double submit
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+        }
+
         try {
             if (this.isEditing && this.currentAppointment) {
                 appointmentData.id = this.currentAppointment.id;
@@ -224,7 +248,11 @@ class AppointmentsManager {
                 
                 this.showSuccess('Appointment updated successfully');
             } else {
+                // Generate a collision-safe unique ID; if somehow exists, regenerate once
                 appointmentData.id = window.dentalApp ? window.dentalApp.generateId('appointment') : this.generateId();
+                if (this.appointments.some(a => a.id === appointmentData.id)) {
+                    appointmentData.id = window.dentalApp ? window.dentalApp.generateId('appointment') : this.generateId();
+                }
                 appointmentData.createdAt = new Date().toISOString();
                 appointmentData.updatedAt = new Date().toISOString();
                 
@@ -233,6 +261,20 @@ class AppointmentsManager {
             }
 
             this.saveToStorage();
+
+            // Keep main app in sync without duplicating writes
+            if (window.dentalApp) {
+                try {
+                    const latest = localStorage.getItem('dentalClinic_appointments');
+                    const synced = latest ? JSON.parse(latest) : [];
+                    window.dentalApp.setStoredData('appointments', synced);
+                    if (typeof window.dentalApp.loadTodayAppointments === 'function') {
+                        window.dentalApp.loadTodayAppointments();
+                    }
+                } catch (e) {
+                    console.error('Failed to sync appointments to main app:', e);
+                }
+            }
             
             // Use the main app's display function to ensure consistent styling
             if (window.dentalApp) {
@@ -266,6 +308,12 @@ class AppointmentsManager {
         } catch (error) {
             console.error('Error saving appointment:', error);
             this.showError('Failed to save appointment');
+        } finally {
+            // Re-enable submit and clear saving flag
+            if (submitBtn) {
+                submitBtn.disabled = false;
+            }
+            this.isSaving = false;
         }
     }
 
@@ -297,13 +345,24 @@ class AppointmentsManager {
             
             this.saveToStorage();
             
-            // Use the main app's display function to ensure consistent styling
+            // Update the main app's data storage as well
             if (window.dentalApp) {
-                window.dentalApp.updateAppointmentStatus(appointmentId, status);
-            } else {
-                this.renderAppointments();
+                const appointments = window.dentalApp.getStoredData('appointments') || [];
+                const appointmentIndex = appointments.findIndex(apt => apt.id === appointmentId);
+                if (appointmentIndex !== -1) {
+                    appointments[appointmentIndex].status = status;
+                    appointments[appointmentIndex].updatedAt = new Date().toISOString();
+                    window.dentalApp.setStoredData('appointments', appointments);
+                    
+                    // Refresh the dashboard's today appointments list
+                    if (typeof window.dentalApp.loadTodayAppointments === 'function') {
+                        window.dentalApp.loadTodayAppointments();
+                    }
+                }
             }
             
+            // Re-render appointments to show updated status
+            this.renderAppointments();
             this.updateDashboard();
             
             this.showSuccess(`Appointment marked as ${status}`);

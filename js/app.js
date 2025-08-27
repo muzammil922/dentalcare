@@ -53,7 +53,9 @@ class DentalClinicApp {
             window.patientsManager = new PatientsManager();
         }
         if (typeof AppointmentsManager !== 'undefined') {
-            window.appointmentsManager = new AppointmentsManager();
+            if (!window.appointmentsManager) {
+                window.appointmentsManager = new AppointmentsManager();
+            }
         }
         if (typeof BillingManager !== 'undefined' && !window.billingManager) {
             console.log('Initializing BillingManager...');
@@ -115,6 +117,17 @@ class DentalClinicApp {
             // Ensure appointment date is set after modal opens
             setTimeout(() => {
                 this.setAppointmentDateToToday();
+                // Fallback submit binding to ensure scheduling works
+                const form = document.getElementById('appointment-form');
+                if (form && !form.dataset.fallbackBound) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        if (window.appointmentsManager && typeof window.appointmentsManager.saveAppointment === 'function') {
+                            window.appointmentsManager.saveAppointment();
+                        }
+                    });
+                    form.dataset.fallbackBound = 'true';
+                }
             }, 50);
         });
         document.getElementById('add-new-billing-btn')?.addEventListener('click', () => this.showAddBillingModal());
@@ -1925,6 +1938,57 @@ class DentalClinicApp {
         });
     }
 
+    // Delete ALL appointments in the system (including hidden/duplicates)
+    showDeleteAllAppointmentsConfirmation() {
+        const appointments = this.getStoredData('appointments') || [];
+        const count = appointments.length;
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;';
+        modal.innerHTML = '<div style="background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: 100%; max-width: 560px; position: relative; border: 1px solid #e5e7eb; overflow: hidden;">'
+            + '<div style="padding: 1.5rem 2rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: var(--white-color);">'
+            + '<div style="display: flex; align-items: center; gap: 0.75rem;">'
+            + '<i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--primary-color)"></i>'
+            + '<h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color(--gray-color);">Delete All Appointments</h2>'
+            + '</div>'
+            + '<button onclick="this.closest(\'.modal\').remove()" style="background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; transition: all 0.3s ease;" onmouseover="this.style.background=\'var(--primary-color)\'" onmouseout="this.style.background=\'var(--primary-color)\'">×</button>'
+            + '</div>'
+            + '<div style="padding: 2rem;">'
+            + '<div style="text-align: center; margin-bottom: 1.5rem;">'
+            + '<i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>'
+            + '<h3 style="margin: 0 0 1rem 0; color: #1f2937; font-size: 1.125rem;">Warning: This action cannot be undone!</h3>'
+            + '<p style="margin: 0; color: #6b7280; line-height: 1.6;">You are about to delete <strong>' + count + ' appointment(s)</strong> from the system.</p>'
+            + '</div>'
+            + '</div>'
+            + '<div style="padding: 1.5rem 2rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 1rem; background: #f9fafb;">'
+            + '<button onclick="this.closest(\'.modal\').remove()" style="padding: 0.75rem 1.5rem; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.opacity=\'0.8\'" onmouseout="this.style.opacity=\'1\'">Cancel</button>'
+            + '<button onclick="window.dentalApp.confirmDeleteAllAppointments(this)" style="padding: 0.75rem 1.5rem; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s ease;" onmouseover="this.style.opacity=\'0.8\'" onmouseout="this.style.opacity=\'1\'">Delete All</button>'
+            + '</div>'
+            + '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    }
+
+    confirmDeleteAllAppointments(buttonEl) {
+        try {
+            // Clear all appointments entirely
+            this.setStoredData('appointments', []);
+            this.currentAppointments = [];
+            // Close modal
+            const modal = buttonEl.closest('.modal');
+            if (modal) modal.remove();
+            // Refresh list to empty state
+            this.displayAppointments([], 1);
+            this.showToast('All appointments deleted', 'success');
+            // Sync AppointmentsManager if present
+            if (window.appointmentsManager && typeof window.appointmentsManager.refreshFromStorage === 'function') {
+                window.appointmentsManager.refreshFromStorage();
+            }
+        } catch (e) {
+            console.error('Delete all appointments failed:', e);
+            this.showToast('Failed to delete all appointments', 'error');
+        }
+    }
     // Delete all patients
     deleteAllPatients(modalElement = null) {
         const patients = this.getStoredData('patients') || [];
@@ -3256,6 +3320,16 @@ class DentalClinicApp {
 
     deleteAppointment(appointmentId) {
         this.showDeleteAppointmentConfirmation(appointmentId);
+        // After confirmation flow completes, ensure UI refreshes from storage
+        // Small delay gives modal time to perform storage write
+        setTimeout(() => {
+            const updated = this.getStoredData('appointments') || [];
+            // Re-render list preserving current page
+            const currentPage = parseInt(document.querySelector('#appointments-list')?.getAttribute('data-current-page') || '1');
+            this.displayAppointments(updated, currentPage);
+            // Update dashboard widgets
+            this.loadDashboardData();
+        }, 300);
     }
 
     displayAppointments(appointments, currentPage = 1) {
@@ -5707,8 +5781,12 @@ class DentalClinicApp {
         // Load any cached data
         this.loadCachedData();
         
-        // Initialize sample data if no patients exist
-        this.initializeSampleData();
+        // Initialize sample data once per browser (guarded)
+        const seeded = localStorage.getItem('dentalClinic_seeded') === 'true';
+        if (!seeded) {
+            this.initializeSampleData();
+            localStorage.setItem('dentalClinic_seeded', 'true');
+        }
 
         // Repair any appointments that reference missing patients
         this.repairAppointmentsWithMissingPatients();
@@ -5811,9 +5889,10 @@ class DentalClinicApp {
             console.log('Sample invoices:', sampleInvoices);
         }
         
-        // Create sample appointments if they don't exist
+        // Create sample appointments only if none exist AND not previously seeded
         const appointments = this.getStoredData('appointments') || [];
-        if (appointments.length === 0) {
+        const appointmentsSeeded = localStorage.getItem('dentalClinic_seeded') === 'true';
+        if (appointments.length === 0 && !appointmentsSeeded) {
             const sampleAppointments = [
                 {
                     id: this.generateId('appointment'),
@@ -6353,6 +6432,11 @@ class DentalClinicApp {
 
     // Utility methods
     generateId(type = 'patient') {
+        // Use collision-safe IDs for appointments specifically
+        if (type === 'appointment') {
+            const uniqueId = `a-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+            return uniqueId;
+        }
         const prefix = type === 'patient' ? 'p' : type === 'appointment' ? 'a' : type === 'billing' ? 'b' : type === 'staff' ? 's' : type === 'salary' ? 'sal' : type === 'attendance' ? 'att' : 'p';
         const dataKey = type === 'patient' ? 'patients' : type === 'appointment' ? 'appointments' : type === 'billing' ? 'invoices' : type === 'staff' ? 'staff' : type === 'salary' ? 'salaries' : type === 'attendance' ? 'attendance' : 'patients';
         const existingData = this.getStoredData(dataKey) || [];
@@ -7977,7 +8061,9 @@ class DentalClinicApp {
             window.patientsManager = new PatientsManager();
         }
         if (typeof AppointmentsManager !== 'undefined') {
-            window.appointmentsManager = new AppointmentsManager();
+            if (!window.appointmentsManager) {
+                window.appointmentsManager = new AppointmentsManager();
+            }
         }
         if (typeof BillingManager !== 'undefined' && !window.billingManager) {
             console.log('Initializing BillingManager...');
@@ -10022,93 +10108,7 @@ class DentalClinicApp {
         }
     }
 
-    updateAppointmentStatus(appointmentId, newStatus) {
-        const appointments = this.getStoredData('appointments') || [];
-        const appointmentIndex = appointments.findIndex(apt => apt.id === appointmentId);
-        
-        if (appointmentIndex !== -1) {
-            appointments[appointmentIndex].status = newStatus;
-            this.setStoredData('appointments', appointments);
-            
-            // Get current active filters
-            const activeTimeFilter = document.querySelector('[data-type="appointment"].dropdown-filter-option.active');
-            const activeStatusFilter = document.querySelector('[data-type="appointment-status"].dropdown-filter-option.active');
-            
-            let timeFilter = 'all';
-            let statusFilter = 'all';
-            
-            if (activeTimeFilter) {
-                timeFilter = activeTimeFilter.getAttribute('data-filter');
-            }
-            if (activeStatusFilter) {
-                statusFilter = activeStatusFilter.getAttribute('data-filter');
-            }
-            
-            // Re-apply current filters to get updated list
-            let filteredAppointments = appointments;
-            
-            // Apply time filter first
-            switch (timeFilter) {
-                case 'today':
-                    const today = new Date().toISOString().split('T')[0];
-                    filteredAppointments = appointments.filter(apt => apt.date === today);
-                    break;
-                case 'week':
-                    const weekStart = new Date();
-                    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-                    const weekEnd = new Date(weekStart);
-                    weekEnd.setDate(weekEnd.getDate() + 6);
-                    filteredAppointments = appointments.filter(apt => {
-                        const aptDate = new Date(apt.date);
-                        return aptDate >= weekStart && aptDate <= weekEnd;
-                    });
-                    break;
-                case 'month':
-                    const monthStart = new Date();
-                    monthStart.setDate(1);
-                    const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
-                    filteredAppointments = appointments.filter(apt => {
-                        const aptDate = new Date(apt.date);
-                        return aptDate >= monthStart && aptDate <= monthEnd;
-                    });
-                    break;
-                default:
-                    filteredAppointments = appointments;
-            }
-            
-            // Apply status filter
-            if (statusFilter !== 'all') {
-                filteredAppointments = filteredAppointments.filter(apt => apt.status === statusFilter);
-            }
-            
-            // Get current page from data attribute
-            const appointmentsList = document.getElementById('appointments-list');
-            let currentPage = 1;
-            if (appointmentsList) {
-                const storedPage = appointmentsList.getAttribute('data-current-page');
-                if (storedPage) {
-                    currentPage = parseInt(storedPage);
-                }
-            }
-            
-            // Calculate new page after status change using current per-page setting
-            const perPage2 = this.appointmentsPerPage === 'all' ? filteredAppointments.length : (this.appointmentsPerPage || 10);
-            const totalPages = Math.ceil(filteredAppointments.length / perPage2);
-            
-            // If current page is beyond the new total pages, go to the last page
-            if (currentPage > totalPages && totalPages > 0) {
-                currentPage = totalPages;
-            }
-            
-            // Update current appointments list
-            this.currentAppointments = filteredAppointments;
-            
-            // Refresh the display with current page
-            this.displayAppointments(filteredAppointments, currentPage);
-            
-            this.showToast(`Appointment status updated to ${newStatus}`, 'success');
-        }
-    }
+
 
     viewAppointmentDetails(appointmentId) {
         const appointments = this.getStoredData('appointments') || [];
@@ -13760,6 +13760,8 @@ class DentalClinicApp {
             console.log('Setting up staff age calculation (duplicate function)...');
             
             // Remove existing event listeners to prevent duplicates
+
+            
             if (this.staffAgeCalculationHandler) {
                 dobInput.removeEventListener('change', this.staffAgeCalculationHandler);
                 dobInput.removeEventListener('input', this.staffAgeCalculationHandler);
@@ -18498,6 +18500,11 @@ class DentalClinicApp {
             }
             
             this.filterAppointments(currentFilter);
+
+            // Keep AppointmentsManager in sync to avoid old data reappearing when adding new
+            if (window.appointmentsManager && typeof window.appointmentsManager.refreshFromStorage === 'function') {
+                window.appointmentsManager.refreshFromStorage();
+            }
         }
     }
 
