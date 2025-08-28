@@ -20313,6 +20313,38 @@ class DentalClinicApp {
             });
         }
 
+        // Delete confirmation modal event listeners
+        const deleteConfirmationClose = document.getElementById('delete-confirmation-close');
+        if (deleteConfirmationClose) {
+            deleteConfirmationClose.addEventListener('click', () => {
+                this.closeDeleteConfirmationModal();
+            });
+        }
+
+        const deleteCancelBtn = document.getElementById('delete-cancel-btn');
+        if (deleteCancelBtn) {
+            deleteCancelBtn.addEventListener('click', () => {
+                this.closeDeleteConfirmationModal();
+            });
+        }
+
+        const deleteConfirmBtn = document.getElementById('delete-confirm-btn');
+        if (deleteConfirmBtn) {
+            deleteConfirmBtn.addEventListener('click', () => {
+                this.confirmDeleteInventoryItem();
+            });
+        }
+
+        // Close modal when clicking outside
+        const deleteConfirmationModal = document.getElementById('delete-confirmation-modal');
+        if (deleteConfirmationModal) {
+            deleteConfirmationModal.addEventListener('click', (e) => {
+                if (e.target === deleteConfirmationModal) {
+                    this.closeDeleteConfirmationModal();
+                }
+            });
+        }
+
         // Auto-calculate total value
         const quantityInput = document.getElementById('item-quantity');
         const priceInput = document.getElementById('item-price');
@@ -20714,10 +20746,7 @@ class DentalClinicApp {
                     </div>
                 </div>` : ''}
 
-                <div class="form-actions" style="padding: 0 1.25rem 1.25rem 1.25rem; display:flex; gap:.5rem; justify-content:flex-end;">
-                    <button class="btn btn-secondary" type="button" id="inventory-details-close-btn">Close</button>
-                    <button class="btn btn-primary" type="button" onclick="window.dentalApp.editInventoryItem('${item.id}')"><i class="fas fa-pen-to-square"></i> Edit</button>
-                </div>
+
             </div>
         `;
 
@@ -20729,7 +20758,6 @@ class DentalClinicApp {
 
         const close = () => { modal.style.display = 'none'; modal.remove(); };
         modal.querySelector('#inventory-details-close')?.addEventListener('click', close);
-        modal.querySelector('#inventory-details-close-btn')?.addEventListener('click', close);
         modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
         
         this.showToast('Showing inventory details', 'info');
@@ -20756,9 +20784,20 @@ class DentalClinicApp {
     }
 
     deleteInventoryItem(itemId) {
-        if (confirm('Are you sure you want to delete this inventory item?')) {
+        // Store the item ID for deletion confirmation
+        this.itemToDelete = itemId;
+        
+        // Show the delete confirmation modal
+        const modal = document.getElementById('delete-confirmation-modal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+
+    confirmDeleteInventoryItem() {
+        if (this.itemToDelete) {
             const inventory = this.getStoredData('inventory') || [];
-            const updatedInventory = inventory.filter(item => item.id !== itemId);
+            const updatedInventory = inventory.filter(item => item.id !== this.itemToDelete);
             
             this.setStoredData('inventory', updatedInventory);
             this.currentInventory = updatedInventory;
@@ -20767,7 +20806,22 @@ class DentalClinicApp {
             this.updateInventoryStats();
             
             this.showToast('Inventory item deleted successfully', 'success');
+            
+            // Reset the item to delete
+            this.itemToDelete = null;
+            
+            // Close the modal
+            this.closeDeleteConfirmationModal();
         }
+    }
+
+    closeDeleteConfirmationModal() {
+        const modal = document.getElementById('delete-confirmation-modal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+        // Reset the item to delete
+        this.itemToDelete = null;
     }
 
     refreshInventory() {

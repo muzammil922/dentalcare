@@ -1683,21 +1683,19 @@
 
                 <!-- Usage Section -->
                 <div id="usage-section" class="inventory-content-section" style="display: none;">
-                    <div class="usage-header">
-                        <h3>Item Usage Tracking</h3>
-                        <p>Track when items are used or consumed to monitor stock levels</p>
-                    </div>
+                    
                     
                     <div class="usage-controls">
-                        <button class="btn btn-primary" id="add-usage-btn">
-                            <i class="fas fa-plus"></i> Add Usage Record
-                        </button>
+                        
                         <div class="usage-filters">
-                            <input type="text" id="usage-search" placeholder="Search usage records...">
+                            
                             <select id="usage-item-filter">
                                 <option value="">All Items</option>
                             </select>
                         </div>
+                        <button class="btn btn-primary" id="add-usage-btn">
+                            <i class="fas fa-plus"></i> Add Usage Record
+                        </button>
                     </div>
                     
                     <div class="usage-stats">
@@ -1729,6 +1727,7 @@
                             </div>
                         </div>
                     </div>
+                    <input type="text" id="usage-search" placeholder="Search usage records...">
                     
                     <div class="usage-list-container">
                         <div id="usage-list" class="usage-list">
@@ -2029,6 +2028,23 @@
                             <button type="submit" class="btn btn-primary" id="inventory-submit-btn">Save Item</button>
                         </div>
                     </form>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div id="delete-confirmation-modal" class="modal">
+                <div class="modal-content" style="max-width: 400px;">
+                    <div class="modal-header">
+                        <h3>Confirm Delete</h3>
+                        <span class="close" id="delete-confirmation-close">&times;</span>
+                    </div>
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <p style="margin: 0; color: #374151; font-size: 1rem; line-height: 1.5;">Are you sure you want to delete this item?</p>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="delete-cancel-btn">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="delete-confirm-btn">Confirm</button>
+                    </div>
                 </div>
             </div>
         </main>
