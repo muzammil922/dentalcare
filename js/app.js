@@ -15646,9 +15646,9 @@ class DentalClinicApp {
             calendarHTML += '<tr>';
             for (let day = 0; day < 7; day++) {
                 if (week === 0 && day < startingDay) {
-                    calendarHTML += '<td style="padding: 0.5rem; text-align: center; border: 1px solid #000; background: #f5f5f5;"></td>';
+                    calendarHTML += '<td style="background: #f5f5f5;"></td>';
                 } else if (dayCount > daysInMonth) {
-                    calendarHTML += '<td style="padding: 0.5rem; text-align: center; border: 1px solid #000; background: #f5f5f5;"></td>';
+                    calendarHTML += '<td style="background: #f5f5f5;"></td>';
                 } else {
                     const attendanceStatus = attendanceMap[dayCount];
                     let statusDisplay = '';
@@ -15678,7 +15678,7 @@ class DentalClinicApp {
                                 textColor = '#6f42c1';
                                 break;
                             case 'late':
-                                statusDisplay = 'L';
+                                statusDisplay = 'LT';
                                 statusColor = '#fff3cd';
                                 textColor = '#856404';
                                 break;
@@ -15686,9 +15686,9 @@ class DentalClinicApp {
                     }
                     
                     calendarHTML += `
-                        <td style="padding: 0.5rem; text-align: center; border: 1px solid #000; background: ${statusColor};">
-                            <div style="font-weight: 600; color: #333;">${dayCount}</div>
-                            ${statusDisplay ? `<div style="font-size: 0.75rem; font-weight: 700; color: ${textColor}; margin-top: 0.25rem;">${statusDisplay}</div>` : ''}
+                        <td style="background: ${statusColor};">
+                            <div class="day-number">${dayCount}</div>
+                            ${statusDisplay ? `<div class="status-badge" style="background: ${statusColor}; color: ${textColor};">${statusDisplay}</div>` : ''}
                         </td>
                     `;
                     dayCount++;
@@ -15697,80 +15697,422 @@ class DentalClinicApp {
             calendarHTML += '</tr>';
         }
 
+        // Calculate attendance statistics
+        const totalDays = daysInMonth;
+        const presentDays = monthAttendance.filter(record => record.status === 'present').length;
+        const absentDays = monthAttendance.filter(record => record.status === 'absent').length;
+        const leaveDays = monthAttendance.filter(record => record.status === 'leave').length;
+        const halfDays = monthAttendance.filter(record => record.status === 'half-day').length;
+        const lateDays = monthAttendance.filter(record => record.status === 'late').length;
+        const attendanceRate = totalDays > 0 ? ((presentDays + halfDays * 0.5) / totalDays * 100).toFixed(1) : 0;
+
         const printHTML = `
             <!DOCTYPE html>
             <html>
             <head>
-                <title>${staffMember.name} - Attendance Report</title>
+                <title>Staff Attendance Report - ${staffMember.name}</title>
                 <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    .header { text-align: center; margin-bottom: 20px; }
-                    .staff-info { margin-bottom: 20px; }
-                    .legend { margin-bottom: 20px; }
-                    .legend-item { display: inline-block; margin-right: 20px; }
-                    .calendar { width: 100%; border-collapse: collapse; }
-                    .calendar th, .calendar td { border: 1px solid #000; padding: 8px; text-align: center; }
-                    .calendar th { background: #f0f0f0; font-weight: bold; }
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        line-height: 1.6;
+                        color: #1e293b;
+                        background: #f8fafc;
+                        // padding: 20px;
+                    }
+                    
+                    .print-container {
+                        width: 100%;
+                        margin: 0 auto;
+                        background: #fff;
+                        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                        
+                        overflow: hidden;
+                    }
+                    
+                    .header {
+                        background: #dbeafe;
+                            color: #2563eb;
+                        padding: 30px;
+                        text-align: center;
+                        position: relative;
+                    }
+                    
+                    .header::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: none;
+                        opacity: 0;
+                    }
+                    
+                    .header-content {
+                        position: relative;
+                        z-index: 1;
+                    }
+                    
+                    .header h1 {
+                        font-size: 2.5rem;
+                        font-weight: 700;
+                        margin-bottom: 10px;
+                        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                    }
+                    
+                    .header .subtitle {
+                        font-size: 1.2rem;
+                        opacity: 0.9;
+                        font-weight: 300;
+                    }
+                    
+                    .content {
+                        padding: 40px;
+                    }
+                    
+                    .info-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                        gap: 30px;
+                        margin-bottom: 40px;
+                    }
+                    
+                    .info-section {
+                        background: #f8f9fa;
+                        border-radius: 12px;
+                        padding: 25px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                    }
+                    
+                    .info-section h3 {
+                        color: #2563eb;
+                        font-size: 1.3rem;
+                        margin-bottom: 20px;
+                        font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    
+                    .info-item {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 12px 0;
+                        border-bottom: 1px solid #e9ecef;
+                    }
+                    
+                    .info-item:last-child {
+                        border-bottom: none;
+                    }
+                    
+                    .info-label {
+                        font-weight: 600;
+                        color: #495057;
+                        font-size: 0.95rem;
+                    }
+                    
+                    .info-value {
+                        color: #212529;
+                        font-weight: 500;
+                        text-align: right;
+                    }
+                    
+                    .calendar-section {
+                        margin-bottom: 40px;
+                    }
+                    
+                    .calendar-section h3 {
+                        color: #2563eb;
+                        font-size: 1.5rem;
+                        margin-bottom: 20px;
+                        font-weight: 600;
+                        text-align: center;
+                    }
+                    
+                    .legend {
+                        display: flex;
+                        justify-content: center;
+                        flex-wrap: wrap;
+                        gap: 20px;
+                        margin-bottom: 30px;
+                        padding: 20px;
+                        background: #f8f9fa;
+                        border-radius: 12px;
+                    }
+                    
+                    .legend-item {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 0.9rem;
+                        font-weight: 500;
+                    }
+                    
+                    .legend-badge {
+                        padding: 4px 8px;
+                        border-radius: 6px;
+                        font-weight: 700;
+                        font-size: 0.8rem;
+                        min-width: 30px;
+                        text-align: center;
+                    }
+                    
+                    .calendar {
+                        width: 100%;
+                        border-collapse: collapse;
+                        border-radius: 12px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        margin-bottom: 30px;
+                    }
+                    
+                    .calendar th {
+                        background: #2563eb;
+                        color: white;
+                        padding: 15px 8px;
+                        text-align: center;
+                        font-weight: 600;
+                        font-size: 0.9rem;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    }
+                    
+                    .calendar td {
+                        padding: 0;
+                        text-align: center;
+                        border: 1px solid #e9ecef;
+                        height: 60px;
+                        vertical-align: middle;
+                        position: relative;
+                    }
+                    
+                    .calendar td .day-number {
+                        font-weight: 600;
+                        color: #333;
+                        font-size: 1rem;
+                    }
+                    
+                    .calendar td .status-badge {
+                        font-size: 0.7rem;
+                        font-weight: 700;
+                        margin-top: 4px;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        display: inline-block;
+                    }
+                    
+                    .stats-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                        gap: 20px;
+                        margin-bottom: 30px;
+                    }
+                    
+                    .stat-card {
+                        background: #f8f9fa;
+                        border-radius: 12px;
+                        padding: 20px;
+                        text-align: center;
+                    }
+                    
+                    .stat-number {
+                        font-size: 2rem;
+                        font-weight: 700;
+                        color: #667eea;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .stat-label {
+                        font-size: 0.9rem;
+                        color: #6c757d;
+                        font-weight: 500;
+                    }
+                    
+                    .footer {
+                        background: #f8f9fa;
+                        padding: 25px;
+                        text-align: center;
+                        border-top: 3px solid #667eea;
+                        margin-top: 30px;
+                    }
+                    
+                    .footer-content {
+                        color: #6c757d;
+                        font-size: 0.9rem;
+                        line-height: 1.8;
+                    }
+                    
+                    .footer-content strong {
+                        color: #495057;
+                    }
+                    
                     @media print {
-                        body { margin: 0; }
-                        .no-print { display: none; }
+                        body {
+                            padding: 0;
+                            background: white;
+                        }
+                        
+                        .print-container {
+                            box-shadow: none;
+                            border-radius: 0;
+                            max-width: none;
+                        }
+                        
+                        .no-print {
+                            display: none !important;
+                        }
+                        
+                        .header {
+                            background: #0891b2 !important;
+                            -webkit-print-color-adjust: exact;
+                            color-adjust: exact;
+                        }
+                        
+                        .calendar th {
+                            background: #0891b2 !important;
+                            -webkit-print-color-adjust: exact;
+                            color-adjust: exact;
+                        }
                     }
                 </style>
             </head>
             <body>
-                <div class="header">
-                    <h1>Staff Attendance Report</h1>
-                    <h2>${monthNames[currentMonth]} ${currentYear}</h2>
-                </div>
-                
-                <div class="staff-info">
-                    <h3>Staff Information</h3>
-                    <p><strong>Name:</strong> ${staffMember.name}</p>
-                    <p><strong>Role:</strong> ${staffMember.role}</p>
-                    <p><strong>Month:</strong> ${monthNames[currentMonth]} ${currentYear}</p>
-                </div>
-                
-                <div class="legend">
-                    <h3>Attendance Legend</h3>
-                    <div class="legend-item">
-                        <span style="background: #d4edda; color: #155724; padding: 2px 6px; border-radius: 3px; font-weight: bold;">P</span> Present
+                <div id="printButtonContainer" class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: #059669; color: #fff; padding: 12px 24px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(5,150,105,.4); font-weight: 600; transition: all .3s ease; border: none; display: flex; align-items: center; gap: 8px;" onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'"><span>Print Attendance Report</span></div>
+                <div class="print-container">
+                    <div class="header">
+                        <div class="header-content">
+                            <h1>Staff Attendance Report</h1>
+                            <div class="subtitle">${monthNames[currentMonth]} ${currentYear}</div>
+                        </div>
                     </div>
-                    <div class="legend-item">
-                        <span style="background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 3px; font-weight: bold;">A</span> Absent
+                    
+                    <div class="content">
+                        <div class="info-grid">
+                            <div class="info-section">
+                                <h3>Staff Information</h3>
+                                <div class="info-item">
+                                    <span class="info-label">Staff ID:</span>
+                                    <span class="info-value">${staffMember.id}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Name:</span>
+                                    <span class="info-value">${staffMember.name}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Role:</span>
+                                    <span class="info-value">${staffMember.role}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Department:</span>
+                                    <span class="info-value">${staffMember.department || 'General'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-section">
+                                <h3>Attendance Summary</h3>
+                                <div class="info-item">
+                                    <span class="info-label">Total Days:</span>
+                                    <span class="info-value">${totalDays}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Present:</span>
+                                    <span class="info-value">${presentDays}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Absent:</span>
+                                    <span class="info-value">${absentDays}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Attendance Rate:</span>
+                                    <span class="info-value">${attendanceRate}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="calendar-section">
+                            <h3>Monthly Attendance Calendar</h3>
+                            
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <span class="legend-badge" style="background: #d4edda; color: #155724;">P</span>
+                                    <span>Present</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-badge" style="background: #f8d7da; color: #721c24;">A</span>
+                                    <span>Absent</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-badge" style="background: #d1ecf1; color: #0c5460;">L</span>
+                                    <span>Leave</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-badge" style="background: #e2d9f3; color: #6f42c1;">HD</span>
+                                    <span>Half Day</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-badge" style="background: #fff3cd; color: #856404;">LT</span>
+                                    <span>Late</span>
+                                </div>
+                            </div>
+                            
+                            <table class="calendar">
+                                <thead>
+                                    <tr>
+                                        <th>Sunday</th>
+                                        <th>Monday</th>
+                                        <th>Tuesday</th>
+                                        <th>Wednesday</th>
+                                        <th>Thursday</th>
+                                        <th>Friday</th>
+                                        <th>Saturday</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${calendarHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number">${presentDays}</div>
+                                <div class="stat-label">Present Days</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${absentDays}</div>
+                                <div class="stat-label">Absent Days</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${leaveDays}</div>
+                                <div class="stat-label">Leave Days</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${halfDays}</div>
+                                <div class="stat-label">Half Days</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${attendanceRate}%</div>
+                                <div class="stat-label">Attendance Rate</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="legend-item">
-                        <span style="background: #d1ecf1; color: #0c5460; padding: 2px 6px; border-radius: 3px; font-weight: bold;">L</span> Leave
-                    </div>
-                    <div class="legend-item">
-                        <span style="background: #e2d9f3; color: #6f42c1; padding: 2px 6px; border-radius: 3px; font-weight: bold;">HD</span> Half Day
+                    
+                    <div class="footer">
+                        <div class="footer-content">
+                            <strong>Dental Clinic Pro</strong> - Staff Attendance Management System<br>
+                            Generated on: <strong>${this.formatDate(new Date())}</strong> | Report Period: <strong>${monthNames[currentMonth]} ${currentYear}</strong>
+                        </div>
                     </div>
                 </div>
                 
-                <table class="calendar">
-                    <thead>
-                        <tr>
-                            <th>Sun</th>
-                            <th>Mon</th>
-                            <th>Tue</th>
-                            <th>Wed</th>
-                            <th>Thu</th>
-                            <th>Fri</th>
-                            <th>Sat</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${calendarHTML}
-                    </tbody>
-                </table>
                 
-                <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
-                    <p>Generated on: ${this.formatDate(new Date())}</p>
-                </div>
-                
-                <div class="no-print" style="margin-top: 20px; text-align: center;">
-                    <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Print Report</button>
-                    <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Close</button>
-                </div>
             </body>
             </html>
         `;
@@ -17315,8 +17657,10 @@ class DentalClinicApp {
             <head>
                 <title>Staff Details - ${staffMember.name}</title>
                 <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                    body { font-family: Arial, sans-serif; margin: 0; background: #f8fafc; color: #1e293b; }
+                    .header { background: #06b6d4; color: #ffffff; text-align: center; padding: 24px; margin-bottom: 20px; }
+                    .header h1 { margin: 0; font-size: 28px; }
+                    .header p { margin: 6px 0 0 0; opacity: 0.9; }
                     .section { margin-bottom: 20px; }
                     .section h3 { color: #2563eb; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
                     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -17869,12 +18213,12 @@ class DentalClinicApp {
                     }
                     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #f8fafc; color: #1e293b; }
                     .container { width: 100%; margin: 0 auto 20px auto; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-                    .header { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: #fff; padding: 2rem; text-align: center; position: relative; overflow: hidden; }
+                    .header { background: #dbeafe; color: #2563eb; padding: 2rem; text-align: center; position: relative; overflow: hidden; }
                     .header h1 { margin: 0; font-size: 2.5rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative; z-index: 1; }
                     .header h2 { margin: .5rem 0 0 0; font-size: 1.5rem; font-weight: 400; opacity: .9; position: relative; z-index: 1; }
                     .content { padding: 2rem; }
                     .section { margin-bottom: 2rem; background: #f0f9ff; border-radius: 12px; padding: 1.5rem; }
-                    .section h3 { margin: 0 0 1rem 0; color: #0284c7; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; }
+                    .section h3 { margin: 0 0 1rem 0; color: #2563eb; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; }
                     .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
                     .info-item { background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
                     .info-label { font-weight: 600; color: #475569; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .25rem; }
@@ -21843,8 +22187,8 @@ Status: ${item.status || 'In Stock'}
                         }
                         
                         .header {
-                            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-                            color: white;
+                            background: #dbeafe;
+                            color: #2563eb;
                             padding: 2rem;
                             text-align: center;
                             position: relative;
@@ -21882,7 +22226,7 @@ Status: ${item.status || 'In Stock'}
                         
                         .section h3 {
                             margin: 0 0 1rem 0;
-                            color: #0284c7;
+                            color: #2563eb;
                             font-size: 1.25rem;
                             font-weight: 600;
                             display: flex;
