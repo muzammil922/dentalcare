@@ -27,6 +27,9 @@ class DentalClinicApp {
         this.init();
         this.startDateAutoUpdate(); // Start auto-date update
         
+        // Prevent duplicate inventory listeners
+        this.inventoryEventsBound = false;
+
         // Initialize enhanced date pickers after a short delay
         setTimeout(() => {
             this.initializeEnhancedDatePickers();
@@ -20274,6 +20277,10 @@ class DentalClinicApp {
     }
 
     setupInventoryEventListeners() {
+        // Avoid binding listeners multiple times
+        if (this.inventoryEventsBound) {
+            return;
+        }
         // Add New Item button
         const addNewItemBtn = document.getElementById('add-new-item-btn');
         if (addNewItemBtn) {
@@ -20339,6 +20346,9 @@ class DentalClinicApp {
 
         // Usage section event listeners
         this.setupUsageEventListeners();
+
+        // Mark as bound
+        this.inventoryEventsBound = true;
     }
 
     showAddInventoryModal() {
@@ -20551,7 +20561,7 @@ class DentalClinicApp {
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 <button class="action-btn edit" onclick="window.dentalApp.editInventoryItem('${item.id}')" title="Edit">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-pen-to-square"></i>
                                 </button>
                                 <button class="action-btn delete" onclick="window.dentalApp.deleteInventoryItem('${item.id}')" title="Delete">
                                     <i class="fas fa-trash"></i>
@@ -20635,21 +20645,94 @@ class DentalClinicApp {
             return;
         }
 
-        // Show item details in a simple alert for now
-        const details = `
-Item Details:
-Name: ${item.name}
-Category: ${item.category}
-Description: ${item.description || 'N/A'}
-Quantity: ${item.quantity || 0} ${item.unit || 'units'}
-Price: Rs. ${Math.round(item.price || 0).toLocaleString()}
-Total Value: Rs. ${Math.round(item.totalValue || 0).toLocaleString()}
-Supplier: ${item.supplier || 'N/A'}
-Location: ${item.location || 'N/A'}
-Status: ${item.status || 'In Stock'}
+        // Create a modern modal similar to Staff Details style
+        const existing = document.getElementById('inventory-details-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'inventory-details-modal';
+        modal.className = 'modal';
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px; width: 95%;">
+                <div class="modal-header">
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <div style="width:40px;height:40px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--primary-color);">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin:0">Inventory Details</h3>
+                            <div style="color:var(--gray-600);font-size:0.9rem;">${item.name}</div>
+                        </div>
+                    </div>
+                    <span class="close" id="inventory-details-close">&times;</span>
+                </div>
+
+                <div style="padding:1.25rem; display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:1rem;">
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Category</div>
+                        <div style="color:var(--gray-900);font-weight:600;">${item.category || 'N/A'}</div>
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Quantity</div>
+                        <div style="color:var(--primary-color);font-weight:700;">${item.quantity || 0} ${item.unit || 'units'}</div>
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Price / Unit</div>
+                        <div style="color:var(--primary-color);font-weight:700;">Rs. ${Math.round(item.price || 0).toLocaleString()}</div>
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Total Value</div>
+                        <div style="color:var(--primary-color);font-weight:700;">Rs. ${Math.round(item.totalValue || ((item.quantity||0)*(item.price||0))).toLocaleString()}</div>
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Supplier</div>
+                        <div style="color:var(--gray-900);font-weight:600;">${item.supplier || 'N/A'}</div>
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Location</div>
+                        <div style="color:var(--gray-900);font-weight:600;">${item.location || 'N/A'}</div>
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Status</div>
+                        <div style="display:inline-block;padding:.25rem .6rem;border-radius:999px;font-weight:700; font-size:.8rem; ${(() => {
+                            const q = item.quantity || 0; const min = item.minStock || 0; if (q === 0) return 'background: var(--error-light); color: var(--error-color);'; if (q <= min) return 'background: var(--warning-light); color: var(--warning-color);'; return 'background: var(--success-light); color: var(--success-color);';
+                        })()}">${item.status || ((item.quantity||0)===0 ? 'Out of Stock' : (item.quantity||0) <= (item.minStock||0) ? 'Low Stock' : 'In Stock')}</div>
+                    </div>
+                    ${item.expiryDate ? `
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Expiry Date</div>
+                        <div style="color:var(--gray-900);font-weight:600;">${this.formatDate(item.expiryDate)}</div>
+                    </div>`: ''}
+                </div>
+
+                ${item.description ? `
+                <div style="padding:0 1.25rem 1.25rem 1.25rem;">
+                    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                        <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Description</div>
+                        <div style="color:var(--gray-800);line-height:1.5;">${item.description}</div>
+                    </div>
+                </div>` : ''}
+
+                <div class="form-actions" style="padding: 0 1.25rem 1.25rem 1.25rem; display:flex; gap:.5rem; justify-content:flex-end;">
+                    <button class="btn btn-secondary" type="button" id="inventory-details-close-btn">Close</button>
+                    <button class="btn btn-primary" type="button" onclick="window.dentalApp.editInventoryItem('${item.id}')"><i class="fas fa-pen-to-square"></i> Edit</button>
+                </div>
+            </div>
         `;
+
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.padding = '20px';
+
+        const close = () => { modal.style.display = 'none'; modal.remove(); };
+        modal.querySelector('#inventory-details-close')?.addEventListener('click', close);
+        modal.querySelector('#inventory-details-close-btn')?.addEventListener('click', close);
+        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
         
-        alert(details);
+        this.showToast('Showing inventory details', 'info');
     }
 
     populateInventoryFormForEdit(item) {

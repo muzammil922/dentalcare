@@ -388,14 +388,12 @@ body {
   font-weight: 500;
   font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  transition: none;
+  box-shadow: none;
 }
 
 .overview-btn:hover {
   background: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
 }
 
 .overview-btn.active {
@@ -4698,10 +4696,10 @@ select {
   margin-bottom: var(--spacing-6);
   background-color: white;
   padding: var(--spacing-3);
-  box-shadow: var(--shadow-sm);
+  /* box-shadow: var(--shadow-sm); */
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  display: flex;
+  /* display: flex; */
   justify-content: space-between;
   align-items: center;
 }
@@ -4720,29 +4718,32 @@ select {
 
 .inventory-overview .overview-btn {
   display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-3) var(--spacing-4);
-  background: transparent;
-  color: var(--primary-color);
-  border: none;
-  border-radius: var(--radius-lg);
-  font-weight: 500;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3) var(--spacing-4);
+    border: none;
+    background: transparent;
+    color: var(--gray-600);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    /* transition: all var(--transition-fast); */
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .inventory-overview .overview-btn:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  background: var(--gray-light);
+  box-shadow: none;
+  
+  
 }
 
 .inventory-overview .overview-btn.active {
   background: var(--primary-color);
-  color: var(--white);
+    color: var(--white);
+    box-shadow: var(--shadow-sm);
+  
 }
 
 .inventory-overview .overview-btn i {
@@ -4984,10 +4985,10 @@ select {
 .inventory-table-header {
   display: grid;
   grid-template-columns: 60px 1fr 100px 120px 80px 80px 140px 120px;
-  background: var(--gray-100);
+  
   border-bottom: 1px solid var(--gray-200);
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--primary-color);
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -5014,7 +5015,7 @@ select {
   align-items: center;
   justify-content: center;
   font-size: 0.875rem;
-  overflow: hidden;
+  
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
@@ -5132,42 +5133,50 @@ select {
 
 .table-actions {
   display: flex;
-  gap: var(--spacing-1);
+  
   justify-content: center;
+  
 }
 
 .action-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--gray-300);
   border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--gray-600);
+  background: #e8f0ff; /* soft blue like screenshot */
+  color: #2563eb; /* primary blue for icons */
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  line-height: 1;
+  box-sizing: border-box;
+}
+.action-btn.view{
+  width: 25px;
+  height: 25px;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+.action-btn.edit{
+  color: var(--warning-color);
+  width: 25px;
+  height: 25px;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
 }
 
-.action-btn:hover {
-  transform: translateY(-1px);
-}
-
-.action-btn.view:hover {
-  background: var(--primary-light);
-  color: var(--primary-color);
-}
-
-.action-btn.edit:hover {
-  background: var(--primary-light);
-  color: var(--primary-color);
-}
-
-.action-btn.delete:hover {
-  background: var(--error-light);
-  color: var(--error-color);
+.action-btn.delete {
+  color: var(--danger-color);
+  width: 25px;
+  height: 25px;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 /* Inventory Pagination Styles */
@@ -5382,28 +5391,46 @@ select {
 
 .inventory-action-btn {
   padding: 0.5rem;
-  border: none;
+  border: 1px solid var(--gray-300);
   border-radius: var(--border-radius);
   background: transparent;
   color: var(--gray-600);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .inventory-action-btn:hover {
-  transform: translateY(-1px);
+  /* no lift on hover to match theme */
 }
 
+.inventory-action-btn.view:hover,
 .inventory-action-btn.edit:hover {
   background-color: var(--primary-light);
   color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .inventory-action-btn.delete:hover {
   background-color: var(--error-light);
+  color: var(--error-color);
+  border-color: var(--error-color);
+}
+
+/* Themed colors for inventory action buttons */
+.inventory-action-btn.view {
+  color: var(--primary-color);
+}
+.inventory-action-btn.view:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+}
+.inventory-action-btn.edit {
+  color: var(--primary-color);
+}
+.inventory-action-btn.delete {
   color: var(--error-color);
 }
 
