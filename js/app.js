@@ -13,8 +13,7 @@ class DentalClinicApp {
         this.isLoading = true;
         this.isMobile = window.innerWidth <= 768;
         this.formSubmissionLock = false;
-        this.isEditingStaff = false; // Track if we're editing staff
-        this.editingStaffId = null; // Track which staff member we're editing
+
         this.pakistanTimeZone = 'Asia/Karachi'; // Pakistan timezone
         this.patientsPerPage = 10; // Default patients per page
         this.currentPatientPage = 1; // Track current patient page
@@ -5771,6 +5770,14 @@ class DentalClinicApp {
             modal.style.display = 'none';
         });
         
+        // Reset all modal state variables
+        
+        // Reset submit button text for staff modal
+        const staffSubmitButton = document.getElementById('staff-submit-btn');
+        if (staffSubmitButton) {
+            staffSubmitButton.textContent = 'Save Staff';
+        }
+        
         // Close all calendar dropdowns
         document.querySelectorAll('.calendar-dropdown').forEach(calendar => {
             calendar.remove();
@@ -7144,6 +7151,7 @@ class DentalClinicApp {
         }
         
         // Show modal
+        modal.style.display = 'flex';
         modal.classList.add('active');
         
         // Focus on first input
@@ -7158,17 +7166,29 @@ class DentalClinicApp {
 
     closeStaffModal() {
         const modal = document.getElementById('staff-modal');
+        const form = document.getElementById('staff-form');
         const submitButton = document.getElementById('staff-submit-btn');
+        
         if (modal) {
             modal.classList.remove('active');
         }
+        
+        // Reset form and clear edit state
+        if (form) {
+            form.reset();
+            delete form.dataset.editId;
+        }
+        
         // Reset button text to default
         if (submitButton) {
             submitButton.textContent = 'Save Staff';
         }
-        // Reset edit mode flags
-        this.isEditingStaff = false;
-        this.editingStaffId = null;
+        
+        // Reset modal title
+        const modalTitle = document.getElementById('staff-modal-title');
+        if (modalTitle) {
+            modalTitle.textContent = 'Add New Staff Member';
+        }
     }
 
     setupStaffAgeCalculation() {
@@ -7248,13 +7268,14 @@ class DentalClinicApp {
     handleStaffFormSubmit(e) {
         e.preventDefault();
         
-        const formData = new FormData(e.target);
+        const form = e.target;
+        const formData = new FormData(form);
         
-        // Check if we're in edit mode
-        if (this.isEditingStaff && this.editingStaffId) {
+        // Check if we're in edit mode using dataset.editId (like patient form)
+        if (form.dataset.editId) {
             // Update existing staff member
             const staff = this.getStoredData('staff') || [];
-            const staffMember = staff.find(s => s.id === this.editingStaffId);
+            const staffMember = staff.find(s => s.id === form.dataset.editId);
             
             if (!staffMember) {
                 this.showToast('Staff member not found', 'error');
@@ -7300,7 +7321,7 @@ class DentalClinicApp {
             }
             
             // Update staff data
-            const updatedStaff = staff.map(s => s.id === this.editingStaffId ? updatedData : s);
+            const updatedStaff = staff.map(s => s.id === form.dataset.editId ? updatedData : s);
             this.setStoredData('staff', updatedStaff);
             
             this.closeStaffModal();
@@ -7343,9 +7364,8 @@ class DentalClinicApp {
             // Refresh the display with current page
             this.displayStaff(filteredStaff, currentPage);
             
-            // Reset edit mode
-            this.isEditingStaff = false;
-            this.editingStaffId = null;
+            // Clear edit mode (like patient form)
+            delete form.dataset.editId;
             
             // Reset button text
             const submitButton = document.getElementById('staff-submit-btn');
@@ -7358,7 +7378,7 @@ class DentalClinicApp {
         
         // Add new staff member
         const staffData = {
-            id: this.generateId('staff'),
+            id: form.dataset.editId || this.generateId('staff'),
             name: formData.get('name'),
             email: formData.get('email'),
             phone: formData.get('phone'),
@@ -7374,7 +7394,7 @@ class DentalClinicApp {
             address: formData.get('address'),
             salary: parseFloat(formData.get('salary')) || 0,
             workingDays: formData.get('workingDays'),
-            createdAt: new Date().toISOString(),
+            createdAt: form.dataset.editId ? undefined : new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
@@ -7396,27 +7416,45 @@ class DentalClinicApp {
             return;
         }
 
-        // Save staff member
+        // Save staff member (unified approach like patient form)
         const staff = this.getStoredData('staff') || [];
-        staff.push(staffData);
+        
+        if (form.dataset.editId) {
+            // Update existing staff member
+            const index = staff.findIndex(s => s.id === form.dataset.editId);
+            if (index !== -1) {
+                staff[index] = { ...staff[index], ...staffData };
+                this.showToast(`Staff member ${this.capitalizeWords(staffData.name)} updated successfully`, 'success');
+            }
+        } else {
+            // Check if staff already exists (by phone number)
+            const existingStaff = staff.find(s => s.phone === staffData.phone);
+            if (existingStaff) {
+                this.showToast('Staff member with this phone number already exists', 'error');
+                return;
+            }
+            
+            // Add new staff member
+            staff.push(staffData);
+            this.showToast(`Staff member ${this.capitalizeWords(staffData.name)} added successfully`, 'success');
+        }
+        
         this.setStoredData('staff', staff);
-
-        // Close modal
         this.closeStaffModal();
-
-        // Show success message
-        this.showToast(`Staff member ${this.capitalizeWords(staffData.name)} added successfully`, 'success');
         
-        // Reset modal state to ensure it can be opened again
-        this.isEditingStaff = false;
-        this.editingStaffId = null;
-        
-        // Update the staff list display
-        this.filterStaff('all');
-
-        // Update current staff and refresh staff display
-        this.currentStaff = staff;
-        this.displayStaff(staff, 1);
+        // Refresh the display with current filter and maintain current page
+        if (document.getElementById('staff-management').classList.contains('active')) {
+            // Get current active filter option to re-apply the filter
+            const activeFilterOption = document.querySelector('[data-type="staff"].dropdown-filter-option.active');
+            let currentFilter = 'all'; // default to all
+            
+            if (activeFilterOption) {
+                currentFilter = activeFilterOption.getAttribute('data-filter');
+            }
+            
+            // Re-apply the current filter to refresh the display while maintaining current page
+            this.filterStaff(currentFilter, false, true);
+        }
     }
 
     handleSalaryFormSubmit(e) {
@@ -8136,172 +8174,7 @@ class DentalClinicApp {
         }, 100);
     }
 
-    setupEventListeners() {
-        // Navigation
-        document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const section = e.currentTarget.getAttribute('data-section');
-                this.showSection(section);
-            });
-        });
 
-        // Tab navigation
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const tabName = e.currentTarget.getAttribute('data-tab');
-                this.showTab(tabName);
-            });
-        });
-
-        // Dropdown filters
-        this.setupDropdownFilters();
-
-        // Patient form functionality
-        this.setupPatientForm();
-
-        // Import/Export buttons
-        document.getElementById('import-patients-btn')?.addEventListener('click', () => this.importPatients());
-        document.getElementById('export-patients-btn')?.addEventListener('click', () => this.exportPatients());
-        document.getElementById('import-appointments-btn')?.addEventListener('click', () => this.importAppointments());
-        document.getElementById('export-appointments-btn')?.addEventListener('click', () => this.exportAppointments());
-        document.getElementById('import-billing-btn')?.addEventListener('click', () => this.importBilling());
-        document.getElementById('export-billing-btn')?.addEventListener('click', () => this.exportBilling());
-
-        // Add new buttons
-        document.getElementById('add-new-patient-btn')?.addEventListener('click', () => {
-            this.showAddPatientModal();
-            // Double-check date is set after modal opens
-            setTimeout(() => {
-                const addDateInput = document.getElementById('patient-add-date');
-                if (addDateInput && !addDateInput.value) {
-                    const today = new Date().toISOString().split('T')[0];
-                    addDateInput.value = today;
-                    addDateInput.setAttribute('readonly', true);
-                }
-            }, 10);
-        });
-        document.getElementById('add-new-appointment-btn')?.addEventListener('click', () => {
-            this.showAddAppointmentModal();
-            // Ensure appointment date is set after modal opens
-            setTimeout(() => {
-                this.setAppointmentDateToToday();
-            }, 50);
-        });
-        document.getElementById('add-new-billing-btn')?.addEventListener('click', () => this.showAddBillingModal());
-
-        // Staff section buttons
-        const addNewStaffBtn = document.getElementById('add-new-staff-btn');
-        if (addNewStaffBtn) {
-            addNewStaffBtn.addEventListener('click', () => {
-                console.log('Add New Staff button clicked');
-                this.showAddStaffModal();
-            });
-        } else {
-            console.log('Add New Staff button not found');
-        }
-        document.getElementById('add-new-salary-btn')?.addEventListener('click', () => {
-            this.showAddSalaryModal();
-        });
-        
-        document.getElementById('staff-header-settings-btn')?.addEventListener('click', () => {
-            this.showStaffSettingsModal();
-        });
-
-        // Staff import/export buttons
-        document.getElementById('import-staff-btn')?.addEventListener('click', () => this.importStaff());
-        document.getElementById('export-staff-btn')?.addEventListener('click', () => this.exportStaff());
-        document.getElementById('import-salary-btn')?.addEventListener('click', () => this.importSalary());
-        document.getElementById('export-salary-btn')?.addEventListener('click', () => this.exportSalary());
-        document.getElementById('import-attendance-btn')?.addEventListener('click', () => this.importAttendance());
-        document.getElementById('export-attendance-btn')?.addEventListener('click', () => this.exportAttendance());
-
-        // Modal close buttons
-        document.getElementById('patient-modal-close')?.addEventListener('click', () => this.closePatientModal());
-        document.getElementById('patient-cancel-btn')?.addEventListener('click', () => this.closePatientModal());
-        document.getElementById('appointment-modal-close')?.addEventListener('click', () => this.closeAppointmentModal());
-        document.getElementById('appointment-cancel-btn')?.addEventListener('click', () => this.closeAppointmentModal());
-        document.getElementById('staff-modal-close')?.addEventListener('click', () => this.closeStaffModal());
-        document.getElementById('staff-cancel-btn')?.addEventListener('click', () => this.closeStaffModal());
-        document.getElementById('salary-modal-close')?.addEventListener('click', () => this.closeSalaryModal());
-        document.getElementById('salary-cancel-btn')?.addEventListener('click', () => this.closeSalaryModal());
-        document.getElementById('attendance-modal-close')?.addEventListener('click', () => this.closeAttendanceModal());
-        document.getElementById('attendance-cancel-btn')?.addEventListener('click', () => this.closeAttendanceModal());
-        document.getElementById('staff-settings-close')?.addEventListener('click', () => this.closeStaffSettingsModal());
-        document.getElementById('staff-settings-cancel')?.addEventListener('click', () => this.closeStaffSettingsModal());
-
-        // Search functionality
-        document.getElementById('patient-search')?.addEventListener('input', (e) => this.searchPatients(e.target.value));
-        document.getElementById('appointment-search')?.addEventListener('input', (e) => this.searchAppointments(e.target.value));
-        document.getElementById('billing-search')?.addEventListener('input', (e) => this.searchBilling(e.target.value));
-        document.getElementById('staff-search')?.addEventListener('input', (e) => this.searchStaff(e.target.value));
-        document.getElementById('salary-search')?.addEventListener('input', (e) => this.searchSalary(e.target.value));
-        document.getElementById('attendance-search')?.addEventListener('input', (e) => this.searchAttendance(e.target.value));
-
-        // Mobile menu toggle
-        document.getElementById('sidebar-toggle')?.addEventListener('click', () => this.toggleSidebar());
-
-        // Sidebar close button
-        document.getElementById('sidebar-close')?.addEventListener('click', () => this.closeSidebar());
-
-        // Sidebar overlay
-        document.getElementById('sidebar-overlay')?.addEventListener('click', () => this.closeSidebar());
-
-        // Close sidebar when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.sidebar') && !e.target.closest('#sidebar-toggle')) {
-                this.closeSidebar();
-            }
-        });
-
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => this.handleKeyboardNavigation(e));
-
-        // Staff form submission
-        document.getElementById('staff-form')?.addEventListener('submit', (e) => this.handleStaffFormSubmit(e));
-        
-        // Salary form submission
-        document.getElementById('salary-form')?.addEventListener('submit', (e) => this.handleSalaryFormSubmit(e));
-        
-        // Salary save & print button
-        document.getElementById('salary-save-print-btn')?.addEventListener('click', (e) => this.handleSalarySaveAndPrint(e));
-        
-        // Attendance form submission
-        document.getElementById('attendance-form')?.addEventListener('submit', (e) => this.handleAttendanceFormSubmit(e));
-        
-        // Staff settings form submission
-        document.getElementById('staff-settings-form')?.addEventListener('submit', (e) => this.handleStaffSettingsSubmit(e));
-        
-        // Attendance date filter
-        document.getElementById('attendance-date-filter')?.addEventListener('change', (e) => this.filterAttendanceByDate(e.target.value));
-        
-        // Attendance time change listener for auto-status detection
-        document.getElementById('attendance-time')?.addEventListener('change', () => this.autoDetectAttendanceStatus());
-
-        // Setup staff status dropdown
-        this.setupStaffStatusDropdown();
-
-        // Event delegation for staff buttons (in case they're loaded dynamically)
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#add-new-staff-btn')) {
-                console.log('Add New Staff button clicked (delegated)');
-                this.showAddStaffModal();
-            }
-        });
-
-
-
-        // Window resize
-        window.addEventListener('resize', () => this.handleResize());
-
-        // Close modals when clicking outside
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                this.closeAllModals();
-            }
-        });
-    }
 
     setupImportExportTooltips() {
         console.log('Setting up import/export tooltips...');
@@ -13728,7 +13601,16 @@ class DentalClinicApp {
         }
         
         // Show modal
+        modal.style.display = 'flex';
         modal.classList.add('active');
+        
+        // Focus on first input field
+        setTimeout(() => {
+            const firstInput = form.querySelector('input[type="text"], input[type="email"], input[type="tel"], input[type="date"], textarea');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }, 100);
         
         // Focus on first input
         const nameInput = document.getElementById('staff-name');
@@ -13742,17 +13624,29 @@ class DentalClinicApp {
 
     closeStaffModal() {
         const modal = document.getElementById('staff-modal');
+        const form = document.getElementById('staff-form');
         const submitButton = document.getElementById('staff-submit-btn');
+        
         if (modal) {
             modal.classList.remove('active');
         }
+        
+        // Reset form and clear edit state
+        if (form) {
+            form.reset();
+            delete form.dataset.editId;
+        }
+        
         // Reset button text to default
         if (submitButton) {
             submitButton.textContent = 'Save Staff';
         }
-        // Reset edit mode flags
-        this.isEditingStaff = false;
-        this.editingStaffId = null;
+        
+        // Reset modal title
+        const modalTitle = document.getElementById('staff-modal-title');
+        if (modalTitle) {
+            modalTitle.textContent = 'Add New Staff Member';
+        }
     }
 
     setupStaffAgeCalculation() {
@@ -13836,11 +13730,13 @@ class DentalClinicApp {
         
         const formData = new FormData(e.target);
         
+        const form = e.target;
+        
         // Check if we're in edit mode
-        if (this.isEditingStaff && this.editingStaffId) {
+        if (form.dataset.editId) {
             // Update existing staff member
             const staff = this.getStoredData('staff') || [];
-            const staffMember = staff.find(s => s.id === this.editingStaffId);
+            const staffMember = staff.find(s => s.id === form.dataset.editId);
             
             if (!staffMember) {
                 this.showToast('Staff member not found', 'error');
@@ -13886,7 +13782,7 @@ class DentalClinicApp {
             }
             
             // Update staff data
-            const updatedStaff = staff.map(s => s.id === this.editingStaffId ? updatedData : s);
+            const updatedStaff = staff.map(s => s.id === form.dataset.editId ? updatedData : s);
             this.setStoredData('staff', updatedStaff);
             
             this.closeStaffModal();
@@ -13929,9 +13825,8 @@ class DentalClinicApp {
             // Refresh the display with current page
             this.displayStaff(filteredStaff, currentPage);
             
-            // Reset edit mode
-            this.isEditingStaff = false;
-            this.editingStaffId = null;
+            // Clear edit state
+            delete form.dataset.editId;
             
             // Reset button text
             const submitButton = document.getElementById('staff-submit-btn');
@@ -13942,9 +13837,9 @@ class DentalClinicApp {
             return;
         }
         
-        // Add new staff member
+        // Use unified approach for both edit and add
         const staffData = {
-            id: this.generateId('staff'),
+            id: form.dataset.editId || this.generateId('staff'),
             name: formData.get('name'),
             email: formData.get('email'),
             phone: formData.get('phone'),
@@ -13960,7 +13855,7 @@ class DentalClinicApp {
             address: formData.get('address'),
             salary: parseFloat(formData.get('salary')) || 0,
             workingDays: formData.get('workingDays'),
-            createdAt: new Date().toISOString(),
+            createdAt: form.dataset.editId ? undefined : new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
@@ -13982,20 +13877,45 @@ class DentalClinicApp {
             return;
         }
 
-        // Save staff member
+        // Save staff member (unified approach like patient form)
         const staff = this.getStoredData('staff') || [];
-        staff.push(staffData);
+        
+        if (form.dataset.editId) {
+            // Update existing staff member
+            const index = staff.findIndex(s => s.id === form.dataset.editId);
+            if (index !== -1) {
+                staff[index] = { ...staff[index], ...staffData };
+                this.showToast(`Staff member ${this.capitalizeWords(staffData.name)} updated successfully`, 'success');
+            }
+        } else {
+            // Check if staff already exists (by phone number)
+            const existingStaff = staff.find(s => s.phone === staffData.phone);
+            if (existingStaff) {
+                this.showToast('Staff member with this phone number already exists', 'error');
+                return;
+            }
+            
+            // Add new staff member
+            staff.push(staffData);
+            this.showToast(`Staff member ${this.capitalizeWords(staffData.name)} added successfully`, 'success');
+        }
+        
         this.setStoredData('staff', staff);
-
-        // Close modal
         this.closeStaffModal();
-
-        // Show success message
-        this.showToast(`Staff member ${this.capitalizeWords(staffData.name)} added successfully`, 'success');
-
-        // Update current staff and refresh staff display
-        this.currentStaff = staff;
-        this.displayStaff(staff, 1);
+        
+        // Refresh the display with current filter and maintain current page
+        if (document.getElementById('staff-management').classList.contains('active')) {
+            // Get current active filter option to re-apply the filter
+            const activeFilterOption = document.querySelector('[data-type="staff"].dropdown-filter-option.active');
+            let currentFilter = 'all'; // default to all
+            
+            if (activeFilterOption) {
+                currentFilter = activeFilterOption.getAttribute('data-filter');
+            }
+            
+            // Re-apply the current filter to refresh the display while maintaining current page
+            this.filterStaff(currentFilter, false, true);
+        }
     }
 
     handleSalaryFormSubmit(e) {
@@ -17123,6 +17043,9 @@ class DentalClinicApp {
             submitButton.textContent = 'Update Staff';
         }
         
+        // Set the form's dataset editId for edit mode (like patient form)
+        form.dataset.editId = staffId;
+        
         // Populate form with existing data
         const nameInput = document.getElementById('staff-name');
         const emailInput = document.getElementById('staff-email');
@@ -17157,7 +17080,16 @@ class DentalClinicApp {
         if (workingDaysInput) workingDaysInput.value = staffMember.workingDays || '';
         
         // Show modal
+        modal.style.display = 'flex';
         modal.classList.add('active');
+        
+        // Focus on first input field
+        setTimeout(() => {
+            const firstInput = form.querySelector('input[type="text"], input[type="email"], input[type="tel"], input[type="date"], textarea');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }, 100);
     }
 
     deleteStaff(staffId) {
@@ -20533,6 +20465,22 @@ class DentalClinicApp {
             return;
         }
 
+        // Initialize inventory per page if not set
+        if (!this.inventoryPerPage) {
+            this.inventoryPerPage = 10;
+        }
+        
+        // Update current page tracking
+        this.currentInventoryPage = currentPage;
+
+        // Initialize inventory per page if not set
+        if (!this.inventoryPerPage) {
+            this.inventoryPerPage = 10;
+        }
+        
+        // Update current page tracking
+        this.currentInventoryPage = currentPage;
+
         console.log('Displaying inventory:', inventory);
         console.log('Inventory length:', inventory.length);
 
@@ -20547,12 +20495,39 @@ class DentalClinicApp {
             return;
         }
 
-        const itemsPerPage = 10;
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const itemsToShow = inventory.slice(startIndex, endIndex);
 
-        console.log('Items to show:', itemsToShow);
+
+        // Pagination
+        // Ensure inventoryPerPage is set
+        if (!this.inventoryPerPage || this.inventoryPerPage === 0) {
+            this.inventoryPerPage = 10;
+        }
+        
+        console.log('Inventory per page:', this.inventoryPerPage);
+        console.log('Current page:', currentPage);
+        console.log('Inventory length:', inventory.length);
+        
+        const totalPages = Math.ceil(inventory.length / (this.inventoryPerPage || 10));
+        const startIndex = (currentPage - 1) * (this.inventoryPerPage || 10);
+        const endIndex = Math.min(startIndex + (this.inventoryPerPage || 10), inventory.length);
+        const currentItems = inventory.slice(startIndex, endIndex);
+        
+        console.log('Total pages:', totalPages);
+        console.log('Start index:', startIndex);
+        console.log('End index:', endIndex);
+        console.log('Current items length:', currentItems.length);
+        
+        // Fix pagination edge cases
+        if (totalPages === 0) {
+            inventoryList.innerHTML = '<p class="text-center" style="color: var(--gray-500); padding: 2rem;">No inventory items found</p>';
+            return;
+        }
+        
+        // Ensure currentPage is within valid range
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        console.log('Items to show:', currentItems);
 
         inventoryList.innerHTML = `
             <div class="inventory-summary">
@@ -20560,24 +20535,20 @@ class DentalClinicApp {
                     <span class="summary-label">Total Items:</span>
                     <span class="summary-count">${inventory.length}</span>
                 </div>
-                <div class="// ... existing code ...
-constructor() {
-    this.currentSection = 'dashboard';
-    this.currentTab = 'overview';
-    this.patientsPerPage = 10; // Default patients per page
-    this.currentPatientPage = 1;
-    this.appointmentsPerPage = 10;
-    this.currentAppointmentPage = 1;
-    this.inventoryPerPage = 10; // Add inventory per page property
-    this.currentInventoryPage = 1; // Add current inventory page property
-    this.selectedInventoryItems = new Set(); // Add selected inventory items tracking
-// ... existing code ...-right">
-                    Showing ${startIndex + 1}-${endIndex} of ${inventory.length} items
+                <div class="inventory-summary-right">
+                    <span class="summary-info" style="color: var(--gray-600); font-size: 0.875rem;">Showing ${startIndex + 1}-${Math.min(endIndex, inventory.length)} of ${inventory.length} inventory</span>
+                    <button id="delete-all-inventory-btn" onclick="window.dentalApp.showDeleteAllInventoryConfirmation()" style="padding: 0.5rem 1rem; background: var(--error-color); color: var(--white); border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500; transition: all 0.2s ease; display: none; margin-left: 1rem;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
+                        Delete Selected
+                    </button>
                 </div>
             </div>
             <div class="inventory-table">
                 <div class="inventory-table-header">
-                    <div class="table-cell">S.NO</div>
+                    <div class="table-cell">
+                        <input type="checkbox" id="select-all-inventory" onchange="window.dentalApp.toggleSelectAllInventory(this.checked)" style="width: 14px; height: 14px; cursor: pointer; margin-right: 0.5rem;">
+                        S.NO
+                    </div>
                     <div class="table-cell">NAME</div>
                     <div class="table-cell">CATEGORY</div>
                     <div class="table-cell">VENDOR</div>
@@ -20586,9 +20557,10 @@ constructor() {
                     <div class="table-cell">PRICE PER UNIT</div>
                     <div class="table-cell">ACTIONS</div>
                 </div>
-                ${itemsToShow.map((item, index) => `
+                ${currentItems.map((item, index) => `
                     <div class="inventory-table-row">
                         <div class="table-cell">
+                            <input type="checkbox" class="inventory-checkbox" data-inventory-id="${item.id || 'unknown'}" onchange="window.dentalApp.toggleInventorySelection('${item.id || 'unknown'}')" style="width: 14px; height: 14px; cursor: pointer; margin-right: 0.5rem;">
                             <span class="serial-number">${startIndex + index + 1}</span>
                         </div>
                         <div class="table-cell">
@@ -20625,8 +20597,54 @@ constructor() {
                     </div>
                 `).join('')}
             </div>
-            ${this.generateInventoryPagination(inventory, currentPage)}
+            
+            <!-- Pagination Controls -->
+            ${(this.inventoryPerPage || 10) !== 'all' ? `
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 2rem; padding: 1rem; border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <!-- Entries Per Page Selector -->
+                        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--gray-600); font-size: 0.875rem;">
+                            <span>Show</span>
+                            <select id="inventory-entries-per-page" style="padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; cursor: pointer;" onchange="window.dentalApp.changeInventoryEntriesPerPage(this.value)">
+                                <option value="10" ${(this.inventoryPerPage || 10) === 10 ? 'selected' : ''}>10</option>
+                                <option value="20" ${(this.inventoryPerPage || 10) === 20 ? 'selected' : ''}>20</option>
+                                <option value="25" ${(this.inventoryPerPage || 10) === 25 ? 'selected' : ''}>25</option>
+                                <option value="50" ${(this.inventoryPerPage || 10) === 50 ? 'selected' : ''}>50</option>
+                                <option value="100" ${(this.inventoryPerPage || 10) === 100 ? 'selected' : ''}>100</option>
+                                <option value="all" ${(this.inventoryPerPage || 10) === 'all' ? 'selected' : ''}>All</option>
+                            </select>
+                            <span>records per page</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination Buttons and Page Info -->
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        ${totalPages > 1 ? `
+                            ${currentPage > 1 ? `<button onclick="window.dentalApp.displayInventory(window.dentalApp.currentInventory, ${currentPage - 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Previous</button>` : ''}
+                            
+                            ${this.generateSmartPagination(currentPage, totalPages, 'inventory')}
+                            
+                            ${currentPage < totalPages ? `<button onclick="window.dentalApp.displayInventory(window.dentalApp.currentInventory, ${currentPage + 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Next</button>` : ''}
+                        ` : ''}
+                        
+                        <!-- Page Info -->
+                        <div style="color: var(--gray-600); font-size: 0.875rem; margin-left: 1rem;">
+                            Page ${currentPage} of ${totalPages}
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+
         `;
+        
+
+        
+        // Store current inventory for pagination
+        this.currentInventory = inventory;
+        
+        // Initialize inventory selection tracking
+        this.selectedInventoryItems = new Set();
+        this.updateInventoryBulkActionsVisibility();
         
         console.log('Inventory list HTML updated');
     }
@@ -21047,15 +21065,23 @@ constructor() {
 
     loadUsageData() {
         const usageRecords = this.getStoredData('usage-records') || [];
-        this.displayUsageRecords(usageRecords);
+        this.displayUsageRecords(usageRecords, 1);
         this.updateUsageStats(usageRecords);
     }
 
-    displayUsageRecords(usageRecords) {
+    displayUsageRecords(usageRecords, currentPage = 1) {
         const usageList = document.getElementById('usage-list');
         if (!usageList) return;
 
         const inventory = this.getStoredData('inventory') || [];
+        
+        // Initialize usage per page if not set
+        if (!this.usagePerPage) {
+            this.usagePerPage = 25;
+        }
+        
+        // Update current page tracking
+        this.currentUsagePage = currentPage;
 
         if (usageRecords.length === 0) {
             usageList.innerHTML = `
@@ -21070,25 +21096,159 @@ constructor() {
 
         // Sort by date (newest first)
         const sortedRecords = usageRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // Pagination
+        const totalPages = Math.ceil(sortedRecords.length / this.usagePerPage);
+        const startIndex = (currentPage - 1) * this.usagePerPage;
+        const endIndex = Math.min(startIndex + this.usagePerPage, sortedRecords.length);
+        const currentRecords = sortedRecords.slice(startIndex, endIndex);
+        
+        // Fix pagination edge cases
+        if (totalPages === 0) {
+            usageList.innerHTML = '<p class="text-center" style="color: var(--gray-500); padding: 2rem;">No usage records found</p>';
+            return;
+        }
+        
+        // Ensure currentPage is within valid range
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
 
-        usageList.innerHTML = sortedRecords.map(record => {
-            const item = inventory.find(i => i.id === record.itemId);
-            const itemName = item ? item.name : 'Unknown Item';
-            const reasonText = record.reason ? record.reason.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified';
-            
-            return `
-                <div class="usage-record">
-                    <div class="usage-record-info">
-                        <div class="usage-item-name">${itemName}</div>
-                        <div class="usage-details">
-                            <span class="usage-quantity">${record.quantity} used</span>
-                            <span class="usage-reason">${reasonText}</span>
-                            <span class="usage-date">${new Date(record.date).toLocaleDateString()}</span>
+        // Create single unified grid container with count, records, and pagination
+        const usageHTML = `
+            <div class="usage-grid-container" style="background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 1.5rem; margin-bottom: 1rem;">
+                <!-- Count Display -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 0 1rem 0; border-bottom: 1px solid var(--gray-200); margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="color: var(--gray-700); font-weight: 600; font-size: 1rem;">
+                            Total Usage Records: <span style="color: var(--primary-color);">${usageRecords.length}</span>
                         </div>
                     </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="color: var(--gray-600); font-size: 0.875rem;">
+                            Showing ${startIndex + 1}-${Math.min(endIndex, usageRecords.length)} of ${usageRecords.length} usage
+                        </div>
+                        
+                        <button id="delete-all-usage-btn" onclick="window.dentalApp.showDeleteAllUsageConfirmation()" style="padding: 0.5rem 1rem; background: var(--error-color); color: var(--white); border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500; transition: all 0.2s ease; display: none;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
+                            Delete Selected
+                        </button>
+                    </div>
                 </div>
-            `;
-        }).join('');
+                
+                <!-- Select All Header -->
+                <div style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); font-weight: 600; color: var(--gray-700);">
+                    <div style="min-width: 120px; display: flex; align-items: center; gap: 1rem;">
+                        <input type="checkbox" id="select-all-usage" onchange="window.dentalApp.toggleSelectAllUsage(this.checked)" style="width: 14px; height: 14px; cursor: pointer;">
+                        <span style="font-size: 0.875rem; color: var(--primary-color);">Select All</span>
+                    </div>
+                    <div style="flex: 1; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Usage Information</div>
+                    <div style="min-width: 200px; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Actions</div>
+                </div>
+                
+                <!-- Usage Rows -->
+                ${currentRecords.map((record, index) => {
+                    const item = inventory.find(i => i.id === record.itemId);
+                    const itemName = item ? item.name : 'Unknown Item';
+                    const reasonText = record.reason ? record.reason.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified';
+                    const globalIndex = startIndex + index;
+                    
+                    return `
+                        <div class="usage-row" data-usage-id="${record.id || 'unknown'}" data-item-name="${itemName}" style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; border-bottom: ${index < currentRecords.length - 1 ? '1px solid var(--gray-200)' : 'none'}; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='var(--gray-100)'" onmouseout="this.style.backgroundColor='transparent'">
+                            <!-- Usage Selection Checkbox -->
+                            <div style="display: flex; align-items: center; gap: 1rem; min-width: 120px;
+                                <input type="checkbox" class="usage-checkbox" data-usage-id="${record.id || 'unknown'}" onchange="window.dentalApp.toggleUsageSelection('${record.id || 'unknown'}')" style="width: 14px; height: 14px; cursor: pointer;">
+                                <div class="usage-avatar" style="width: 40px; height: 40px; background: var(--primary-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--primary-color); font-size: var(--font-size-sm); flex-shrink: 0;">
+                                    ${globalIndex + 1}
+                                </div>
+                                <div style="width: 50px; height: 50px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.5rem;">
+                                    <i class="fas fa-clipboard-list" style="font-size: 1rem;"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Usage Info -->
+                            <div class="usage-info" style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div class="usage-item-name" style="background: var(--primary-light); color: var(--primary-color); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); font-weight: 500; font-size: 0.875rem; display: inline-block; width: 100%; text-align: left; letter-spacing: 0.025em;">
+                                    ${this.escapeHtml(itemName)}
+                                </div>
+                                
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <div class="usage-quantity" style="background: var(--primary-light); color: var(--primary-color); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 500; font-size: var(--font-size-xs); display: inline-block; width: fit-content;">
+                                        ${record.quantity} used
+                                    </div>
+                                    <div class="usage-reason" style="background: var(--primary-light); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; width: fit-content;">
+                                        <span style="font-size: 0.875rem; color: var(--primary-color);">${reasonText}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="usage-date" style="background: var(--primary-light); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.875rem; display: inline-block; width: fit-content; text-align: left; letter-spacing: 0.025em;">
+                                    <i class="fas fa-calendar" style="margin-right: 0.5rem; font-size: 0.75rem;"></i>
+                                    ${new Date(record.date).toLocaleDateString()}
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div style="display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center;">
+                                <button onclick="window.dentalApp.viewUsageDetails('${record.id}')" style="width: 40px; height: 40px; padding: 0; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-md); border: none; cursor: pointer; transition: all 0.2s ease-in-out;" title="View Details" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="window.dentalApp.editUsage('${record.id}')" style="width: 40px; height: 40px; padding: 0; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-md); border: none; cursor: pointer; transition: all 0.2s ease-in-out;" title="Edit Usage" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="window.dentalApp.showDeleteUsageConfirmation('${record.id}')" style="width: 40px; height: 40px; padding: 0; background: var(--white); color: var(--error-color); border: 1px solid var(--error-color); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease-in-out;" title="Delete" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                
+                <!-- Pagination Controls -->
+                ${this.usagePerPage !== 'all' ? `
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 2rem; padding: 1rem; border-top: 1px solid var(--gray-200); flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <!-- Entries Per Page Selector -->
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <span>Show</span>
+                                <select id="usage-entries-per-page" style="padding: 0.25rem 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; cursor: pointer;" onchange="window.dentalApp.changeUsageEntriesPerPage(this.value)">
+                                    <option value="10" ${this.usagePerPage === 10 ? 'selected' : ''}>10</option>
+                                    <option value="20" ${this.usagePerPage === 20 ? 'selected' : ''}>20</option>
+                                    <option value="25" ${this.usagePerPage === 25 ? 'selected' : ''}>25</option>
+                                    <option value="50" ${this.usagePerPage === 50 ? 'selected' : ''}>50</option>
+                                    <option value="100" ${this.usagePerPage === 100 ? 'selected' : ''}>100</option>
+                                    <option value="all" ${this.usagePerPage === 'all' ? 'selected' : ''}>All</option>
+                                </select>
+                                <span>records per page</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Pagination Buttons and Page Info -->
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            ${totalPages > 1 ? `
+                                ${currentPage > 1 ? `<button onclick="window.dentalApp.displayUsageRecords(window.dentalApp.currentUsageRecords, ${currentPage - 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Previous</button>` : ''}
+                                
+                                ${this.generateSmartPagination(currentPage, totalPages, 'usage')}
+                                
+                                ${currentPage < totalPages ? `<button onclick="window.dentalApp.displayUsageRecords(window.dentalApp.currentUsageRecords, ${currentPage + 1})" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); background: var(--white); color: var(--gray-700); border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s ease;">Next</button>` : ''}
+                            ` : ''}
+                            
+                            <!-- Page Info -->
+                            <div style="color: var(--gray-600); font-size: 0.875rem; margin-left: 1rem;">
+                                Page ${currentPage} of ${totalPages}
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        usageList.innerHTML = usageHTML;
+        
+        // Store current usage records for pagination
+        this.currentUsageRecords = usageRecords;
+        
+        // Initialize usage selection tracking
+        this.selectedUsageRecords = new Set();
+        this.updateUsageBulkActionsVisibility();
     }
 
     updateUsageStats(usageRecords) {
@@ -21124,19 +21284,19 @@ constructor() {
                    notes.includes(query.toLowerCase());
         });
 
-        this.displayUsageRecords(filteredRecords);
+        this.displayUsageRecords(filteredRecords, 1);
     }
 
     filterUsageByItem(itemId) {
         const usageRecords = this.getStoredData('usage-records') || [];
         
         if (!itemId) {
-            this.displayUsageRecords(usageRecords);
+            this.displayUsageRecords(usageRecords, 1);
             return;
         }
 
         const filteredRecords = usageRecords.filter(record => record.itemId === itemId);
-        this.displayUsageRecords(filteredRecords);
+        this.displayUsageRecords(filteredRecords, 1);
     }
 
     generateInventoryPagination(inventory, currentPage) {
@@ -21676,6 +21836,25 @@ constructor() {
             this.salaryPerPage = 10;
         }
         console.log('Loaded salary entries per page:', this.salaryPerPage);
+
+        // Load usage preference
+        const savedUsage = localStorage.getItem('usage-entries-per-page');
+        if (savedUsage) {
+            this.usagePerPage = savedUsage === 'all' ? 'all' : (parseInt(savedUsage) || 25);
+        } else {
+            this.usagePerPage = 25;
+        }
+        console.log('Loaded usage entries per page:', this.usagePerPage);
+
+        // Load inventory preference
+        const savedInventory = localStorage.getItem('inventory-entries-per-page');
+        if (savedInventory) {
+            this.inventoryPerPage = savedInventory === 'all' ? 'all' : (parseInt(savedInventory) || 25);
+        } else {
+            this.inventoryPerPage = 25;
+        }
+        console.log('Loaded inventory entries per page:', this.inventoryPerPage);
+
     }
 
     // Change appointments entries per page and refresh
@@ -23617,6 +23796,1108 @@ constructor() {
         // Hide bulk actions
         const bulkActions = document.getElementById('salary-bulk-actions');
         if (bulkActions) bulkActions.style.display = 'none';
+    }
+
+    // Usage Section Functions
+    toggleSelectAllUsage(checked) {
+        const checkboxes = document.querySelectorAll('.usage-checkbox');
+        const usageRecords = this.getStoredData('usage-records') || [];
+        
+        if (checked) {
+            // Select all usage records - add all valid usage IDs
+            usageRecords.forEach((record, index) => {
+                if (record && record.id) {
+                    this.selectedUsageRecords.add(record.id);
+                }
+            });
+        } else {
+            // Deselect all usage records
+            this.selectedUsageRecords.clear();
+        }
+        
+        // Update checkbox states
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = checked;
+        });
+        
+        // Update bulk actions visibility
+        this.updateUsageBulkActionsVisibility();
+        
+        console.log('Select all usage toggled:', checked, 'Selected usage records:', this.selectedUsageRecords.size);
+    }
+
+    // Toggle individual usage selection
+    toggleUsageSelection(usageId) {
+        const checkbox = document.querySelector(`.usage-checkbox[data-usage-id="${usageId}"]`);
+        if (checkbox.checked) {
+            this.selectedUsageRecords.add(usageId);
+        } else {
+            this.selectedUsageRecords.delete(usageId);
+        }
+        
+        // Update select all checkbox state
+        this.updateUsageSelectAllCheckbox();
+        this.updateUsageBulkActionsVisibility();
+    }
+
+    // Update select all checkbox state for usage
+    updateUsageSelectAllCheckbox() {
+        const selectAllCheckbox = document.getElementById('select-all-usage');
+        const checkboxes = document.querySelectorAll('.usage-checkbox');
+        const checkedCount = document.querySelectorAll('.usage-checkbox:checked').length;
+        
+        if (checkedCount === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === checkboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    // Update bulk actions visibility for usage
+    updateUsageBulkActionsVisibility() {
+        const deleteAllBtn = document.getElementById('delete-all-usage-btn');
+        
+        console.log('Updating usage bulk actions visibility. Selected usage records:', this.selectedUsageRecords.size);
+        console.log('Selected usage IDs:', Array.from(this.selectedUsageRecords));
+        
+        if (this.selectedUsageRecords.size > 0) {
+            console.log('Showing usage delete button');
+            if (deleteAllBtn) {
+                deleteAllBtn.style.display = 'inline-block';
+                console.log('Usage delete button shown');
+            }
+        } else {
+            console.log('Hiding usage delete button');
+            if (deleteAllBtn) deleteAllBtn.style.display = 'none';
+        }
+    }
+
+    // Change usage entries per page
+    changeUsageEntriesPerPage(value) {
+        this.usagePerPage = value === 'all' ? 'all' : parseInt(value);
+        
+        // Save preference
+        localStorage.setItem('usage-entries-per-page', this.usagePerPage);
+        
+        // Refresh display
+        this.displayUsageRecords(this.currentUsageRecords, 1);
+        
+        this.showToast(`Showing ${this.usagePerPage} usage records per page`, 'info');
+    }
+
+    // View usage details
+    viewUsageDetails(usageId) {
+        const usageRecords = this.getStoredData('usage-records') || [];
+        const inventory = this.getStoredData('inventory') || [];
+        const record = usageRecords.find(r => r.id === usageId);
+        
+        if (!record) {
+            this.showToast('Usage record not found', 'error');
+            return;
+        }
+        
+        const item = inventory.find(i => i.id === record.itemId);
+        const itemName = item ? item.name : 'Unknown Item';
+        
+        // Create modal for viewing details
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: var(--white);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-xl);
+                width: 100%;
+                max-width: 600px;
+                position: relative;
+                border: 1px solid var(--gray-200);
+                overflow: hidden;
+            ">
+                <!-- Header -->
+                <div class="modal-header" style="
+                    padding: 1.5rem 2rem;
+                    border-bottom: 1px solid var(--gray-200);
+                    display: flex; justify-content: space-between;
+                    align-items: center;
+                    background: var(--primary-color);
+                    color: var(--white);
+                ">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-clipboard-list" style="font-size: 1.5rem;"></i>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Usage Record Details</h2>
+                    </div>
+                    <button onclick="this.closest('.modal').remove()" style="
+                        background: transparent;
+                        color: var(--white);
+                        border: none;
+                        border-radius: 50%;
+                        width: 36px;
+                        height: 36px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.125rem;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">×</button>
+                </div>
+                
+                <!-- Body -->
+                <div class="modal-body" style="padding: 2rem;">
+                    <div style="display: grid; gap: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-md);">
+                            <span style="font-weight: 600; color: var(--gray-700);">Item:</span>
+                            <span style="color: var(--primary-color); font-weight: 500;">${itemName}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-md);">
+                            <span style="font-weight: 600; color: var(--gray-700);">Quantity Used:</span>
+                            <span style="color: var(--primary-color); font-weight: 500;">${record.quantity}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-md);">
+                            <span style="font-weight: 600; color: var(--gray-700);">Date:</span>
+                            <span style="color: var(--primary-color); font-weight: 500;">${new Date(record.date).toLocaleDateString()}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-md);">
+                            <span style="font-weight: 600; color: var(--gray-700);">Reason:</span>
+                            <span style="color: var(--primary-color); font-weight: 500;">${record.reason || 'Not specified'}</span>
+                        </div>
+                        ${record.notes ? `
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-md);">
+                            <span style="font-weight: 600; color: var(--gray-700);">Notes:</span>
+                            <span style="color: var(--primary-color); font-weight: 500; text-align: right; max-width: 60%;">${record.notes}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="modal-footer" style="
+                    padding: 1.5rem 2rem;
+                    border-top: 1px solid var(--gray-200);
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 1rem;
+                    background: var(--gray-50);
+                ">
+                    <button onclick="this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--gray-500);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to body
+        document.body.appendChild(modal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+            }
+        });
+    }
+
+    // Edit usage record
+    editUsage(usageId) {
+        const usageRecords = this.getStoredData('usage-records') || [];
+        const record = usageRecords.find(r => r.id === usageId);
+        
+        if (!record) {
+            this.showToast('Usage record not found', 'error');
+            return;
+        }
+        
+        // Show the usage modal with pre-filled data
+        const modal = document.getElementById('usage-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.classList.add('active');
+            
+            // Populate form with existing data
+            const form = document.getElementById('usage-form');
+            if (form) {
+                form.setAttribute('data-edit-id', usageId);
+                
+                // Set form values
+                const itemSelect = document.getElementById('usage-item');
+                const quantityInput = document.getElementById('usage-quantity');
+                const dateInput = document.getElementById('usage-date');
+                const reasonInput = document.getElementById('usage-reason');
+                const notesInput = document.getElementById('usage-notes');
+                
+                if (itemSelect) itemSelect.value = record.itemId;
+                if (quantityInput) quantityInput.value = record.quantity;
+                if (dateInput) dateInput.value = record.date;
+                if (reasonInput) reasonInput.value = record.reason || '';
+                if (notesInput) notesInput.value = record.notes || '';
+            }
+            
+            // Update modal title
+            const title = document.querySelector('#usage-modal .modal-title');
+            if (title) title.textContent = 'Edit Usage Record';
+            
+            // Update submit button text
+            const submitBtn = document.querySelector('#usage-form button[type="submit"]');
+            if (submitBtn) submitBtn.textContent = 'Update Usage Record';
+        }
+    }
+
+    // Show delete usage confirmation
+    showDeleteUsageConfirmation(usageId) {
+        const usageRecords = this.getStoredData('usage-records') || [];
+        const inventory = this.getStoredData('inventory') || [];
+        const record = usageRecords.find(r => r.id === usageId);
+        
+        if (!record) {
+            this.showToast('Usage record not found', 'error');
+            return;
+        }
+        
+        const item = inventory.find(i => i.id === record.itemId);
+        const itemName = item ? item.name : 'Unknown Item';
+        
+        // Create confirmation modal
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: var(--white);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-xl);
+                width: 100%;
+                max-width: 500px;
+                position: relative;
+                border: 1px solid var(--gray-200);
+                overflow: hidden;
+            ">
+                <!-- Header -->
+                <div class="modal-header" style="
+                    padding: 1.5rem 2rem;
+                    border-bottom: 1px solid var(--gray-200);
+                    display: flex; justify-content: space-between;
+                    align-items: center;
+                    background: var(--error-color);
+                    color: var(--white);
+                ">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem;"></i>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Delete Usage Record</h2>
+                    </div>
+                    <button onclick="this.closest('.modal').remove()" style="
+                        background: transparent;
+                        color: var(--white);
+                        border: none;
+                        border-radius: 50%;
+                        width: 36px;
+                        height: 36px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.125rem;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">×</button>
+                </div>
+                
+                <!-- Body -->
+                <div class="modal-body" style="padding: 2rem;">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--error-color); margin-bottom: 1rem;"></i>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--gray-800); font-size: 1.125rem;">Are you sure you want to delete this usage record?</h3>
+                        <p style="margin: 0; color: var(--gray-600); line-height: 1.6;">
+                            This will permanently delete the usage record for <strong>${itemName}</strong> (${record.quantity} used on ${new Date(record.date).toLocaleDateString()}).
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="modal-footer" style="
+                    padding: 1.5rem 2rem;
+                    border-top: 1px solid var(--gray-200);
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 1rem;
+                    background: var(--gray-50);
+                ">
+                    <button onclick="this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--gray-500);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        Cancel
+                    </button>
+                    <button onclick="window.dentalApp.deleteUsageRecord('${usageId}'); this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--error-color);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
+                        Delete Record
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to body
+        document.body.appendChild(modal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+            }
+        });
+    }
+
+    // Delete usage record
+    deleteUsageRecord(usageId) {
+        const usageRecords = this.getStoredData('usage-records') || [];
+        const record = usageRecords.find(r => r.id === usageId);
+        
+        if (!record) {
+            this.showToast('Usage record not found', 'error');
+            return;
+        }
+        
+        // Remove the record
+        const updatedRecords = usageRecords.filter(r => r.id !== usageId);
+        this.setStoredData('usage-records', updatedRecords);
+        
+        // Refresh display
+        this.loadUsageData();
+        
+        this.showToast('Usage record deleted successfully', 'success');
+    }
+
+    // Show delete all usage confirmation
+    showDeleteAllUsageConfirmation() {
+        if (this.selectedUsageRecords.size === 0) {
+            this.showToast('No usage records selected for deletion', 'warning');
+            return;
+        }
+
+        const usageRecords = this.getStoredData('usage-records') || [];
+        const selectedRecords = usageRecords.filter(r => this.selectedUsageRecords.has(r.id));
+        
+        // Create confirmation modal
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: var(--white);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-xl);
+                width: 100%;
+                max-width: 500px;
+                position: relative;
+                border: 1px solid var(--gray-200);
+                overflow: hidden;
+            ">
+                <!-- Header -->
+                <div class="modal-header" style="
+                    padding: 1.5rem 2rem;
+                    border-bottom: 1px solid var(--gray-200);
+                    display: flex; justify-content: space-between;
+                    align-items: center;
+                    background: var(--error-color);
+                    color: var(--white);
+                ">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem;"></i>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Delete Selected Usage Records</h2>
+                    </div>
+                    <button onclick="this.closest('.modal').remove()" style="
+                        background: transparent;
+                        color: var(--white);
+                        border: none;
+                        border-radius: 50%;
+                        width: 36px;
+                        height: 36px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.125rem;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">×</button>
+                </div>
+                
+                <!-- Body -->
+                <div class="modal-body" style="padding: 2rem;">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--error-color); margin-bottom: 1rem;"></i>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--gray-800); font-size: 1.125rem;">Are you sure you want to delete ${this.selectedUsageRecords.size} usage record(s)?</h3>
+                        <p style="margin: 0; color: var(--gray-600); line-height: 1.6;">
+                            This action cannot be undone. All selected usage records will be permanently deleted.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="modal-footer" style="
+                    padding: 1.5rem 2rem;
+                    border-top: 1px solid var(--gray-200);
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 1rem;
+                    background: var(--gray-50);
+                ">
+                    <button onclick="this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--gray-500);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        Cancel
+                    </button>
+                    <button onclick="window.dentalApp.deleteSelectedUsageRecords(); this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--error-color);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
+                        Delete Selected
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to body
+        document.body.appendChild(modal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+            }
+        });
+    }
+
+    // Delete selected usage records
+    deleteSelectedUsageRecords() {
+        if (this.selectedUsageRecords.size === 0) {
+            this.showToast('No usage records selected for deletion', 'warning');
+            return;
+        }
+
+        const usageRecords = this.getStoredData('usage-records') || [];
+        
+        // Remove selected records
+        const updatedRecords = usageRecords.filter(r => !this.selectedUsageRecords.has(r.id));
+        this.setStoredData('usage-records', updatedRecords);
+        
+        // Clear selection
+        this.selectedUsageRecords.clear();
+        
+        // Hide delete button
+        const deleteAllBtn = document.getElementById('delete-all-usage-btn');
+        if (deleteAllBtn) deleteAllBtn.style.display = 'none';
+        
+        this.updateUsageBulkActionsVisibility();
+        
+        // Show success message
+        const deletedCount = usageRecords.length - updatedRecords.length;
+        this.showToast(`Successfully deleted ${deletedCount} usage record(s)`, 'success');
+        
+        // Refresh the display
+        this.loadUsageData();
+    }
+
+    // Inventory Section Functions
+    toggleSelectAllInventory(checked) {
+        const checkboxes = document.querySelectorAll('.inventory-checkbox');
+        const inventory = this.getStoredData('inventory') || [];
+        
+        if (checked) {
+            // Select all inventory items - add all valid inventory IDs
+            inventory.forEach((item, index) => {
+                if (item && item.id) {
+                    this.selectedInventoryItems.add(item.id);
+                }
+            });
+        } else {
+            // Deselect all inventory items
+            this.selectedInventoryItems.clear();
+        }
+        
+        // Update checkbox states
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = checked;
+        });
+        
+        // Update bulk actions visibility
+        this.updateInventoryBulkActionsVisibility();
+        
+        console.log('Select all inventory toggled:', checked, 'Selected inventory items:', this.selectedInventoryItems.size);
+    }
+
+    // Toggle individual inventory selection
+    toggleInventorySelection(inventoryId) {
+        const checkbox = document.querySelector(`.inventory-checkbox[data-inventory-id="${inventoryId}"]`);
+        if (checkbox.checked) {
+            this.selectedInventoryItems.add(inventoryId);
+        } else {
+            this.selectedInventoryItems.delete(inventoryId);
+        }
+        
+        // Update select all checkbox state
+        this.updateInventorySelectAllCheckbox();
+        this.updateInventoryBulkActionsVisibility();
+    }
+
+    // Update select all checkbox state for inventory
+    updateInventorySelectAllCheckbox() {
+        const selectAllCheckbox = document.getElementById('select-all-inventory');
+        const checkboxes = document.querySelectorAll('.inventory-checkbox');
+        const checkedCount = document.querySelectorAll('.inventory-checkbox:checked').length;
+        
+        if (checkedCount === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === checkboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    // Update bulk actions visibility for inventory
+    updateInventoryBulkActionsVisibility() {
+        const deleteAllBtn = document.getElementById('delete-all-inventory-btn');
+        
+        console.log('Updating inventory bulk actions visibility. Selected inventory items:', this.selectedInventoryItems.size);
+        console.log('Selected inventory IDs:', Array.from(this.selectedInventoryItems));
+        
+        if (this.selectedInventoryItems.size > 0) {
+            console.log('Showing inventory delete button');
+            if (deleteAllBtn) {
+                deleteAllBtn.style.display = 'inline-block';
+                console.log('Inventory delete button shown');
+            }
+        } else {
+            console.log('Hiding inventory delete button');
+            if (deleteAllBtn) deleteAllBtn.style.display = 'none';
+        }
+    }
+
+    // Change inventory entries per page
+
+
+    // Show delete inventory confirmation
+    showDeleteInventoryConfirmation(inventoryId) {
+        const inventory = this.getStoredData('inventory') || [];
+        const item = inventory.find(i => i.id === inventoryId);
+        
+        if (!item) {
+            this.showToast('Inventory item not found', 'error');
+            return;
+        }
+        
+        // Create confirmation modal
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: var(--white);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-xl);
+                width: 100%;
+                max-width: 500px;
+                position: relative;
+                border: 1px solid var(--gray-200);
+                overflow: hidden;
+            ">
+                <!-- Header -->
+                <div class="modal-header" style="
+                    padding: 1.5rem 2rem;
+                    border-bottom: 1px solid var(--gray-200);
+                    display: flex; justify-content: space-between;
+                    align-items: center;
+                    background: var(--error-color);
+                    color: var(--white);
+                ">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem;"></i>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Delete Inventory Item</h2>
+                    </div>
+                    <button onclick="this.closest('.modal').remove()" style="
+                        background: transparent;
+                        color: var(--white);
+                        border: none;
+                        border-radius: 50%;
+                        width: 36px;
+                        height: 36px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.125rem;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">×</button>
+                </div>
+                
+                <!-- Body -->
+                <div class="modal-body" style="padding: 2rem;">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--error-color); margin-bottom: 1rem;"></i>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--gray-800); font-size: 1.125rem;">Are you sure you want to delete this inventory item?</h3>
+                        <p style="margin: 0; color: var(--gray-600); line-height: 1.6;">
+                            This will permanently delete <strong>${item.name}</strong> from the inventory.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="modal-footer" style="
+                    padding: 1.5rem 2rem;
+                    border-top: 1px solid var(--gray-200);
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 1rem;
+                    background: var(--gray-50);
+                ">
+                    <button onclick="this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--gray-500);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        Cancel
+                    </button>
+                    <button onclick="window.dentalApp.deleteInventoryItem('${inventoryId}'); this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--error-color);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
+                        Delete Item
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to body
+        document.body.appendChild(modal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+            }
+        });
+    }
+
+    // Show delete all inventory confirmation
+    showDeleteAllInventoryConfirmation() {
+        if (this.selectedInventoryItems.size === 0) {
+            this.showToast('No inventory items selected for deletion', 'warning');
+            return;
+        }
+
+        const inventory = this.getStoredData('inventory') || [];
+        const selectedItems = inventory.filter(i => this.selectedInventoryItems.has(i.id));
+        
+        // Create confirmation modal
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: var(--white);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-xl);
+                width: 100%;
+                max-width: 500px;
+                position: relative;
+                border: 1px solid var(--gray-200);
+                overflow: hidden;
+            ">
+                <!-- Header -->
+                <div class="modal-header" style="
+                    padding: 1.5rem 2rem;
+                    border-bottom: 1px solid var(--gray-200);
+                    display: flex; justify-content: space-between;
+                    align-items: center;
+                    background: var(--error-color);
+                    color: var(--white);
+                ">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem;"></i>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Delete Selected Inventory Items</h2>
+                    </div>
+                    <button onclick="this.closest('.modal').remove()" style="
+                        background: transparent;
+                        color: var(--white);
+                        border: none;
+                        border-radius: 50%;
+                        width: 36px;
+                        height: 36px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.125rem;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">×</button>
+                </div>
+                
+                <!-- Body -->
+                <div class="modal-body" style="padding: 2rem;">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--error-color); margin-bottom: 1rem;"></i>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--gray-800); font-size: 1.125rem;">Are you sure you want to delete ${this.selectedInventoryItems.size} inventory item(s)?</h3>
+                        <p style="margin: 0; color: var(--gray-600); line-height: 1.6;">
+                            This action cannot be undone. All selected inventory items will be permanently deleted.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="modal-footer" style="
+                    padding: 1.5rem 2rem;
+                    border-top: 1px solid var(--gray-200);
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 1rem;
+                    background: var(--gray-50);
+                ">
+                    <button onclick="this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--gray-500);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        Cancel
+                    </button>
+                    <button onclick="window.dentalApp.deleteSelectedInventoryItems(); this.closest('.modal').remove()" style="
+                        padding: 0.75rem 1.5rem;
+                        background: var(--error-color);
+                        color: var(--white);
+                        border: none;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
+                        Delete Selected
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to body
+        document.body.appendChild(modal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+            }
+        });
+    }
+
+    // Delete selected inventory items
+    deleteSelectedInventoryItems() {
+        if (this.selectedInventoryItems.size === 0) {
+            this.showToast('No inventory items selected for deletion', 'warning');
+            return;
+        }
+
+        const inventory = this.getStoredData('inventory') || [];
+        
+        // Remove selected items
+        const updatedInventory = inventory.filter(i => !this.selectedInventoryItems.has(i.id));
+        this.setStoredData('inventory', updatedInventory);
+        
+        // Clear selection
+        this.selectedInventoryItems.clear();
+        
+        // Hide delete button
+        const deleteAllBtn = document.getElementById('delete-all-inventory-btn');
+        if (deleteAllBtn) deleteAllBtn.style.display = 'none';
+        
+        this.updateInventoryBulkActionsVisibility();
+        
+        // Show success message
+        const deletedCount = inventory.length - updatedInventory.length;
+        this.showToast(`Successfully deleted ${deletedCount} inventory item(s)`, 'success');
+        
+        // Refresh the display
+        this.displayInventory(updatedInventory, 1);
+        this.updateInventoryStats();
+    }
+
+    changeInventoryEntriesPerPage(value) {
+        this.inventoryPerPage = value === 'all' ? 'all' : parseInt(value);
+        
+        // Save preference
+        localStorage.setItem('inventory-entries-per-page', this.inventoryPerPage);
+        
+        // Refresh display
+        this.displayInventory(this.currentInventory, 1);
+        
+        this.showToast(`Showing ${this.inventoryPerPage} inventory items per page`, 'info');
+    }
+
+    toggleSelectAllInventory(checked) {
+        const checkboxes = document.querySelectorAll('.inventory-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = checked;
+            const inventoryId = checkbox.getAttribute('data-inventory-id');
+            if (checked) {
+                this.selectedInventoryItems.add(inventoryId);
+            } else {
+                this.selectedInventoryItems.delete(inventoryId);
+            }
+        });
+        
+        this.updateInventoryBulkActionsVisibility();
+        console.log('Select all inventory:', checked, 'Selected items:', this.selectedInventoryItems.size);
+    }
+
+    toggleInventorySelection(inventoryId) {
+        if (this.selectedInventoryItems.has(inventoryId)) {
+            this.selectedInventoryItems.delete(inventoryId);
+        } else {
+            this.selectedInventoryItems.add(inventoryId);
+        }
+        
+        this.updateInventorySelectAllCheckbox();
+        this.updateInventoryBulkActionsVisibility();
+        console.log('Inventory selection toggled:', inventoryId, 'Selected items:', this.selectedInventoryItems.size);
+    }
+
+    updateInventorySelectAllCheckbox() {
+        const selectAllCheckbox = document.getElementById('select-all-inventory');
+        const checkboxes = document.querySelectorAll('.inventory-checkbox');
+        
+        if (selectAllCheckbox && checkboxes.length > 0) {
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            selectAllCheckbox.checked = checkedCount === checkboxes.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+        }
+    }
+
+    updateInventoryBulkActionsVisibility() {
+        console.log('Updating inventory bulk actions visibility. Selected inventory items:', this.selectedInventoryItems.size);
+        const selectedIds = Array.from(this.selectedInventoryItems);
+        console.log('Selected inventory IDs:', selectedIds);
+        
+        const deleteAllBtn = document.getElementById('delete-all-inventory-btn');
+        if (deleteAllBtn) {
+            if (this.selectedInventoryItems.size > 0) {
+                deleteAllBtn.style.display = 'inline-block';
+                console.log('Showing inventory delete button');
+            } else {
+                deleteAllBtn.style.display = 'none';
+                console.log('Hiding inventory delete button');
+            }
+        }
+    }
+
+    showDeleteAllInventoryConfirmation() {
+        const selectedCount = this.selectedInventoryItems.size;
+        if (selectedCount === 0) {
+            this.showToast('No items selected for deletion', 'warning');
+            return;
+        }
+        
+        const confirmMessage = `Are you sure you want to delete ${selectedCount} selected inventory item(s)? This action cannot be undone.`;
+        
+        if (confirm(confirmMessage)) {
+            this.deleteSelectedInventoryItems();
+        }
+    }
+
+    deleteSelectedInventoryItems() {
+        const inventory = this.getStoredData('inventory') || [];
+        const selectedIds = Array.from(this.selectedInventoryItems);
+        
+        if (selectedIds.length === 0) {
+            this.showToast('No items selected for deletion', 'warning');
+            return;
+        }
+        
+        // Filter out selected items
+        const updatedInventory = inventory.filter(item => !selectedIds.includes(item.id));
+        
+        // Save updated inventory
+        this.setStoredData('inventory', updatedInventory);
+        
+        // Clear selection
+        this.selectedInventoryItems.clear();
+        
+        // Hide delete button
+        const deleteAllBtn = document.getElementById('delete-all-inventory-btn');
+        if (deleteAllBtn) deleteAllBtn.style.display = 'none';
+        
+        this.updateInventoryBulkActionsVisibility();
+        
+        // Show success message
+        const deletedCount = inventory.length - updatedInventory.length;
+        this.showToast(`Successfully deleted ${deletedCount} inventory item(s)`, 'success');
+        
+        // Refresh the display
+        this.displayInventory(updatedInventory, 1);
+        this.updateInventoryStats();
     }
 }
 
