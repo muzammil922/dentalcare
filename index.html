@@ -1727,11 +1727,54 @@
                             </div>
                         </div>
                     </div>
-                    <input type="text" id="usage-search" placeholder="Search usage records...">
+                    <div class="search-bar">
+                         <input type="text" id="usage-search" placeholder="Search usage records...">
+                         <i class="fas fa-search"></i>
+                    </div>
+                    
+                    
+                    <!-- Entries Per Page Selector -->
+                    <div class="entries-per-page">
+                        <label for="usage-entries-per-page">Show:</label>
+                        <select id="usage-entries-per-page">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>entries per page</span>
+                    </div>
+                    
+                    <!-- Select All Header -->
+                    <div class="select-all-header">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="usage-select-all">
+                            <span class="checkmark"></span>
+                            Select All
+                        </label>
+                    </div>
                     
                     <div class="usage-list-container">
                         <div id="usage-list" class="usage-list">
                             <!-- Usage records will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    <div class="pagination-controls">
+                        <div class="pagination-info">
+                            <span id="usage-pagination-info">Showing 1 to 25 of 0 entries</span>
+                        </div>
+                        <div class="pagination-buttons">
+                            <button class="pagination-btn" id="usage-prev-btn" disabled>
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </button>
+                            <div class="pagination-numbers" id="usage-pagination-numbers">
+                                <!-- Page numbers will be generated here -->
+                            </div>
+                            <button class="pagination-btn" id="usage-next-btn" disabled>
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1741,8 +1784,48 @@
                         <input type="text" id="inventory-search" placeholder="Search inventory items...">
                         <i class="fas fa-search"></i>
                     </div>
+                    
+                    <!-- Entries Per Page Selector -->
+                    <div class="entries-per-page">
+                        <label for="inventory-entries-per-page">Show:</label>
+                        <select id="inventory-entries-per-page">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>entries per page</span>
+                    </div>
+                    
+                    <!-- Select All Header -->
+                    <div class="select-all-header">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="inventory-select-all">
+                            <span class="checkmark"></span>
+                            Select All
+                        </label>
+                    </div>
+                    
                     <div id="inventory-list" class="inventory-list">
                         <!-- Inventory items will be loaded here -->
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    <div class="pagination-controls">
+                        <div class="pagination-info">
+                            <span id="inventory-pagination-info">Showing 1 to 25 of 0 entries</span>
+                        </div>
+                        <div class="pagination-buttons">
+                            <button class="pagination-btn" id="inventory-prev-btn" disabled>
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </button>
+                            <div class="pagination-numbers" id="inventory-pagination-numbers">
+                                <!-- Page numbers will be generated here -->
+                            </div>
+                            <button class="pagination-btn" id="inventory-next-btn" disabled>
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>

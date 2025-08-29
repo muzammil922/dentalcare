@@ -4931,7 +4931,7 @@ select {
   border-radius: var(--radius-lg);
   margin-bottom: var(--spacing-4);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--gray-200);
+  
   min-height: 60px;
   overflow: hidden;
   gap: var(--spacing-4);

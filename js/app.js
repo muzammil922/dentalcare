@@ -20397,6 +20397,17 @@ class DentalClinicApp {
             if (statusSelect) {
                 statusSelect.value = 'In Stock';
             }
+
+            // Reset modal title and button text for new item
+            const modalTitle = document.getElementById('inventory-modal-title');
+            if (modalTitle) {
+                modalTitle.textContent = 'Add New Item';
+            }
+
+            const submitBtn = document.getElementById('inventory-submit-btn');
+            if (submitBtn) {
+                submitBtn.textContent = 'Save Item';
+            }
         }
     }
 
@@ -20549,7 +20560,18 @@ class DentalClinicApp {
                     <span class="summary-label">Total Items:</span>
                     <span class="summary-count">${inventory.length}</span>
                 </div>
-                <div class="inventory-summary-right">
+                <div class="// ... existing code ...
+constructor() {
+    this.currentSection = 'dashboard';
+    this.currentTab = 'overview';
+    this.patientsPerPage = 10; // Default patients per page
+    this.currentPatientPage = 1;
+    this.appointmentsPerPage = 10;
+    this.currentAppointmentPage = 1;
+    this.inventoryPerPage = 10; // Add inventory per page property
+    this.currentInventoryPage = 1; // Add current inventory page property
+    this.selectedInventoryItems = new Set(); // Add selected inventory items tracking
+// ... existing code ...-right">
                     Showing ${startIndex + 1}-${endIndex} of ${inventory.length} items
                 </div>
             </div>
@@ -20780,6 +20802,12 @@ class DentalClinicApp {
         const modalTitle = document.getElementById('inventory-modal-title');
         if (modalTitle) {
             modalTitle.textContent = 'Edit Inventory Item';
+        }
+
+        // Update button text
+        const submitBtn = document.getElementById('inventory-submit-btn');
+        if (submitBtn) {
+            submitBtn.textContent = 'Update Item';
         }
     }
 
