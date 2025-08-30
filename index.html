@@ -1625,124 +1625,31 @@
                         <i class="fas fa-boxes"></i>
                         Inventory
                     </button>
-                    <button class="overview-btn" data-tab="usage">
-                        <i class="fas fa-clipboard-list"></i>
-                        Usage
-                    </button>
                 </div>
                 
-                <div class="inventory-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-boxes"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="total-items">0</h3>
-                            <p>Total Items</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="low-stock-items">0</h3>
-                            <p>Low Stock Items</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-times-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="out-of-stock-items">0</h3>
-                            <p>Out of Stock</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="inventory-value">Rs.0</h3>
-                            <p>Total Value</p>
-                        </div>
-                    </div>
-                </div>
+
                 <div class="inventory-overview-btn-container">
-                    <button class="btn btn-primary" id="add-new-item-btn">
-                        <i class="fas fa-plus"></i> Add New Item
+                    <button class="btn btn-primary" id="add-new-item-btn" style="padding: 0.75rem 1.5rem; font-size: 0.875rem; font-weight: 600;">
+                        <i class="fas fa-plus"></i> Add Item
                     </button>
-                    <button class="btn btn-secondary" id="refresh-inventory-btn" onclick="window.dentalApp.refreshInventory()">
-                        <i class="fas fa-sync-alt"></i> Refresh
+                    <button class="btn btn-primary" id="record-usage-btn" onclick="window.dentalApp.showRecordUsageModal()" style="padding: 0.75rem 1.5rem; font-size: 0.875rem; font-weight: 600;">
+                        <i class="fas fa-minus-circle"></i> Record Usage
+                    </button>
+                    <button class="refresh-btn" id="refresh-inventory-btn" onclick="window.dentalApp.refreshInventory()" style="padding: 0.75rem; font-size: 0.875rem; font-weight: 600; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;  background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: var(--radius-md); cursor: pointer; "onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='var(--white)'" onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--primary-color)'"">
+                        <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
 
-                <!-- Usage Section -->
-                <div id="usage-section" class="inventory-content-section" style="display: none;">
-                    
-                    <div class="usage-controls">
-                        <div class="usage-filters">
-                            <select id="usage-item-filter">
-                                <option value="">All Items</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" id="add-usage-btn">
-                            <i class="fas fa-plus"></i> Add Usage Record
-                        </button>
-                    </div>
-                    
-                    <div class="usage-stats">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 id="total-usage-records">0</h3>
-                                <p>Total Usage Records</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-calendar-day"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 id="today-usage">0</h3>
-                                <p>Today's Usage</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-arrow-down"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 id="monthly-usage">0</h3>
-                                <p>This Month</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="search-bar">
-                         <input type="text" id="usage-search" placeholder="Search usage records...">
-                         <i class="fas fa-search"></i>
-                    </div>
-                    
-                    <!-- Usage records will be loaded here with the same design as other tabs -->
-                    <div id="usage-list" class="usage-list">
-                        <!-- Usage records will be loaded here -->
-                    </div>
-                </div>
+
+                
                 <!-- Inventory List -->
+                
+
                 <div class="inventory-container">
                     <div class="search-bar">
-                        <input type="text" id="inventory-search" placeholder="Search inventory items...">
-                        <i class="fas fa-search"></i>
+                        <input type="text" id="inventory-search" placeholder="Search inventory records...">
+                        <i class="fas fa-search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"></i>
                     </div>
-                    
-
                     
                     <div id="inventory-list" class="inventory-list">
                         <!-- Inventory items will be loaded here -->
@@ -1879,58 +1786,7 @@
                 </div>
             </div>
 
-            <!-- Usage Form Modal -->
-            <div id="usage-modal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="usage-modal-title">Add Usage Record</h3>
-                        <span class="close" id="usage-modal-close">&times;</span>
-                    </div>
-                    <form id="usage-form">
-                        <div class="form-layout">
-                            <div class="form-column">
-                                <div class="form-group">
-                                    <label for="usage-item">ITEM *</label>
-                                    <select id="usage-item" name="itemId" required>
-                                        <option value="">Select Item</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="usage-quantity">QUANTITY USED *</label>
-                                    <input type="number" id="usage-quantity" name="quantity" min="1" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="usage-date">DATE *</label>
-                                    <div class="enhanced-date-picker">
-                                        <input type="date" id="usage-date" name="date" required>
-                                        <i class="fas fa-calendar date-icon"></i>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="usage-reason">REASON FOR USAGE</label>
-                                    <select id="usage-reason" name="reason">
-                                        <option value="">Select Reason</option>
-                                        <option value="patient-treatment">Patient Treatment</option>
-                                        <option value="cleaning">Cleaning</option>
-                                        <option value="maintenance">Maintenance</option>
-                                        <option value="expired">Expired</option>
-                                        <option value="damaged">Damaged</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="usage-notes">NOTES</label>
-                                    <textarea id="usage-notes" name="notes" rows="3" placeholder="Additional notes about the usage..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Add Usage Record</button>
-                            <button type="button" class="btn btn-secondary" id="usage-cancel-btn">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+
 
             <!-- Inventory Form Modal -->
             <div id="inventory-modal" class="modal">
@@ -2068,6 +1924,7 @@
     <!-- Custom JavaScript -->
     <script src="js/firebase-config.js"></script>
     <script src="js/app.js"></script>
+
     <script src="js/patients.js"></script>
     <script src="js/appointments.js"></script>
     <script src="js/billing.js"></script>

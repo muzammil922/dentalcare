@@ -955,6 +955,7 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 0.5rem;
+  width: 100%;
 }
 
 .search-bar input {
@@ -5355,6 +5356,9 @@ select {
   font-size: 1rem;
   line-height: 1;
   box-sizing: border-box;
+}
+.action-btn :hover{
+  box-shadow: none;
 }
 .action-btn.view{
   width: 25px;

@@ -20196,6 +20196,10 @@ class DentalClinicApp {
         console.log('Initializing inventory...');
         this.setupInventoryEventListeners();
         this.loadInventoryData();
+        
+        // Clean up orphaned usage records on initialization
+        this.cleanupOrphanedUsageRecords();
+        
         this.updateInventoryStats();
         
         // Force display update
@@ -20473,14 +20477,6 @@ class DentalClinicApp {
         // Update current page tracking
         this.currentInventoryPage = currentPage;
 
-        // Initialize inventory per page if not set
-        if (!this.inventoryPerPage) {
-            this.inventoryPerPage = 10;
-        }
-        
-        // Update current page tracking
-        this.currentInventoryPage = currentPage;
-
         console.log('Displaying inventory:', inventory);
         console.log('Inventory length:', inventory.length);
 
@@ -20495,7 +20491,8 @@ class DentalClinicApp {
             return;
         }
 
-
+        // Get usage records to calculate used quantities
+        const usageRecords = this.getStoredData('usage-records') || [];
 
         // Pagination
         // Ensure inventoryPerPage is set
@@ -20543,59 +20540,145 @@ class DentalClinicApp {
                     </button>
                 </div>
             </div>
-            <div class="inventory-table">
-                <div class="inventory-table-header">
-                    <div class="table-cell">
-                        <input type="checkbox" id="select-all-inventory" onchange="window.dentalApp.toggleSelectAllInventory(this.checked)" style="width: 14px; height: 14px; cursor: pointer; margin-right: 0.5rem;">
-                        S.NO
+            <div class="inventory-table" style="background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);  overflow: hidden;">
+                <div class="inventory-table-header" style="display: grid; grid-template-columns: 50px 2fr 1fr 1fr 100px 100px 120px 80px 120px 140px; gap: 1rem; padding: 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); font-weight: 600; color: var(--primary-color); align-items: center;">
+                    <div class="table-cell" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                        <input type="checkbox" id="select-all-inventory" onchange="window.dentalApp.toggleSelectAllInventory(this.checked)" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color);">
+                        <span style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600;"></span>
                     </div>
-                    <div class="table-cell">NAME</div>
-                    <div class="table-cell">CATEGORY</div>
-                    <div class="table-cell">VENDOR</div>
-                    <div class="table-cell">QUANTITY</div>
-                    <div class="table-cell">UNIT</div>
-                    <div class="table-cell">PRICE PER UNIT</div>
-                    <div class="table-cell">ACTIONS</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: left; padding-left: 0;">ITEM NAME</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: left; padding-left: 0;">CATEGORY</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: left; padding-left: 0;">VENDOR</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: center;">TOTAL</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: center;">REMAINING</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: center;">STATUS</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: center;">UNIT</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: center;">PRICE</div>
+                    <div class="table-cell" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-align: center;">ACTIONS</div>
                 </div>
-                ${currentItems.map((item, index) => `
-                    <div class="inventory-table-row">
-                        <div class="table-cell">
-                            <input type="checkbox" class="inventory-checkbox" data-inventory-id="${item.id || 'unknown'}" onchange="window.dentalApp.toggleInventorySelection('${item.id || 'unknown'}')" style="width: 14px; height: 14px; cursor: pointer; margin-right: 0.5rem;">
-                            <span class="serial-number">${startIndex + index + 1}</span>
-                        </div>
-                        <div class="table-cell">
-                            <span class="item-name">${item.name}</span>
-                        </div>
-                        <div class="table-cell">
-                            <span class="item-category">${item.category || 'N/A'}</span>
-                        </div>
-                        <div class="table-cell">
-                            <span class="item-vendor">${item.supplier || 'N/A'}</span>
-                        </div>
-                        <div class="table-cell">
-                            <span class="item-quantity">${item.quantity || 0}</span>
-                        </div>
-                        <div class="table-cell">
-                            <span class="item-unit">${item.unit || 'units'}</span>
-                        </div>
-                                                    <div class="table-cell">
-                                <span class="item-price">Rs. ${Math.round(item.price || 0).toLocaleString()}</span>
+                ${currentItems.map((item, index) => {
+                    // Calculate used quantity from usage records
+                    const usedQuantity = usageRecords
+                        .filter(record => record.itemId === item.id)
+                        .reduce((sum, record) => sum + (parseInt(record.quantity) || 0), 0);
+                    
+                    // Calculate remaining quantity
+                    const totalQuantity = parseInt(item.quantity) || 0;
+                    const remainingQuantity = Math.max(0, totalQuantity - usedQuantity);
+                    
+                    // Determine stock status
+                    const minStockLevel = parseInt(item.minStock) || 5; // Default minimum stock level
+                    let stockStatus = '';
+                    let statusColor = '';
+                    let statusBgColor = '';
+                    
+                    if (remainingQuantity === 0) {
+                        stockStatus = 'Out of Stock';
+                        statusColor = 'var(--white)';
+                        statusBgColor = 'var(--error-color)';
+                    } else if (remainingQuantity <= minStockLevel) {
+                        stockStatus = `Low Stock (${remainingQuantity})`;
+                        statusColor = 'var(--white)';
+                        statusBgColor = 'var(--warning-color)';
+                    } else {
+                        stockStatus = 'In Stock';
+                        statusColor = 'var(--white)';
+                        statusBgColor = 'var(--success-color)';
+                    }
+                    
+                    return `
+                        <div class="inventory-table-row" style="display: grid; grid-template-columns: 50px 2fr 1fr 1fr 100px 100px 120px 80px 120px 140px; gap: 1rem; padding: 1rem; border-bottom: 1px solid var(--gray-100); transition: background-color 0.2s ease; align-items: center; background: var(--white);" onmouseover="this.style.backgroundColor='var(--gray-50)'" onmouseout="this.style.backgroundColor='var(--white)'">
+                            <div class="table-cell" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                                <input type="checkbox" class="inventory-checkbox" data-inventory-id="${item.id || 'unknown'}" onchange="window.dentalApp.toggleInventorySelection('${item.id || 'unknown'}')" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color);">
+                                <span class="serial-number" style="font-weight: 600; color: var(--primary-color); font-size: 0.875rem; background: var(--primary-light); padding: 0.25rem 0.5rem; border-radius: var(--radius-md); min-width: 24px; text-align: center;">${startIndex + index + 1}</span>
                             </div>
-                        <div class="table-cell">
-                            <div class="table-actions">
-                                <button class="action-btn view" onclick="window.dentalApp.viewInventoryItem('${item.id}')" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="action-btn edit" onclick="window.dentalApp.editInventoryItem('${item.id}')" title="Edit">
-                                    <i class="fas fa-pen-to-square"></i>
-                                </button>
-                                <button class="action-btn delete" onclick="window.dentalApp.deleteInventoryItem('${item.id}')" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                            <div class="table-cell" style="text-align: left; padding-left: 0;">
+                                <span class="item-name" style="font-weight: 600; color: var(--primary-color); font-size: 0.875rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.4;">${item.name}</span>
+                            </div>
+                            <div class="table-cell" style="text-align: left; padding-left: 0;">
+                                <span class="item-category" style="color: var(--primary-color); font-size: 0.875rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">${item.category || 'N/A'}</span>
+                            </div>
+                            <div class="table-cell" style="text-align: left; padding-left: 0;">
+                                <span class="item-vendor" style="color: var(--primary-color); font-size: 0.875rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">${item.supplier || 'N/A'}</span>
+                            </div>
+                            <div class="table-cell" style="text-align: center;">
+                                <span class="item-total-quantity" style="font-weight: 600; color: var(--primary-color); font-size: 0.875rem;">${totalQuantity}</span>
+                            </div>
+                            <div class="table-cell" style="text-align: center;">
+                                <span class="item-remaining-quantity" style="font-weight: 600; color: ${remainingQuantity === 0 ? 'var(--error-color)' : remainingQuantity <= (totalQuantity * 0.2) ? 'var(--warning-color)' : 'var(--success-color)'}; font-size: 0.875rem; background: ${remainingQuantity === 0 ? 'var(--error-light)' : remainingQuantity <= (totalQuantity * 0.2) ? 'var(--warning-light)' : 'var(--success-light)'}; padding: 0.25rem 0.75rem; border-radius: var(--radius-md);">${remainingQuantity}</span>
+                            </div>
+                            <div class="table-cell" style="text-align: center;">
+                                <span class="item-status" style="padding: 0.375rem 0.875rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 600; color: ${remainingQuantity === 0 ? 'var(--white)' : remainingQuantity <= (totalQuantity * 0.2) ? 'var(--white)' : 'var(--white)'}; background: ${remainingQuantity === 0 ? 'var(--error-color)' : remainingQuantity <= (totalQuantity * 0.2) ? 'var(--warning-color)' : 'var(--success-color)'}; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    ${remainingQuantity === 0 ? 'Out of Stock' : remainingQuantity <= (totalQuantity * 0.2) ? 'Low Stock' : 'Available'}
+                                </span>
+                            </div>
+                            <div class="table-cell" style="text-align: center;">
+                                <span class="item-unit" style="color: var(--primary-color); font-size: 0.875rem; font-weight: 500;">${item.unit || 'units'}</span>
+                            </div>
+                            <div class="table-cell" style="text-align: center;">
+                                <span class="item-price" style="font-weight: 600; color: var(--primary-color); font-size: 0.875rem;">Rs. ${Math.round(item.price || 0).toLocaleString()}</span>
+                            </div>
+                            <div class="table-cell" style="text-align: center;">
+                                <div class="table-actions" style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+                                    <button class="action-btn view" 
+    onclick="window.dentalApp.viewInventoryUsage('${item.id}')" 
+    title="View Usage" 
+    style="width: 32px; height: 32px; padding: 0;  
+           color: var(--info-color); border-radius: var(--radius-md); 
+           background: none; border: none; cursor: pointer; 
+           transition: all 0.2s ease-in-out; 
+           display: flex; align-items: center; justify-content: center;" 
+    onmouseover="this.style.transform='scale(1.1)'; this.style.background='none'" 
+    onmouseout="this.style.transform='scale(1)'; this.style.background='none'">
+    <i class="fas fa-eye" style="font-size: 0.85rem;"></i>
+</button>
+
+<button class="action-btn edit" 
+    onclick="window.dentalApp.editInventoryItem('${item.id}')" 
+    title="Edit" 
+    style="width: 32px; height: 32px; padding: 0;  
+           color: var(--primary-color); border-radius: var(--radius-md); 
+           background: none; border: none; cursor: pointer; 
+           transition: all 0.2s ease-in-out; 
+           display: flex; align-items: center; justify-content: center;" 
+    onmouseover="this.style.transform='scale(1.1)'; this.style.background='none'" 
+    onmouseout="this.style.transform='scale(1)'; this.style.background='none'">
+    <i class="fas fa-pen-to-square" style="font-size: 0.85rem;"></i>
+</button>
+
+<button class="action-btn print" 
+    onclick="window.dentalApp.printInventoryItem('${item.id}')" 
+    title="Print" 
+    style="width: 32px; height: 32px; padding: 0;  
+           color: var(--warning-color); border-radius: var(--radius-md); 
+           background: none; border: none; cursor: pointer; 
+           transition: all 0.2s ease-in-out; 
+           display: flex; align-items: center; justify-content: center;" 
+    onmouseover="this.style.transform='scale(1.1)'; this.style.background='none'" 
+    onmouseout="this.style.transform='scale(1)'; this.style.background='none'">
+    <i class="fas fa-print" style="font-size: 0.85rem;"></i>
+</button>
+
+<button class="action-btn delete" 
+    onclick="window.dentalApp.deleteInventoryItem('${item.id}')" 
+    title="Delete" 
+    style="width: 32px; height: 32px; padding: 0;  
+           color: var(--error-color); border-radius: var(--radius-md); 
+           background: none; border: none; cursor: pointer; 
+           transition: all 0.2s ease-in-out; 
+           display: flex; align-items: center; justify-content: center;" 
+    onmouseover="this.style.transform='scale(1.1)'; this.style.background='none'" 
+    onmouseout="this.style.transform='scale(1)'; this.style.background='none'">
+    <i class="fas fa-trash" style="font-size: 0.85rem;"></i>
+</button>
+
+
+                                    
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </div>
             
             <!-- Pagination Controls -->
@@ -20637,8 +20720,6 @@ class DentalClinicApp {
 
         `;
         
-
-        
         // Store current inventory for pagination
         this.currentInventory = inventory;
         
@@ -20651,6 +20732,7 @@ class DentalClinicApp {
 
     updateInventoryStats() {
         const inventory = this.getStoredData('inventory') || [];
+        const usageRecords = this.getStoredData('usage-records') || [];
         
         // Update total items
         const totalItemsElement = document.getElementById('total-items');
@@ -20658,24 +20740,54 @@ class DentalClinicApp {
             totalItemsElement.textContent = inventory.length;
         }
 
+        // Calculate low stock and out of stock items based on remaining quantity
+        let lowStockCount = 0;
+        let outOfStockCount = 0;
+        
+        inventory.forEach(item => {
+            // Calculate used quantity from usage records
+            const usedQuantity = usageRecords
+                .filter(record => record.itemId === item.id)
+                .reduce((sum, record) => sum + (parseInt(record.quantity) || 0), 0);
+            
+            // Calculate remaining quantity
+            const totalQuantity = parseInt(item.quantity) || 0;
+            const remainingQuantity = Math.max(0, totalQuantity - usedQuantity);
+            
+            // Determine stock status
+            const minStockLevel = parseInt(item.minStock) || 5; // Default minimum stock level
+            
+            if (remainingQuantity === 0) {
+                outOfStockCount++;
+            } else if (remainingQuantity <= minStockLevel) {
+                lowStockCount++;
+            }
+        });
+        
         // Update low stock items
-        const lowStockItems = inventory.filter(item => 
-            (item.quantity || 0) <= (item.minStock || 0) && (item.quantity || 0) > 0
-        );
         const lowStockElement = document.getElementById('low-stock-items');
         if (lowStockElement) {
-            lowStockElement.textContent = lowStockItems.length;
+            lowStockElement.textContent = lowStockCount;
         }
 
         // Update out of stock items
-        const outOfStockItems = inventory.filter(item => (item.quantity || 0) === 0);
         const outOfStockElement = document.getElementById('out-of-stock-items');
         if (outOfStockElement) {
-            outOfStockElement.textContent = outOfStockItems.length;
+            outOfStockElement.textContent = outOfStockCount;
         }
 
-        // Update total inventory value
-        const totalValue = inventory.reduce((sum, item) => sum + (item.totalValue || 0), 0);
+        // Update total inventory value (based on remaining quantity)
+        const totalValue = inventory.reduce((sum, item) => {
+            const usedQuantity = usageRecords
+                .filter(record => record.itemId === item.id)
+                .reduce((sum, record) => sum + (parseInt(record.quantity) || 0), 0);
+            
+            const totalQuantity = parseInt(item.quantity) || 0;
+            const remainingQuantity = Math.max(0, totalQuantity - usedQuantity);
+            
+            return sum + (remainingQuantity * (item.price || 0));
+        }, 0);
+        
         const totalValueElement = document.getElementById('inventory-value');
         if (totalValueElement) {
             totalValueElement.textContent = `Rs. ${Math.round(totalValue).toLocaleString()}`;
@@ -20803,6 +20915,392 @@ class DentalClinicApp {
         this.showToast('Showing inventory details', 'info');
     }
 
+    printInventoryItem(itemId) {
+        const inventory = this.getStoredData('inventory') || [];
+        const item = inventory.find(i => i.id === itemId);
+        
+        if (!item) {
+            this.showToast('Inventory item not found', 'error');
+            return;
+        }
+
+        // Get usage records for this item
+        const usageRecords = this.getStoredData('usage-records') || [];
+        const usedQuantity = usageRecords
+            .filter(record => record.itemId === item.id)
+            .reduce((sum, record) => sum + (parseInt(record.quantity) || 0), 0);
+        
+        const totalQuantity = parseInt(item.quantity) || 0;
+        const remainingQuantity = Math.max(0, totalQuantity - usedQuantity);
+        const totalValue = Math.round((item.quantity || 0) * (item.price || 0));
+
+        // Create print-friendly HTML
+        const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Inventory Item - ${item.name}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
+                    .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+                    .header h1 { color: #2563eb; margin: 0; font-size: 24px; }
+                    .header p { color: #666; margin: 5px 0; }
+                    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+                    .info-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9fafb; }
+                    .info-label { font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
+                    .info-value { font-size: 16px; font-weight: bold; color: #333; }
+                    .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+                    .status-instock { background: #dcfce7; color: #166534; }
+                    .status-lowstock { background: #fef3c7; color: #92400e; }
+                    .status-outstock { background: #fee2e2; color: #991b1b; }
+                    .description { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9fafb; margin-top: 20px; }
+                    .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
+                    @media print { body { margin: 0; } .header { border-bottom-color: #000; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>🦷 DentalCare Pro</h1>
+                    <p>Inventory Item Report</p>
+                    <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h2 style="color: #2563eb; margin: 0 0 10px 0;">${item.name}</h2>
+                    <p style="color: #666; margin: 0;">Item ID: ${item.id}</p>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">Category</div>
+                        <div class="info-value">${item.category || 'N/A'}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Supplier</div>
+                        <div class="info-value">${item.supplier || 'N/A'}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Total Quantity</div>
+                        <div class="info-value">${totalQuantity} ${item.unit || 'units'}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Used Quantity</div>
+                        <div class="info-value">${usedQuantity} ${item.unit || 'units'}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Remaining Quantity</div>
+                        <div class="info-value">${remainingQuantity} ${item.unit || 'units'}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Price per Unit</div>
+                        <div class="info-value">Rs. ${Math.round(item.price || 0).toLocaleString()}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Total Value</div>
+                        <div class="info-value">Rs. ${totalValue.toLocaleString()}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Location</div>
+                        <div class="info-value">${item.location || 'N/A'}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Status</div>
+                        <div class="info-value">
+                            <span class="status-badge ${remainingQuantity === 0 ? 'status-outstock' : remainingQuantity <= (item.minStock || 5) ? 'status-lowstock' : 'status-instock'}">
+                                ${remainingQuantity === 0 ? 'Out of Stock' : remainingQuantity <= (item.minStock || 5) ? 'Low Stock' : 'In Stock'}
+                            </span>
+                        </div>
+                    </div>
+                    ${item.expiryDate ? `
+                    <div class="info-card">
+                        <div class="info-label">Expiry Date</div>
+                        <div class="info-value">${this.formatDate(item.expiryDate)}</div>
+                    </div>` : ''}
+                </div>
+                
+                ${item.description ? `
+                <div class="description">
+                    <div class="info-label">Description</div>
+                    <div style="color: #333; line-height: 1.5; margin-top: 5px;">${item.description}</div>
+                </div>` : ''}
+                
+                <div class="footer">
+                    <p>This is an official inventory report from DentalCare Pro</p>
+                    <p>For any queries, please contact the clinic administration</p>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        
+        // Wait for content to load then print
+        printWindow.onload = function() {
+            printWindow.print();
+            printWindow.close();
+        };
+        
+        this.showToast('Printing inventory details...', 'success');
+    }
+
+    showRecordUsageModal() {
+        const inventory = this.getStoredData('inventory') || [];
+        if (inventory.length === 0) {
+            this.showToast('No inventory items available', 'warning');
+            return;
+        }
+
+        // Create modal
+        const existing = document.getElementById('record-usage-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'record-usage-modal';
+        modal.className = 'modal';
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px; width: 95%;">
+                <div class="modal-header">
+                    <h3>Record Usage</h3>
+                    <span class="close" id="record-usage-close">&times;</span>
+                </div>
+                <form id="record-usage-form">
+                    <div style="padding: 1.5rem;">
+                        <div class="form-group">
+                            <label for="usage-item-select">Select Item *</label>
+                            <select id="usage-item-select" name="itemId" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem;">
+                                <option value="">Choose an item</option>
+                                ${inventory.map(item => `
+                                    <option value="${item.id}">${item.name} (${item.quantity || 0} ${item.unit || 'units'} remaining)</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="usage-quantity-input">Quantity Used *</label>
+                            <input type="number" id="usage-quantity-input" name="quantity" min="1" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem;">
+                        </div>
+                        <div class="form-group">
+                            <label for="usage-reason-select">Reason</label>
+                            <select id="usage-reason-select" name="reason" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem;">
+                                <option value="">Select reason</option>
+                                <option value="patient-treatment">Patient Treatment</option>
+                                <option value="cleaning">Cleaning</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="expired">Expired</option>
+                                <option value="damaged">Damaged</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="usage-notes-input">Notes</label>
+                            <textarea id="usage-notes-input" name="notes" rows="3" placeholder="Additional notes..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); color: var(--gray-700); font-size: 0.875rem; resize: vertical;"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="padding: 1rem 1.5rem; border-top: 1px solid var(--gray-200); display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" id="record-usage-cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Record Usage</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.padding = '20px';
+
+        // Event listeners
+        const close = () => { modal.style.display = 'none'; modal.remove(); };
+        modal.querySelector('#record-usage-close')?.addEventListener('click', close);
+        modal.querySelector('#record-usage-cancel')?.addEventListener('click', close);
+        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+        // Form submit
+        const form = modal.querySelector('#record-usage-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleRecordUsageSubmit(e);
+            close();
+        });
+    }
+
+    handleRecordUsageSubmit(e) {
+        const formData = new FormData(e.target);
+        const itemId = formData.get('itemId');
+        const quantity = parseInt(formData.get('quantity'));
+        const reason = formData.get('reason');
+        const notes = formData.get('notes');
+
+        if (!itemId || !quantity) {
+            this.showToast('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Get inventory item
+        const inventory = this.getStoredData('inventory') || [];
+        const item = inventory.find(i => i.id === itemId);
+        
+        if (!item) {
+            this.showToast('Item not found', 'error');
+            return;
+        }
+
+        // Check if enough quantity available
+        const currentQuantity = parseInt(item.quantity) || 0;
+        if (quantity > currentQuantity) {
+            this.showToast(`Not enough stock. Available: ${currentQuantity}`, 'error');
+            return;
+        }
+
+        // Update inventory quantity - only for the selected item
+        const updatedInventory = inventory.map(invItem => {
+            if (invItem.id === itemId) {
+                return { ...invItem, quantity: Math.max(0, currentQuantity - quantity) };
+            }
+            return invItem;
+        });
+        this.setStoredData('inventory', updatedInventory);
+
+        // Add usage record
+        const usageRecords = this.getStoredData('usage-records') || [];
+        const usageRecord = {
+            id: Date.now().toString(),
+            itemId: itemId,
+            quantity: quantity,
+            date: new Date().toISOString().split('T')[0],
+            reason: reason,
+            notes: notes,
+            createdAt: new Date().toISOString()
+        };
+        usageRecords.push(usageRecord);
+        this.setStoredData('usage-records', usageRecords);
+
+        // Update display
+        this.currentInventory = updatedInventory;
+        this.displayInventory(updatedInventory, 1);
+        this.updateInventoryStats();
+
+        this.showToast(`Usage recorded successfully. ${quantity} units deducted from ${item.name}`, 'success');
+    }
+
+    viewInventoryUsage(itemId) {
+        const inventory = this.getStoredData('inventory') || [];
+        const item = inventory.find(i => i.id === itemId);
+        const usageRecords = this.getStoredData('usage-records') || [];
+        
+        if (!item) {
+            this.showToast('Inventory item not found', 'error');
+            return;
+        }
+
+        // Filter usage records for this item
+        const itemUsageRecords = usageRecords.filter(record => record.itemId === itemId);
+        
+        // Calculate totals
+        const totalUsed = itemUsageRecords.reduce((sum, record) => sum + (parseInt(record.quantity) || 0), 0);
+        const totalQuantity = parseInt(item.quantity) || 0;
+        const remainingQuantity = Math.max(0, totalQuantity - totalUsed);
+
+        // Create modal
+        const existing = document.getElementById('inventory-usage-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'inventory-usage-modal';
+        modal.className = 'modal';
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px; width: 95%;">
+                <div class="modal-header">
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <div style="width:40px;height:40px;background:var(--info-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--info-color);">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin:0">Usage Records</h3>
+                            <div style="color:var(--gray-600);font-size:0.9rem;">${item.name}</div>
+                        </div>
+                    </div>
+                    <span class="close" id="inventory-usage-close">&times;</span>
+                </div>
+
+                <div style="padding:1.25rem;">
+                    <!-- Summary Cards -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;">
+                        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                            <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Total Stock</div>
+                            <div style="color:var(--primary-color);font-weight:700;font-size:1.2rem;">${totalQuantity} ${item.unit || 'units'}</div>
+                        </div>
+                        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                            <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Total Used</div>
+                            <div style="color:var(--warning-color);font-weight:700;font-size:1.2rem;">${totalUsed} ${item.unit || 'units'}</div>
+                        </div>
+                        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                            <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Remaining</div>
+                            <div style="color:var(--success-color);font-weight:700;font-size:1.2rem;">${remainingQuantity} ${item.unit || 'units'}</div>
+                        </div>
+                        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:1rem;">
+                            <div style="font-weight:600;color:var(--gray-500);font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem;">Usage Records</div>
+                            <div style="color:var(--info-color);font-weight:700;font-size:1.2rem;">${itemUsageRecords.length}</div>
+                        </div>
+                    </div>
+
+                    <!-- Usage Records Table -->
+                    <div style="background:var(--white);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);">
+                        <div style="background:var(--gray-50);padding:1rem;border-bottom:1px solid var(--gray-200);font-weight:600;color:var(--gray-700);">
+                            Usage History
+                        </div>
+                        ${itemUsageRecords.length === 0 ? `
+                            <div style="padding:2rem;text-align:center;color:var(--gray-500);">
+                                <i class="fas fa-chart-line" style="font-size:2rem;margin-bottom:1rem;opacity:0.5;"></i>
+                                <p>No usage records found for this item.</p>
+                            </p>
+                        ` : `
+                            <div style="overflow-x:auto;">
+                                <table style="width:100%;border-collapse:collapse;">
+                                    <thead>
+                                        <tr style="background:var(--gray-50);">
+                                            <th style="padding:0.75rem;text-align:left;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-200);">Date</th>
+                                            <th style="padding:0.75rem;text-align:left;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-200);">Quantity Used</th>
+                                            <th style="padding:0.75rem;text-align:left;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-200);">Reason</th>
+                                            <th style="padding:0.75rem;text-align:left;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-200);">Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${itemUsageRecords.map(record => `
+                                            <tr style="border-bottom:1px solid var(--gray-100);">
+                                                <td style="padding:0.75rem;color:var(--gray-700);">${this.formatDate(record.date)}</td>
+                                                <td style="padding:0.75rem;color:var(--warning-color);font-weight:600;">${record.quantity} ${item.unit || 'units'}</td>
+                                                <td style="padding:0.75rem;color:var(--gray-700);">${record.reason || 'N/A'}</td>
+                                                <td style="padding:0.75rem;color:var(--gray-600);font-size:0.875rem;">${record.notes || 'N/A'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.padding = '20px';
+
+        const close = () => { modal.style.display = 'none'; modal.remove(); };
+        modal.querySelector('#inventory-usage-close')?.addEventListener('click', close);
+        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+        
+        this.showToast('Showing usage records', 'info');
+    }
+
     populateInventoryFormForEdit(item) {
         const form = document.getElementById('inventory-form');
         if (!form) return;
@@ -20845,13 +21343,25 @@ class DentalClinicApp {
             const inventory = this.getStoredData('inventory') || [];
             const updatedInventory = inventory.filter(item => item.id !== this.itemToDelete);
             
+            // Also delete associated usage records
+            const usageRecords = this.getStoredData('usage-records') || [];
+            const updatedUsageRecords = usageRecords.filter(record => record.itemId !== this.itemToDelete);
+            
+            // Save updated data
             this.setStoredData('inventory', updatedInventory);
+            this.setStoredData('usage-records', updatedUsageRecords);
             this.currentInventory = updatedInventory;
             
             this.displayInventory(updatedInventory, 1);
             this.updateInventoryStats();
             
-            this.showToast('Inventory item deleted successfully', 'success');
+            // Show success message with usage records info
+            const deletedUsageCount = usageRecords.length - updatedUsageRecords.length;
+            if (deletedUsageCount > 0) {
+                this.showToast(`Inventory item and ${deletedUsageCount} associated usage record(s) deleted successfully`, 'success');
+            } else {
+                this.showToast('Inventory item deleted successfully', 'success');
+            }
             
             // Reset the item to delete
             this.itemToDelete = null;
@@ -20875,9 +21385,32 @@ class DentalClinicApp {
         const inventory = this.getStoredData('inventory') || [];
         console.log('Current inventory from storage:', inventory);
         this.currentInventory = inventory;
+        
+        // Clean up orphaned usage records
+        this.cleanupOrphanedUsageRecords();
+        
         this.displayInventory(inventory, 1);
         this.updateInventoryStats();
         this.showToast('Inventory refreshed', 'info');
+    }
+
+    cleanupOrphanedUsageRecords() {
+        const inventory = this.getStoredData('inventory') || [];
+        const usageRecords = this.getStoredData('usage-records') || [];
+        
+        // Get all inventory item IDs
+        const inventoryIds = inventory.map(item => item.id);
+        
+        // Filter out usage records that reference non-existent inventory items
+        const validUsageRecords = usageRecords.filter(record => inventoryIds.includes(record.itemId));
+        
+        // If there were orphaned records, save the cleaned data
+        if (validUsageRecords.length !== usageRecords.length) {
+            const orphanedCount = usageRecords.length - validUsageRecords.length;
+            this.setStoredData('usage-records', validUsageRecords);
+            console.log(`Cleaned up ${orphanedCount} orphaned usage records`);
+            this.showToast(`Cleaned up ${orphanedCount} orphaned usage records`, 'info');
+        }
     }
 
     switchInventoryTab(tabName) {
@@ -20998,6 +21531,7 @@ class DentalClinicApp {
         if (!itemSelect || !filterSelect) return;
 
         const inventory = this.getStoredData('inventory') || [];
+        const usageRecords = this.getStoredData('usage-records') || [];
         
         // Clear existing options
         itemSelect.innerHTML = '<option value="">Select Item</option>';
@@ -21005,9 +21539,17 @@ class DentalClinicApp {
         
         // Add inventory items
         inventory.forEach(item => {
+            // Calculate remaining quantity
+            const usedQuantity = usageRecords
+                .filter(record => record.itemId === item.id)
+                .reduce((sum, record) => sum + (parseInt(record.quantity) || 0), 0);
+            
+            const totalQuantity = parseInt(item.quantity) || 0;
+            const remainingQuantity = Math.max(0, totalQuantity - usedQuantity);
+            
             const option = document.createElement('option');
             option.value = item.id;
-            option.textContent = `${item.name} (${item.quantity || 0} available)`;
+            option.textContent = `${item.name} (${remainingQuantity} remaining)`;
             itemSelect.appendChild(option);
             
             const filterOption = document.createElement('option');
@@ -21031,8 +21573,9 @@ class DentalClinicApp {
             timestamp: new Date().toISOString()
         };
 
-        // Validate quantity
+        // Validate quantity against remaining stock
         const inventory = this.getStoredData('inventory') || [];
+        const usageRecords = this.getStoredData('usage-records') || [];
         const item = inventory.find(i => i.id === usageData.itemId);
         
         if (!item) {
@@ -21040,13 +21583,20 @@ class DentalClinicApp {
             return;
         }
 
-        if (usageData.quantity > (item.quantity || 0)) {
-            this.showToast('Usage quantity cannot exceed available stock', 'error');
+        // Calculate remaining quantity
+        const usedQuantity = usageRecords
+            .filter(record => record.itemId === usageData.itemId)
+            .reduce((sum, record) => sum + (parseInt(record.quantity) || 0), 0);
+        
+        const totalQuantity = parseInt(item.quantity) || 0;
+        const remainingQuantity = Math.max(0, totalQuantity - usedQuantity);
+
+        if (usageData.quantity > remainingQuantity) {
+            this.showToast(`Usage quantity cannot exceed remaining stock (${remainingQuantity} available)`, 'error');
             return;
         }
 
         // Save usage record
-        const usageRecords = this.getStoredData('usage-records') || [];
         usageRecords.push(usageData);
         this.setStoredData('usage-records', usageRecords);
 
@@ -21135,67 +21685,106 @@ class DentalClinicApp {
                     </div>
                 </div>
                 
-                <!-- Select All Header -->
-                <div style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); font-weight: 600; color: var(--gray-700);">
-                    <div style="min-width: 120px; display: flex; align-items: center; gap: 1rem;">
+                <!-- Table Header -->
+                <div class="usage-table-header" style="display: grid; grid-template-columns: 50px 1fr 150px 120px 120px 150px; gap: 1rem; padding: 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); font-weight: 600; color: var(--gray-700); align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <input type="checkbox" id="select-all-usage" onchange="window.dentalApp.toggleSelectAllUsage(this.checked)" style="width: 14px; height: 14px; cursor: pointer;">
-                        <span style="font-size: 0.875rem; color: var(--primary-color);">Select All</span>
+                        <span style="font-size: 0.875rem; color: var(--primary-color);">#</span>
                     </div>
-                    <div style="flex: 1; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Usage Information</div>
-                    <div style="min-width: 200px; text-align: center; font-size: 0.875rem; color: var(--primary-color);">Actions</div>
+                    <div style="font-size: 0.875rem; color: var(--primary-color);">ITEM & STATUS</div>
+                    <div style="font-size: 0.875rem; color: var(--primary-color);">QUANTITY</div>
+                    <div style="font-size: 0.875rem; color: var(--primary-color);">REASON</div>
+                    <div style="font-size: 0.875rem; color: var(--primary-color);">DATE</div>
+                    <div style="font-size: 0.875rem; color: var(--primary-color); text-align: center;">ACTIONS</div>
                 </div>
                 
                 <!-- Usage Rows -->
                 ${currentRecords.map((record, index) => {
                     const item = inventory.find(i => i.id === record.itemId);
                     const itemName = item ? item.name : 'Unknown Item';
+                    const currentStock = item ? (item.quantity || 0) : 0;
                     const reasonText = record.reason ? record.reason.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified';
                     const globalIndex = startIndex + index;
                     
+                    // Determine stock status
+                    let stockStatus = '';
+                    let statusColor = '';
+                    let statusBgColor = '';
+                    
+                    if (currentStock === 0) {
+                        stockStatus = 'Out of Stock';
+                        statusColor = 'var(--white)';
+                        statusBgColor = 'var(--error-color)';
+                    } else if (currentStock <= 5) {
+                        stockStatus = 'Low Stock';
+                        statusColor = 'var(--white)';
+                        statusBgColor = 'var(--warning-color)';
+                    } else if (currentStock <= 10) {
+                        stockStatus = 'Medium Stock';
+                        statusColor = 'var(--white)';
+                        statusBgColor = 'var(--info-color)';
+                    } else {
+                        stockStatus = 'In Stock';
+                        statusColor = 'var(--white)';
+                        statusBgColor = 'var(--success-color)';
+                    }
+                    
                     return `
-                        <div class="usage-row" data-usage-id="${record.id || 'unknown'}" data-item-name="${itemName}" style="display: flex; align-items: center; gap: 1.5rem; padding: 1rem; border-bottom: ${index < currentRecords.length - 1 ? '1px solid var(--gray-200)' : 'none'}; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='var(--gray-100)'" onmouseout="this.style.backgroundColor='transparent'">
-                            <!-- Usage Selection Checkbox -->
-                            <div style="display: flex; align-items: center; gap: 1rem; min-width: 120px;
+                        <div class="usage-table-row" data-usage-id="${record.id || 'unknown'}" data-item-name="${itemName}" style="display: grid; grid-template-columns: 50px 1fr 150px 120px 120px 150px; gap: 1rem; padding: 1rem; border-bottom: ${index < currentRecords.length - 1 ? '1px solid var(--gray-200)' : 'none'}; transition: background-color 0.2s ease; align-items: center;" onmouseover="this.style.backgroundColor='var(--gray-50)'" onmouseout="this.style.backgroundColor='transparent'">
+                            <!-- Checkbox and Serial Number -->
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <input type="checkbox" class="usage-checkbox" data-usage-id="${record.id || 'unknown'}" onchange="window.dentalApp.toggleUsageSelection('${record.id || 'unknown'}')" style="width: 14px; height: 14px; cursor: pointer;">
-                                <div class="usage-avatar" style="width: 40px; height: 40px; background: var(--primary-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--primary-color); font-size: var(--font-size-sm); flex-shrink: 0;">
-                                    ${globalIndex + 1}
+                                <span style="font-weight: 600; color: var(--gray-600); font-size: 0.875rem;">${globalIndex + 1}</span>
+                            </div>
+                            
+                            <!-- Item Name and Stock Status -->
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="font-weight: 600; color: var(--gray-800); font-size: 0.9rem;">
+                                    ${this.escapeHtml(itemName)}
                                 </div>
-                                <div style="width: 50px; height: 50px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.5rem;">
-                                    <i class="fas fa-clipboard-list" style="font-size: 1rem;"></i>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 500; color: ${statusColor}; background: ${statusBgColor};">
+                                        ${stockStatus}
+                                    </span>
+                                    <span style="font-size: 0.75rem; color: var(--gray-600);">
+                                        (${currentStock} available)
+                                    </span>
                                 </div>
                             </div>
                             
-                            <!-- Usage Info -->
-                            <div class="usage-info" style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
-                                <div class="usage-item-name" style="background: var(--primary-light); color: var(--primary-color); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); font-weight: 500; font-size: 0.875rem; display: inline-block; width: 100%; text-align: left; letter-spacing: 0.025em;">
-                                    ${this.escapeHtml(itemName)}
-                                </div>
-                                
-                                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                    <div class="usage-quantity" style="background: var(--primary-light); color: var(--primary-color); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 500; font-size: var(--font-size-xs); display: inline-block; width: fit-content;">
-                                        ${record.quantity} used
-                                    </div>
-                                    <div class="usage-reason" style="background: var(--primary-light); padding: 0.25rem 0.75rem; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; width: fit-content;">
-                                        <span style="font-size: 0.875rem; color: var(--primary-color);">${reasonText}</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="usage-date" style="background: var(--primary-light); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.875rem; display: inline-block; width: fit-content; text-align: left; letter-spacing: 0.025em;">
-                                    <i class="fas fa-calendar" style="margin-right: 0.5rem; font-size: 0.75rem;"></i>
-                                    ${new Date(record.date).toLocaleDateString()}
-                                </div>
+                            <!-- Quantity Used -->
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-weight: 600; color: var(--primary-color); font-size: 0.9rem;">
+                                    ${record.quantity}
+                                </span>
+                                <span style="font-size: 0.75rem; color: var(--gray-600);">
+                                    ${item ? (item.unit || 'units') : 'units'}
+                                </span>
+                            </div>
+                            
+                            <!-- Reason -->
+                            <div style="font-size: 0.875rem; color: var(--gray-700);">
+                                ${reasonText}
+                            </div>
+                            
+                            <!-- Date -->
+                            <div style="font-size: 0.875rem; color: var(--gray-700);">
+                                ${new Date(record.date).toLocaleDateString()}
                             </div>
                             
                             <!-- Action Buttons -->
-                            <div style="display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center;">
-                                <button onclick="window.dentalApp.viewUsageDetails('${record.id}')" style="width: 40px; height: 40px; padding: 0; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-md); border: none; cursor: pointer; transition: all 0.2s ease-in-out;" title="View Details" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                                    <i class="fas fa-eye"></i>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+                                <button onclick="window.dentalApp.viewUsageDetails('${record.id}')" style="width: 35px; height: 35px; padding: 0; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-md); border: none; cursor: pointer; transition: all 0.2s ease-in-out;" title="View Details" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-eye" style="font-size: 0.8rem;"></i>
                                 </button>
-                                <button onclick="window.dentalApp.editUsage('${record.id}')" style="width: 40px; height: 40px; padding: 0; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-md); border: none; cursor: pointer; transition: all 0.2s ease-in-out;" title="Edit Usage" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                                    <i class="fas fa-edit"></i>
+                                <button onclick="window.dentalApp.editUsage('${record.id}')" style="width: 35px; height: 35px; padding: 0; background: var(--info-light); color: var(--info-color); border-radius: var(--radius-md); border: none; cursor: pointer; transition: all 0.2s ease-in-out;" title="Edit Usage" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-edit" style="font-size: 0.8rem;"></i>
                                 </button>
-                                <button onclick="window.dentalApp.showDeleteUsageConfirmation('${record.id}')" style="width: 40px; height: 40px; padding: 0; background: var(--white); color: var(--error-color); border: 1px solid var(--error-color); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease-in-out;" title="Delete" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                                    <i class="fas fa-trash"></i>
+                                <button onclick="window.dentalApp.printUsageRecord('${record.id}')" style="width: 35px; height: 35px; padding: 0; background: var(--success-light); color: var(--success-color); border-radius: var(--radius-md); border: none; cursor: pointer; transition: all 0.2s ease-in-out;" title="Print Record" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-print" style="font-size: 0.8rem;"></i>
+                                </button>
+                                <button onclick="window.dentalApp.showDeleteUsageConfirmation('${record.id}')" style="width: 35px; height: 35px; padding: 0; background: var(--error-light); color: var(--error-color); border-radius: var(--radius-md); border: none; cursor: pointer; transition: all 0.2s ease-in-out;" title="Delete" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-trash" style="font-size: 0.8rem;"></i>
                                 </button>
                             </div>
                         </div>
@@ -24879,8 +25468,13 @@ class DentalClinicApp {
         // Filter out selected items
         const updatedInventory = inventory.filter(item => !selectedIds.includes(item.id));
         
-        // Save updated inventory
+        // Also delete associated usage records
+        const usageRecords = this.getStoredData('usage-records') || [];
+        const updatedUsageRecords = usageRecords.filter(record => !selectedIds.includes(record.itemId));
+        
+        // Save updated data
         this.setStoredData('inventory', updatedInventory);
+        this.setStoredData('usage-records', updatedUsageRecords);
         
         // Clear selection
         this.selectedInventoryItems.clear();
@@ -24891,13 +25485,38 @@ class DentalClinicApp {
         
         this.updateInventoryBulkActionsVisibility();
         
-        // Show success message
+        // Show success message with usage records info
         const deletedCount = inventory.length - updatedInventory.length;
-        this.showToast(`Successfully deleted ${deletedCount} inventory item(s)`, 'success');
+        const deletedUsageCount = usageRecords.length - updatedUsageRecords.length;
+        
+        if (deletedUsageCount > 0) {
+            this.showToast(`Successfully deleted ${deletedCount} inventory item(s) and ${deletedUsageCount} associated usage record(s)`, 'success');
+        } else {
+            this.showToast(`Successfully deleted ${deletedCount} inventory item(s)`, 'success');
+        }
         
         // Refresh the display
         this.displayInventory(updatedInventory, 1);
         this.updateInventoryStats();
+    }
+
+    cleanupOrphanedUsageRecords() {
+        const inventory = this.getStoredData('inventory') || [];
+        const usageRecords = this.getStoredData('usage-records') || [];
+        
+        // Get all inventory item IDs
+        const inventoryIds = inventory.map(item => item.id);
+        
+        // Filter out usage records that reference non-existent inventory items
+        const validUsageRecords = usageRecords.filter(record => inventoryIds.includes(record.itemId));
+        
+        // If there were orphaned records, save the cleaned data
+        if (validUsageRecords.length !== usageRecords.length) {
+            const orphanedCount = usageRecords.length - validUsageRecords.length;
+            this.setStoredData('usage-records', validUsageRecords);
+            console.log(`Cleaned up ${orphanedCount} orphaned usage records`);
+            this.showToast(`Cleaned up ${orphanedCount} orphaned usage records`, 'info');
+        }
     }
 }
 
