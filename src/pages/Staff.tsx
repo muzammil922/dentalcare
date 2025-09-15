@@ -4692,7 +4692,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && staffToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-xs flex items-center justify-center z-[9999999] max-w-none">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[9999999] max-w-none">
           <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
             <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>
@@ -4731,7 +4731,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
 
       {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-xs flex items-center justify-center z-[9999999] max-w-none">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[9999999] max-w-none">
           <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
             <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Bulk Delete</h3>
@@ -4785,8 +4785,8 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(2px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -6529,7 +6529,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
 
       {/* Salary Delete Confirmation Modal */}
       {showSalaryDeleteConfirm && salaryToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-xs flex items-center justify-center z-[9999999] max-w-none">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[999999] max-w-none">
           <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
             <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>
@@ -6568,7 +6568,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
 
       {/* Bulk Salary Delete Confirmation Modal */}
       {showBulkSalaryDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-xs flex items-center justify-center z-[9999999] max-w-none">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[9999999] max-w-none">
           <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
             <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>

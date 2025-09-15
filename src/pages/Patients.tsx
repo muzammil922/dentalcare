@@ -29,11 +29,12 @@ import { useAppStore } from '@/stores/useAppStore'
 import { formatDate, formatTime, formatCurrency } from '@/lib/utils'
 import PatientForm from '@/components/PatientForm'
 import AppointmentForm from '@/components/AppointmentForm'
+import Billing from '@/pages/Billing'
 import { Patient, Appointment } from '@/stores/useAppStore'
 import jsPDF from 'jspdf'
 
 function Patients() {
-  const [mainTab, setMainTab] = useState<'patient' | 'appointment'>('patient' as const)
+  const [mainTab, setMainTab] = useState<'patient' | 'appointment' | 'billing'>('patient' as const)
   const [currentFilter, setCurrentFilter] = useState('all')
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [showImportDropdown, setShowImportDropdown] = useState(false)
@@ -1703,6 +1704,17 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             >
             <Calendar className="w-4 h-4" />
             Appointment
+          </button>
+          <button
+            onClick={() => setMainTab('billing')}
+            className={`flex items-center gap-2 px-4 py-2 border-none rounded-lg font-medium cursor-pointer ${
+              mainTab === 'billing'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+            <FileText className="w-4 h-4" />
+            Billing
           </button>
         </div>
       </div>
@@ -3377,6 +3389,11 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
     </div>
       )
     }
+
+      {/* Billing Tab Content */}
+      {mainTab === 'billing' && (
+        <Billing />
+      )}
     </div>
   );
 }

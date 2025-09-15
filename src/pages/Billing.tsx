@@ -9,15 +9,12 @@ import {
   Edit,
   Trash2,
   Download,
-  Filter,
-  Search,
-  Eye,
-  Printer
+  Search
 } from 'lucide-react'
 import { useAppStore } from '@/stores/useAppStore'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import InvoiceForm from '@/components/InvoiceForm'
-import { Invoice, Treatment } from '@/stores/useAppStore'
+import { Invoice } from '@/stores/useAppStore'
 
 export default function Billing() {
   const [activeTab, setActiveTab] = useState('invoices')
@@ -28,7 +25,6 @@ export default function Billing() {
   
   const { 
     invoices, 
-    treatments,
     addInvoice, 
     updateInvoice, 
     deleteInvoice 
@@ -59,25 +55,24 @@ export default function Billing() {
 
   // Calculate statistics
   const totalInvoices = invoices.length
-  const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.totalAmount, 0)
+  const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.total, 0)
   const paidAmount = invoices
     .filter(invoice => invoice.status === 'paid')
-    .reduce((sum, invoice) => sum + invoice.totalAmount, 0)
+    .reduce((sum, invoice) => sum + invoice.total, 0)
   const pendingAmount = invoices
     .filter(invoice => invoice.status === 'pending')
-    .reduce((sum, invoice) => sum + invoice.totalAmount, 0)
+    .reduce((sum, invoice) => sum + invoice.total, 0)
   const overdueAmount = invoices
     .filter(invoice => invoice.status === 'overdue')
-    .reduce((sum, invoice) => sum + invoice.totalAmount, 0)
+    .reduce((sum, invoice) => sum + invoice.total, 0)
 
-  const handleSaveInvoice = (invoiceData: Omit<Invoice, 'id'>) => {
+  const handleSaveInvoice = (invoiceData: Omit<Invoice, 'id' | 'invoiceNumber'>) => {
     if (editingInvoice) {
       updateInvoice(editingInvoice.id, invoiceData)
       setEditingInvoice(null)
     } else {
       addInvoice({
         ...invoiceData,
-        id: Math.random().toString(36).substr(2, 9),
         invoiceNumber: generateInvoiceNumber()
       })
     }
@@ -301,7 +296,7 @@ export default function Billing() {
                       </h3>
                       <p className="text-gray-600 mb-2">Invoice #{invoice.invoiceNumber}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>Date: {formatDate(invoice.date)}</span>
+                        <span>Date: {formatDate(invoice.invoiceDate)}</span>
                         <span>Due: {formatDate(invoice.dueDate)}</span>
                         {invoice.status === 'overdue' && (
                           <span className="text-red-600 font-medium">
@@ -314,7 +309,7 @@ export default function Billing() {
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-right">
                       <div className="text-2xl font-bold text-gray-800">
-                        {formatCurrency(invoice.totalAmount)}
+                        {formatCurrency(invoice.total)}
                       </div>
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}>
                         {invoice.status}
@@ -339,16 +334,16 @@ export default function Billing() {
                   </div>
                 </div>
                 
-                {/* Invoice Items */}
+                {/* Invoice Treatments */}
                 <div className="mt-4 space-y-2">
-                  {invoice.items.map((item, itemIndex) => (
-                    <div key={itemIndex} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                  {invoice.treatments.map((treatment, treatmentIndex) => (
+                    <div key={treatmentIndex} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                       <div>
-                        <span className="font-medium text-gray-800">{item.description}</span>
-                        <span className="text-sm text-gray-500 ml-2">x{item.quantity}</span>
+                        <span className="font-medium text-gray-800">{treatment.type}</span>
+                        <span className="text-sm text-gray-500 ml-2">{treatment.description}</span>
                       </div>
                       <span className="font-medium text-gray-800">
-                        {formatCurrency(item.unitPrice * item.quantity)}
+                        {formatCurrency(treatment.total)}
                       </span>
                     </div>
                   ))}
@@ -359,9 +354,6 @@ export default function Billing() {
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <span>Payment Method: {getPaymentMethodIcon(invoice.paymentMethod)} {invoice.paymentMethod}</span>
-                      {invoice.paymentDate && (
-                        <span>• Paid on {formatDate(invoice.paymentDate)}</span>
-                      )}
                     </div>
                   </div>
                 )}
@@ -399,8 +391,8 @@ export default function Billing() {
             <h4 className="text-lg font-medium text-gray-800 mb-3">Recent Payments</h4>
             <div className="space-y-2">
               {invoices
-                .filter(invoice => invoice.status === 'paid' && invoice.paymentDate)
-                .sort((a, b) => new Date(b.paymentDate!).getTime() - new Date(a.paymentDate!).getTime())
+                .filter(invoice => invoice.status === 'paid')
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .slice(0, 5)
                 .map((invoice) => (
                   <div key={invoice.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -414,8 +406,8 @@ export default function Billing() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium text-gray-800">{formatCurrency(invoice.totalAmount)}</div>
-                      <div className="text-sm text-gray-500">{formatDate(invoice.paymentDate!)}</div>
+                      <div className="font-medium text-gray-800">{formatCurrency(invoice.total)}</div>
+                      <div className="text-sm text-gray-500">{formatDate(invoice.createdAt)}</div>
                     </div>
                   </div>
                 ))}
@@ -436,11 +428,11 @@ export default function Billing() {
                   date.setMonth(date.getMonth() - i)
                   const monthName = date.toLocaleDateString('en-US', { month: 'short' })
                   const monthInvoices = invoices.filter(invoice => {
-                    const invoiceDate = new Date(invoice.date)
+                    const invoiceDate = new Date(invoice.invoiceDate)
                     return invoiceDate.getMonth() === date.getMonth() && 
                            invoiceDate.getFullYear() === date.getFullYear()
                   })
-                  const monthRevenue = monthInvoices.reduce((sum, invoice) => sum + invoice.totalAmount, 0)
+                  const monthRevenue = monthInvoices.reduce((sum, invoice) => sum + invoice.total, 0)
                   
                   return (
                     <div key={monthName} className="flex justify-between items-center">
@@ -457,7 +449,7 @@ export default function Billing() {
               <div className="space-y-2">
                 {['cash', 'credit_card', 'bank_transfer', 'insurance'].map((method) => {
                   const methodInvoices = invoices.filter(invoice => invoice.paymentMethod === method)
-                  const methodAmount = methodInvoices.reduce((sum, invoice) => sum + invoice.totalAmount, 0)
+                  const methodAmount = methodInvoices.reduce((sum, invoice) => sum + invoice.total, 0)
                   const methodPercentage = totalAmount > 0 ? (methodAmount / totalAmount) * 100 : 0
                   
                   return (
