@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
-import Appointments from "./pages/Appointments";
 import Billing from "./pages/Billing";
 import Staff from "./pages/Staff";
 import Inventory from "./pages/Inventory";
@@ -46,14 +45,6 @@ function App() {
             element={
               <AnimatedRoute>
                 <Patients />
-              </AnimatedRoute>
-            }
-          />
-          <Route
-            path="/appointments"
-            element={
-              <AnimatedRoute>
-                <Appointments />
               </AnimatedRoute>
             }
           />

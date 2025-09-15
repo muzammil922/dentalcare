@@ -1,10 +1,11 @@
+import React, { useRef, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Calendar, Clock, User } from 'lucide-react'
+import { X, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Appointment, Patient } from '@/stores/useAppStore'
-import { cn } from '@/lib/utils'
+import { cn, getCurrentKarachiTime } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 const appointmentSchema = z.object({
   patient: z.string().min(1, 'Patient is required'),
@@ -23,23 +24,34 @@ type AppointmentFormData = z.infer<typeof appointmentSchema>
 interface AppointmentFormProps {
   appointment?: Appointment | null
   patients: Patient[]
+  appointments: Appointment[]
   onSave: (data: Omit<Appointment, 'id'>) => void
   onClose: () => void
 }
 
-export default function AppointmentForm({ appointment, patients, onSave, onClose }: AppointmentFormProps) {
+export default function AppointmentForm({ appointment, patients, appointments, onSave, onClose }: AppointmentFormProps) {
+  const modalRef = useRef<HTMLDivElement>(null)
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState(getCurrentKarachiTime())
+  const [showYearDropdown, setShowYearDropdown] = useState(false)
+  const [showMonthDropdown, setShowMonthDropdown] = useState(false)
+  const [showTimeDropdown, setShowTimeDropdown] = useState(false)
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<Array<{value: string, label: string}>>([])
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    setValue,
+    watch
   } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       patient: appointment?.patientName || '',
-      appointmentDate: appointment?.date || '09/02/2025',
-      appointmentTime: appointment?.time || '10:00 AM',
-      duration: appointment?.duration ? `${appointment.duration} hour` : '1 hour',
+      appointmentDate: appointment?.date || getCurrentKarachiTime().toISOString().split('T')[0],
+      appointmentTime: appointment?.time || '8:00 AM',
+      duration: appointment?.duration || '60 minutes',
       treatmentType: appointment?.type || 'Consultation',
       status: appointment?.status || 'Scheduled',
       priority: appointment?.priority || 'Normal',
@@ -48,44 +60,280 @@ export default function AppointmentForm({ appointment, patients, onSave, onClose
     }
   })
 
+  // Calendar utility functions
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  }
+
+  const generateYears = () => {
+    const currentYear = getCurrentKarachiTime().getFullYear()
+    return Array.from({ length: 6 }, (_, i) => currentYear + i)
+  }
+
+  const generateMonths = () => {
+    return [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+  }
+
+  const generateTimeSlots = () => {
+    const times = []
+    for (let hour = 8; hour <= 20; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+          timeZone: 'Asia/Karachi'
+        })
+        times.push({ value: displayTime, label: displayTime })
+      }
+    }
+    return times
+  }
+
+  // Helper function to convert 12-hour format to 24-hour format
+  const convertTo24Hour = (time12h: string) => {
+    const [time, modifier] = time12h.split(' ')
+    let [hours, minutes] = time.split(':')
+    
+    if (hours === '12') {
+      hours = '00'
+    }
+    
+    if (modifier === 'PM') {
+      hours = (parseInt(hours, 10) + 12).toString()
+    }
+    
+    return `${hours.padStart(2, '0')}:${minutes}:00`
+  }
+
+  const getNextAvailableTimeSlot = (selectedDate: string) => {
+    if (!selectedDate) return '8:00 AM'
+
+    const existingAppointments = appointments.filter(apt => {
+      const aptDate = new Date(apt.date).toISOString().split('T')[0]
+      const selectedDateFormatted = new Date(selectedDate).toISOString().split('T')[0]
+      // Exclude current appointment when editing
+      const isCurrentAppointment = appointment && apt.id === appointment.id
+      return (aptDate === selectedDateFormatted || apt.date === selectedDate) && !isCurrentAppointment
+    })
+
+    if (existingAppointments.length === 0) {
+      return '8:00 AM'
+    }
+
+    existingAppointments.sort((a, b) => {
+      const timeA24 = convertTo24Hour(a.time)
+      const timeB24 = convertTo24Hour(b.time)
+      const timeA = new Date(`2000-01-01T${timeA24}`).getTime()
+      const timeB = new Date(`2000-01-01T${timeB24}`).getTime()
+      return timeA - timeB
+    })
+
+    const lastAppointment = existingAppointments[existingAppointments.length - 1]
+    
+    // Parse the appointment time safely
+    let appointmentTime
+    try {
+      const time24 = convertTo24Hour(lastAppointment.time)
+      appointmentTime = new Date(`2000-01-01T${time24}`).getTime()
+      if (isNaN(appointmentTime)) {
+        return '8:00 AM'
+      }
+    } catch (error) {
+      return '8:00 AM'
+    }
+    
+    let duration = 60
+    if (lastAppointment.duration) {
+      const durationMatch = lastAppointment.duration.match(/(\d+)/)
+      if (durationMatch) {
+        duration = parseInt(durationMatch[1])
+      }
+    }
+    
+    const appointmentEndTime = appointmentTime + (duration * 60000)
+    const nextAvailableTime = new Date(appointmentEndTime)
+    
+    // Validate the calculated time
+    if (isNaN(nextAvailableTime.getTime())) {
+      return '8:00 AM'
+    }
+    
+    // Check if the next available time is within business hours (8 AM - 6 PM)
+    const hours = nextAvailableTime.getHours()
+    if (hours < 8 || hours >= 18) {
+      return '8:00 AM' // Default to next day start time
+    }
+    
+    return nextAvailableTime.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Karachi'
+    })
+  }
+
+  // Handle click outside to close modal and calendar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
+      
+      if (modalRef.current && !modalRef.current.contains(target)) {
+        onClose()
+        return
+      }
+      
+      const isCalendarElement = (target as Element).closest?.('.calendar-container')
+      const isDropdownElement = (target as Element).closest?.('.dropdown-container')
+      
+      if (!isCalendarElement && !isDropdownElement) {
+        setShowCalendar(false)
+        setShowYearDropdown(false)
+        setShowMonthDropdown(false)
+        setShowTimeDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [onClose])
+
+  // Update available time slots when date changes
+  useEffect(() => {
+    const selectedDate = watch('appointmentDate')
+    if (selectedDate) {
+      const available = generateTimeSlots()
+      setAvailableTimeSlots(available)
+      
+      try {
+        const nextTime = getNextAvailableTimeSlot(selectedDate)
+        if (nextTime && nextTime !== 'Invalid Date') {
+          setValue('appointmentTime', nextTime)
+        } else {
+          setValue('appointmentTime', '8:00 AM')
+        }
+      } catch (error) {
+        setValue('appointmentTime', '8:00 AM')
+      }
+    } else {
+      setAvailableTimeSlots(generateTimeSlots())
+    }
+  }, [watch('appointmentDate'), appointments, setValue])
+
+  // Initialize with current date and auto-select time on component mount
+  useEffect(() => {
+    const currentDate = watch('appointmentDate')
+    
+    if (currentDate) {
+      const available = generateTimeSlots()
+      setAvailableTimeSlots(available)
+      
+      try {
+        const nextTime = getNextAvailableTimeSlot(currentDate)
+        if (nextTime && nextTime !== 'Invalid Date') {
+          setValue('appointmentTime', nextTime)
+        } else {
+          setValue('appointmentTime', '8:00 AM')
+        }
+      } catch (error) {
+        setValue('appointmentTime', '8:00 AM')
+      }
+    }
+  }, [appointments, setValue, watch])
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev)
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1)
+      } else {
+        newDate.setMonth(prev.getMonth() + 1)
+      }
+      return newDate
+    })
+  }
+
+  const selectDate = (day: number) => {
+    const year = currentMonth.getFullYear()
+    const month = currentMonth.getMonth()
+    const selectedDate = new Date(year, month, day)
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    
+    setValue('appointmentDate', formattedDate)
+    setShowCalendar(false)
+  }
+
+  const isSelectedDate = (day: number) => {
+    const selectedDate = watch('appointmentDate')
+    if (!selectedDate) return false
+    
+    const year = currentMonth.getFullYear()
+    const month = currentMonth.getMonth()
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    return selectedDate === formattedDate
+  }
+
   const onSubmit = (data: AppointmentFormData) => {
-    // Find the selected patient to get their details
+    // Check for duplicate appointment times
+    const existingAppointment = appointments.find(apt => {
+      const aptDate = new Date(apt.date).toISOString().split('T')[0]
+      const selectedDate = new Date(data.appointmentDate).toISOString().split('T')[0]
+      
+      // If editing an appointment, exclude the current appointment from the check
+      const isCurrentAppointment = appointment && apt.id === appointment.id
+      
+      return !isCurrentAppointment && 
+             aptDate === selectedDate && 
+             apt.time === data.appointmentTime
+    })
+    
+    if (existingAppointment) {
+      toast.error('Same time appointment not allowed.')
+      return
+    }
+    
     const selectedPatient = patients.find(p => p.name === data.patient)
     
-    // Convert form data to appointment format
     const appointmentData = {
       patientId: selectedPatient?.id || '',
       patientName: data.patient.charAt(0).toUpperCase() + data.patient.slice(1).toLowerCase(),
       patientGender: selectedPatient?.gender || 'male',
-      type: data.treatmentType.charAt(0).toUpperCase() + data.treatmentType.slice(1).toLowerCase(),
       date: data.appointmentDate,
       time: data.appointmentTime,
-      status: data.status.toLowerCase() as 'scheduled' | 'confirmed' | 'completed' | 'cancelled',
-      priority: data.priority.toLowerCase() as 'normal' | 'high' | 'urgent',
-      notes: data.notes || '',
-      createdAt: new Date().toISOString()
+      duration: data.duration,
+      type: data.treatmentType,
+      status: data.status as 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show',
+      priority: data.priority as 'normal' | 'high' | 'urgent',
+      reminder: data.reminder,
+      notes: data.notes,
+      createdAt: getCurrentKarachiTime().toISOString()
     }
     
+    toast.success('Appointment saved successfully!')
     onSave(appointmentData)
     reset()
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4"
-        onClick={onClose}
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4" 
+      onClick={onClose}
+    >
+      <div
+        ref={modalRef}
+        className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide"
+        onClick={(e) => e.stopPropagation()}
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide"
-          onClick={(e) => e.stopPropagation()}
-        >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-800">
@@ -93,183 +341,322 @@ export default function AppointmentForm({ appointment, patients, onSave, onClose
             </h2>
             <button
               onClick={onClose}
-              className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
-              <X className="w-5 h-5" />
+            <X className="w-6 h-6 text-gray-500" />
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-            {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Column */}
-              <div className="space-y-6">
-                {/* PATIENT */}
-                <div className="form-group">
-                  <label htmlFor="patient" className="block text-sm font-semibold text-gray-700 mb-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Patient Selection */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                     PATIENT *
                   </label>
                   <select
                     {...register('patient')}
-                    id="patient"
-                    className={cn(
-                      'w-full px-4 py-3 border-2 border-blue-500 rounded-lg text-gray-900 focus:outline-none focus:border-blue-600 transition-colors',
-                      errors.patient && 'border-red-500'
-                    )}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select Patient</option>
-                    {patients
-                      .filter(patient => patient.status === 'active')
-                      .map(patient => (
+                {patients.map((patient) => (
                         <option key={patient.id} value={patient.name}>
-                          {patient.name} - {patient.phone}
+                    {patient.name}
                         </option>
-                      ))
-                    }
+                ))}
                   </select>
                   {errors.patient && (
-                    <span className="text-red-500 text-sm mt-1">{errors.patient.message}</span>
+                <p className="text-red-500 text-sm">{errors.patient.message}</p>
                   )}
                 </div>
 
-                {/* APPOINTMENT DATE */}
-                <div className="form-group">
-                  <label htmlFor="appointmentDate" className="block text-sm font-semibold text-gray-700 mb-2">
+            {/* Appointment Date */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                     APPOINTMENT DATE *
                   </label>
                   <div className="relative">
                     <input
+                  type="text"
                       {...register('appointmentDate')}
-                      type="text"
-                      id="appointmentDate"
-                      className={cn(
-                        'w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors',
-                        errors.appointmentDate && 'border-red-500'
-                      )}
-                      placeholder="09/02/2025"
-                    />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  readOnly
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                  onClick={() => setShowCalendar(!showCalendar)}
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   </div>
                   {errors.appointmentDate && (
-                    <span className="text-red-500 text-sm mt-1">{errors.appointmentDate.message}</span>
+                <p className="text-red-500 text-sm">{errors.appointmentDate.message}</p>
                   )}
                 </div>
 
-                {/* APPOINTMENT TIME */}
-                <div className="form-group">
-                  <label htmlFor="appointmentTime" className="block text-sm font-semibold text-gray-700 mb-2">
+            {/* Appointment Time */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                     APPOINTMENT TIME *
                   </label>
                   <div className="relative">
                     <input
+                  type="text"
                       {...register('appointmentTime')}
-                      type="text"
-                      id="appointmentTime"
-                      className={cn(
-                        'w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors',
-                        errors.appointmentTime && 'border-red-500'
-                      )}
-                      placeholder="10:00 AM"
-                    />
-                    <Clock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  readOnly
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                  onClick={() => setShowTimeDropdown(!showTimeDropdown)}
+                />
+                <Clock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   </div>
                   {errors.appointmentTime && (
-                    <span className="text-red-500 text-sm mt-1">{errors.appointmentTime.message}</span>
+                <p className="text-red-500 text-sm">{errors.appointmentTime.message}</p>
                   )}
                 </div>
 
-                {/* DURATION */}
-                <div className="form-group">
-                  <label htmlFor="duration" className="block text-sm font-semibold text-gray-700 mb-2">
-                    DURATION
+            {/* Duration */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                DURATION *
                   </label>
-                  <input
+              <select
                     {...register('duration')}
-                    type="text"
-                    id="duration"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
-                    placeholder="1 hour"
-                  />
-                </div>
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-6">
-                {/* TREATMENT TYPE */}
-                <div className="form-group">
-                  <label htmlFor="treatmentType" className="block text-sm font-semibold text-gray-700 mb-2">
-                    TREATMENT TYPE
-                  </label>
-                  <input
-                    {...register('treatmentType')}
-                    type="text"
-                    id="treatmentType"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
-                    placeholder="Consultation"
-                  />
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="30 minutes">30 minutes</option>
+                <option value="40 minutes">40 minutes</option>
+                <option value="60 minutes">60 minutes</option>
+                <option value="90 minutes">90 minutes</option>
+                <option value="120 minutes">120 minutes</option>
+                <option value="custom">Custom (enter manually)</option>
+              </select>
+              {errors.duration && (
+                <p className="text-red-500 text-sm">{errors.duration.message}</p>
+              )}
                 </div>
 
-                {/* STATUS */}
-                <div className="form-group">
-                  <label htmlFor="status" className="block text-sm font-semibold text-gray-700 mb-2">
-                    STATUS
-                  </label>
-                  <input
-                    {...register('status')}
-                    type="text"
-                    id="status"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
-                    placeholder="Scheduled"
-                  />
-                </div>
-
-                {/* PRIORITY */}
-                <div className="form-group">
-                  <label htmlFor="priority" className="block text-sm font-semibold text-gray-700 mb-2">
-                    PRIORITY
-                  </label>
-                  <input
-                    {...register('priority')}
-                    type="text"
-                    id="priority"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
-                    placeholder="Normal"
-                  />
-                </div>
-
-                {/* REMINDER */}
-                <div className="form-group">
-                  <label htmlFor="reminder" className="block text-sm font-semibold text-gray-700 mb-2">
-                    REMINDER
-                  </label>
-                  <input
-                    {...register('reminder')}
-                    type="text"
-                    id="reminder"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
-                    placeholder="No Reminder"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* APPOINTMENT NOTES - Large Text Area */}
-            <div className="mt-8">
-              <label htmlFor="notes" className="block text-sm font-semibold text-gray-700 mb-2">
-                APPOINTMENT NOTES
+            {/* Treatment Type */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                TREATMENT TYPE *
               </label>
-              <textarea
-                {...register('notes')}
-                id="notes"
-                rows={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors resize-none"
-                placeholder="Enter any special instructions, patient concerns, or additional notes..."
-              />
+              <select
+                {...register('treatmentType')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="Consultation">Consultation</option>
+                <option value="Cleaning">Cleaning</option>
+                <option value="Filling">Filling</option>
+                <option value="Root Canal">Root Canal</option>
+                <option value="Extraction">Extraction</option>
+                <option value="Crown">Crown</option>
+                <option value="Bridge">Bridge</option>
+                <option value="Dentures">Dentures</option>
+                <option value="Orthodontics">Orthodontics</option>
+                <option value="Cosmetic">Cosmetic</option>
+                <option value="Emergency">Emergency</option>
+              </select>
+              {errors.treatmentType && (
+                <p className="text-red-500 text-sm">{errors.treatmentType.message}</p>
+              )}
+              </div>
+
+            {/* Priority */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                PRIORITY *
+                  </label>
+              <select
+                {...register('priority')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="Normal">Normal</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Emergency">Emergency</option>
+              </select>
+              {errors.priority && (
+                <p className="text-red-500 text-sm">{errors.priority.message}</p>
+              )}
+                </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                STATUS *
+                  </label>
+              <select
+                    {...register('status')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="Scheduled">Scheduled</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="No Show">No Show</option>
+              </select>
+              {errors.status && (
+                <p className="text-red-500 text-sm">{errors.status.message}</p>
+              )}
             </div>
+
+            {/* Reminder */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                REMINDER *
+              </label>
+              <select
+                {...register('reminder')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="No Reminder">No Reminder</option>
+                <option value="15 minutes before">15 minutes before</option>
+                <option value="30 minutes before">30 minutes before</option>
+                <option value="1 hour before">1 hour before</option>
+                <option value="1 day before">1 day before</option>
+                <option value="2 days before">2 days before</option>
+              </select>
+              {errors.reminder && (
+                <p className="text-red-500 text-sm">{errors.reminder.message}</p>
+              )}
+            </div>
+                </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              NOTES
+                  </label>
+            <textarea
+              {...register('notes')}
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Additional notes or comments..."
+                  />
+                </div>
+
+          {/* Calendar */}
+          {showCalendar && (
+            <div className="calendar-container absolute top-20 left-6 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-20">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={() => navigateMonth('prev')}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-2">
+                  <div className="relative dropdown-container">
+                    <button
+                      type="button"
+                      onClick={() => setShowMonthDropdown(!showMonthDropdown)}
+                      className="px-3 py-1 hover:bg-gray-100 rounded"
+                    >
+                      {generateMonths()[currentMonth.getMonth()]}
+                    </button>
+                    {showMonthDropdown && (
+                      <div className="absolute top-full left-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto scrollbar-hide z-20">
+                        {generateMonths().map((month, index) => (
+                          <button
+                            key={month}
+                            type="button"
+                            onClick={() => {
+                              setCurrentMonth(new Date(currentMonth.getFullYear(), index))
+                              setShowMonthDropdown(false)
+                            }}
+                            className="w-full px-3 py-2 text-left hover:bg-gray-100"
+                          >
+                            {month}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="relative dropdown-container">
+                    <button
+                      type="button"
+                      onClick={() => setShowYearDropdown(!showYearDropdown)}
+                      className="px-3 py-1 hover:bg-gray-100 rounded"
+                    >
+                      {currentMonth.getFullYear()}
+                    </button>
+                    {showYearDropdown && (
+                      <div className="absolute top-full left-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto scrollbar-hide z-20">
+                        {generateYears().map((year) => (
+                          <button
+                            key={year}
+                            type="button"
+                            onClick={() => {
+                              setCurrentMonth(new Date(year, currentMonth.getMonth()))
+                              setShowYearDropdown(false)
+                            }}
+                            className="w-full px-3 py-2 text-left hover:bg-gray-100"
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateMonth('next')}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
+                    {day}
+                  </div>
+                ))}
+                {Array.from({ length: getFirstDayOfMonth(currentMonth) }, (_, i) => (
+                  <div key={`empty-${i}`} className="p-2"></div>
+                ))}
+                {Array.from({ length: getDaysInMonth(currentMonth) }, (_, i) => {
+                  const day = i + 1
+                  const isSelected = isSelectedDate(day)
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => selectDate(day)}
+                      className={cn(
+                        "p-2 text-center text-sm rounded-full hover:bg-gray-100",
+                        isSelected && "bg-blue-500 text-white hover:bg-blue-600"
+                      )}
+                    >
+                      {day}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Time Dropdown */}
+          {showTimeDropdown && (
+            <div className="absolute top-32 left-6 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-20 max-h-60 overflow-y-auto scrollbar-hide">
+              <div className="grid grid-cols-2 gap-2">
+                {availableTimeSlots.map((timeSlot) => (
+                  <button
+                    key={timeSlot.value}
+                    type="button"
+                    onClick={() => {
+                      setValue('appointmentTime', timeSlot.value)
+                      setShowTimeDropdown(false)
+                    }}
+                    className="px-3 py-2 text-sm border border-gray-200 rounded hover:bg-gray-100"
+                  >
+                    {timeSlot.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
             {/* Form Actions */}
-            <div className="flex gap-3 justify-end pt-6 border-t border-gray-200 mt-8">
+          <div className="flex gap-3 pt-6 border-t border-gray-200 justify-end">
               <button
                 type="button"
                 onClick={onClose}
@@ -285,8 +672,7 @@ export default function AppointmentForm({ appointment, patients, onSave, onClose
               </button>
             </div>
           </form>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </div>
   )
 }

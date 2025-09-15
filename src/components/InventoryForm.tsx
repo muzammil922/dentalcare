@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Package, DollarSign, AlertTriangle, Calendar } from 'lucide-react'
 import { InventoryItem } from '@/stores/useAppStore'
-import { cn } from '@/lib/utils'
+import { cn, getCurrentKarachiTime } from '@/lib/utils'
 
 const inventorySchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -68,7 +68,7 @@ export default function InventoryForm({ item, onSave, onClose }: InventoryFormPr
   const onSubmit = (data: InventoryFormData) => {
     onSave({
       ...data,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: getCurrentKarachiTime().toISOString()
     })
     reset()
   }

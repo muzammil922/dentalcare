@@ -3,9 +3,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Save, User, Phone, Mail, MapPin, FileText, Calendar } from 'lucide-react'
+import { X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Patient } from '@/stores/useAppStore'
-import { cn } from '@/lib/utils'
+import { cn, getCurrentKarachiTime } from '@/lib/utils'
 
 // Zod schema for patient validation
 const patientSchema = z.object({
@@ -31,12 +31,37 @@ interface PatientFormProps {
 
 export default function PatientForm({ patient, onClose, onSave }: PatientFormProps) {
   const modalRef = useRef<HTMLDivElement>(null)
+  const [showCalendar, setShowCalendar] = React.useState(false)
+  const [showAddDateCalendar, setShowAddDateCalendar] = React.useState(false)
+  const [currentMonth, setCurrentMonth] = React.useState(getCurrentKarachiTime())
+  const [currentAddDateMonth, setCurrentAddDateMonth] = React.useState(getCurrentKarachiTime())
+  const [showYearDropdown, setShowYearDropdown] = React.useState(false)
+  const [showMonthDropdown, setShowMonthDropdown] = React.useState(false)
+  const [showAddDateYearDropdown, setShowAddDateYearDropdown] = React.useState(false)
+  const [showAddDateMonthDropdown, setShowAddDateMonthDropdown] = React.useState(false)
 
-  // Handle click outside to close modal
+  // Handle click outside to close modal and calendar
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      
+      // Check if clicking outside the modal
+      if (modalRef.current && !modalRef.current.contains(target)) {
         onClose()
+        return
+      }
+      
+      // Check if clicking outside calendar elements
+      const isCalendarElement = (target as Element).closest?.('.calendar-container')
+      const isDropdownElement = (target as Element).closest?.('.dropdown-container')
+      
+      if (!isCalendarElement && !isDropdownElement) {
+        setShowCalendar(false)
+        setShowAddDateCalendar(false)
+        setShowYearDropdown(false)
+        setShowMonthDropdown(false)
+        setShowAddDateYearDropdown(false)
+        setShowAddDateMonthDropdown(false)
       }
     }
 
@@ -60,7 +85,7 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
       phone: patient.phone,
       medicalHistory: patient.medicalHistory,
       email: patient.email,
-      addDate: new Date().toISOString().split('T')[0], // Today's date
+      addDate: getCurrentKarachiTime().toISOString().split('T')[0], // Today's date
       address: patient.address,
       dateOfBirth: '',
       gender: patient.gender,
@@ -71,7 +96,7 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
       phone: '',
       medicalHistory: '',
       email: '',
-      addDate: new Date().toISOString().split('T')[0], // Today's date
+      addDate: getCurrentKarachiTime().toISOString().split('T')[0], // Today's date
       address: '',
       dateOfBirth: '',
       gender: 'male',
@@ -87,7 +112,7 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
   const calculateAge = (birthDate: string) => {
     if (!birthDate) return 0
     
-    const today = new Date()
+    const today = getCurrentKarachiTime()
     const birth = new Date(birthDate)
     let age = today.getFullYear() - birth.getFullYear()
     const monthDiff = today.getMonth() - birth.getMonth()
@@ -106,6 +131,124 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
       setValue('age', calculatedAge)
     }
   }, [dateOfBirth, setValue])
+
+  // Calendar utility functions
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  }
+
+
+  // Generate years array (from 1950 to current year + 10)
+  const generateYears = () => {
+    const currentYear = getCurrentKarachiTime().getFullYear()
+    const years = []
+    for (let year = 1950; year <= currentYear + 10; year++) {
+      years.push(year)
+    }
+    return years.reverse()
+  }
+
+  // Generate months array
+  const generateMonths = () => {
+    return [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+  }
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev)
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1)
+      } else {
+        newDate.setMonth(prev.getMonth() + 1)
+      }
+      return newDate
+    })
+  }
+
+  const navigateAddDateMonth = (direction: 'prev' | 'next') => {
+    setCurrentAddDateMonth(prev => {
+      const newDate = new Date(prev)
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1)
+      } else {
+        newDate.setMonth(prev.getMonth() + 1)
+      }
+      return newDate
+    })
+  }
+
+  // Handle year selection for date of birth calendar
+  const selectYear = (year: number) => {
+    console.log('Selecting year:', year)
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setFullYear(year)
+      return newDate
+    })
+    setShowYearDropdown(false)
+  }
+
+  // Handle month selection for date of birth calendar
+  const selectMonth = (monthIndex: number) => {
+    console.log('Selecting month:', monthIndex)
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setMonth(monthIndex)
+      return newDate
+    })
+    setShowMonthDropdown(false)
+  }
+
+  // Handle year selection for add date calendar
+  const selectAddDateYear = (year: number) => {
+    setCurrentAddDateMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setFullYear(year)
+      return newDate
+    })
+    setShowAddDateYearDropdown(false)
+  }
+
+  // Handle month selection for add date calendar
+  const selectAddDateMonth = (monthIndex: number) => {
+    setCurrentAddDateMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setMonth(monthIndex)
+      return newDate
+    })
+    setShowAddDateMonthDropdown(false)
+  }
+
+  const selectDate = (day: number) => {
+    console.log('Selecting date:', day)
+    // Create date in local timezone to avoid offset issues
+    const year = currentMonth.getFullYear()
+    const month = currentMonth.getMonth()
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    console.log('Formatted date:', formattedDate)
+    setValue('dateOfBirth', formattedDate)
+    setShowCalendar(false)
+  }
+
+  const isToday = (day: number) => {
+    const today = getCurrentKarachiTime()
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+    return date.toDateString() === today.toDateString()
+  }
+
+  const isSelectedDate = (day: number) => {
+    if (!dateOfBirth) return false
+    const selectedDate = new Date(dateOfBirth)
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+    return date.toDateString() === selectedDate.toDateString()
+  }
 
   const onSubmit = (data: PatientFormData) => {
     // Map form data to Patient interface
@@ -130,87 +273,235 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4"
+        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4"
+        style={{ zIndex: 999999 }}
+        onClick={onClose}
       >
         <motion.div
           ref={modalRef}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+          className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide"
+          onClick={(e) => e.stopPropagation()}
         >
-          {/* Modal Header */}
-          <div className="flex items-center justify-between p-5 border-b border-gray-200">
-            <h3 className="text-2xl font-bold text-gray-800">{patient ? 'Update Patient' : 'Add New Patient'}</h3>
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-800">
+              {patient ? 'Update Patient' : 'Add New Patient'}
+            </h2>
             <button
               onClick={onClose}
-              className="w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors duration-200"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6 text-gray-500" />
             </button>
           </div>
 
           {/* Modal Body */}
-          <form onSubmit={handleSubmit(onSubmit)} className="p-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+            {/* Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column */}
-              <div className="space-y-3">
+              <div className="space-y-6">
+                {/* FULL NAME */}
                 <div className="form-group">
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    FULL NAME <span className="text-red-500">*</span>
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                    FULL NAME *
                   </label>
                   <input
                     {...register('name')}
                     type="text"
                     id="name"
                     className={cn(
-                      'w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200',
-                      errors.name && 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                      'w-full px-4 py-3 border-2 border-blue-500 rounded-lg text-gray-900 focus:outline-none focus:border-blue-600 transition-colors',
+                      errors.name && 'border-red-500'
                     )}
                     placeholder="Enter patient's full name"
                   />
                   {errors.name && (
-                    <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                    <span className="text-red-500 text-sm mt-1">{errors.name.message}</span>
                   )}
                 </div>
 
+                {/* PHONE NUMBER */}
                 <div className="form-group">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+                    PHONE NUMBER *
+                  </label>
+                  <input
+                    {...register('phone')}
+                    type="tel"
+                    id="phone"
+                    className={cn(
+                      'w-full px-4 py-3 border-2 border-blue-500 rounded-lg text-gray-900 focus:outline-none focus:border-blue-600 transition-colors',
+                      errors.phone && 'border-red-500'
+                    )}
+                    placeholder="Enter phone number"
+                  />
+                  {errors.phone && (
+                    <span className="text-red-500 text-sm mt-1">{errors.phone.message}</span>
+                  )}
+                </div>
+
+                {/* EMAIL */}
+                <div className="form-group">
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                     EMAIL
                   </label>
                   <input
                     {...register('email')}
                     type="email"
                     id="email"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
                     placeholder="Enter email address"
                   />
                 </div>
 
+                {/* DATE OF BIRTH */}
                 <div className="form-group">
-                  <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
-                    DATE OF BIRTH <span className="text-red-500">*</span>
+                  <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-gray-700 mb-2">
+                    DATE OF BIRTH *
                   </label>
                   <div className="relative">
                   <input
                       {...register('dateOfBirth')}
-                      type="date"
+                      type="text"
                       id="dateOfBirth"
-                      className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
-                      placeholder="mm/dd/yyyy"
+                      readOnly
+                      onClick={() => setShowCalendar(!showCalendar)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                      placeholder="Select date of birth"
+                      value={dateOfBirth ? new Date(dateOfBirth).toLocaleDateString('en-US', { timeZone: 'Asia/Karachi' }) : ''}
                     />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer" />
+                    
+                    {/* Custom Calendar */}
+                    {showCalendar && (
+                      <div className="calendar-container absolute top-full left-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 p-4 z-50 transform -rotate-1">
+                        {/* Calendar Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <button
+                            type="button"
+                            onClick={() => navigateMonth('prev')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5 text-gray-600" />
+                          </button>
+                          
+                          <div className="flex items-center gap-2">
+                            {/* Month Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  console.log('Toggling month dropdown')
+                                  setShowMonthDropdown(!showMonthDropdown)
+                                }}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentMonth.toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Karachi' })}
+                              </button>
+                              {showMonthDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto scrollbar-hide">
+                                  {generateMonths().map((month, index) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      onClick={() => selectMonth(index)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {month}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Year Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  console.log('Toggling year dropdown')
+                                  setShowYearDropdown(!showYearDropdown)
+                                }}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentMonth.getFullYear()}
+                              </button>
+                              {showYearDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto w-20 scrollbar-hide">
+                                  {generateYears().map((year) => (
+                                    <button
+                                      key={year}
+                                      type="button"
+                                      onClick={() => selectYear(year)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {year}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => navigateMonth('next')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5 text-gray-600" />
+                          </button>
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                            <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-1">
+                          {/* Empty cells for days before the first day of the month */}
+                          {Array.from({ length: getFirstDayOfMonth(currentMonth) }).map((_, index) => (
+                            <div key={`empty-${index}`} className="h-8"></div>
+                          ))}
+                          
+                          {/* Days of the month */}
+                          {Array.from({ length: getDaysInMonth(currentMonth) }, (_, i) => i + 1).map(day => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => selectDate(day)}
+                              className={cn(
+                                'h-8 w-8 rounded-full text-sm font-medium transition-colors hover:bg-gray-100',
+                                isToday(day) && 'bg-blue-500 text-white hover:bg-blue-600',
+                                isSelectedDate(day) && !isToday(day) && 'bg-blue-500 text-white hover:bg-blue-600',
+                                !isToday(day) && !isSelectedDate(day) && 'text-gray-800 hover:bg-gray-100'
+                              )}
+                            >
+                              {day}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* GENDER */}
                 <div className="form-group">
-                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">
-                    GENDER <span className="text-red-500">*</span>
+                  <label htmlFor="gender" className="block text-sm font-semibold text-gray-700 mb-2">
+                    GENDER *
                   </label>
                   <select
                     {...register('gender')}
                     id="gender"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
                   >
                     <option value="">Select Gender</option>
                     <option value="male">Male</option>
@@ -219,8 +510,9 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
                   </select>
                 </div>
 
+                {/* AGE */}
                 <div className="form-group">
-                  <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="age" className="block text-sm font-semibold text-gray-700 mb-2">
                     AGE 
                   </label>
                   <input
@@ -228,114 +520,207 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
                     type="number"
                     id="age"
                     readOnly
-                    className={cn(
-                      'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 bg-gray-50 cursor-not-allowed',
-                      errors.age && 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
-                    )}
-                   
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 bg-gray-50 cursor-not-allowed"
                   />
-                  <p className="text-gray-500 text-xs mt-1"></p>
-                  {errors.age && (
-                    <p className="text-red-500 text-sm mt-1">{errors.age.message}</p>
-                  )}
+                  <p className="text-gray-500 text-xs mt-1">Auto-calculated from date of birth</p>
                 </div>
               </div>
 
-              {/* Middle Column */}
-              <div className="space-y-3">
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* ADD DATE */}
                 <div className="form-group">
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                    PHONE NUMBER <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    {...register('phone')}
-                    type="tel"
-                    id="phone"
-                    className={cn(
-                      'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200',
-                      errors.phone && 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
-                    )}
-                    placeholder="Enter phone number"
-                  />
-                  {errors.phone && (
-                    <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
-                  )}
-              </div>
-
-                <div className="form-group">
-                  <label htmlFor="addDate" className="block text-sm font-medium text-gray-700 mb-2">
-                    ADD DATE <span className="text-red-500">*</span>
+                  <label htmlFor="addDate" className="block text-sm font-semibold text-gray-700 mb-2">
+                    ADD DATE *
                   </label>
                   <div className="relative">
                   <input
                       {...register('addDate')}
-                      type="date"
+                      type="text"
                       id="addDate"
-                      className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
-                      defaultValue={new Date().toISOString().split('T')[0]}
+                      readOnly
+                      onClick={() => setShowAddDateCalendar(!showAddDateCalendar)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                      placeholder="Select add date"
+                      value={watch('addDate') ? new Date(watch('addDate')).toLocaleDateString('en-US', { timeZone: 'Asia/Karachi' }) : ''}
                     />
-                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer" />
+                    
+                    {/* Custom Calendar for Add Date */}
+                    {showAddDateCalendar && (
+                      <div className="calendar-container absolute top-full left-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 p-4 z-50 transform -rotate-1">
+                        {/* Calendar Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <button
+                            type="button"
+                            onClick={() => navigateAddDateMonth('prev')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5 text-gray-600" />
+                          </button>
+                          
+                          <div className="flex items-center gap-2">
+                            {/* Month Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowAddDateMonthDropdown(!showAddDateMonthDropdown)}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentAddDateMonth.toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Karachi' })}
+                              </button>
+                              {showAddDateMonthDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto scrollbar-hide">
+                                  {generateMonths().map((month, index) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      onClick={() => selectAddDateMonth(index)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {month}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Year Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowAddDateYearDropdown(!showAddDateYearDropdown)}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentAddDateMonth.getFullYear()}
+                              </button>
+                              {showAddDateYearDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto w-20 scrollbar-hide">
+                                  {generateYears().map((year) => (
+                                    <button
+                                      key={year}
+                                      type="button"
+                                      onClick={() => selectAddDateYear(year)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {year}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => navigateAddDateMonth('next')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5 text-gray-600" />
+                          </button>
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                            <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-1">
+                          {/* Empty cells for days before the first day of the month */}
+                          {Array.from({ length: getFirstDayOfMonth(currentAddDateMonth) }).map((_, index) => (
+                            <div key={`empty-${index}`} className="h-8"></div>
+                          ))}
+                          
+                          {/* Days of the month */}
+                          {Array.from({ length: getDaysInMonth(currentAddDateMonth) }, (_, i) => i + 1).map(day => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => {
+                                const year = currentAddDateMonth.getFullYear()
+                                const month = currentAddDateMonth.getMonth()
+                                const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                                setValue('addDate', formattedDate)
+                                setShowAddDateCalendar(false)
+                              }}
+                              className={cn(
+                                'h-8 w-8 rounded-full text-sm font-medium transition-colors hover:bg-gray-100',
+                                new Date(currentAddDateMonth.getFullYear(), currentAddDateMonth.getMonth(), day).toDateString() === getCurrentKarachiTime().toDateString() && 'bg-blue-500 text-white hover:bg-blue-600',
+                                watch('addDate') && new Date(watch('addDate')).toDateString() === new Date(currentAddDateMonth.getFullYear(), currentAddDateMonth.getMonth(), day).toDateString() && 'bg-blue-500 text-white hover:bg-blue-600',
+                                !(new Date(currentAddDateMonth.getFullYear(), currentAddDateMonth.getMonth(), day).toDateString() === getCurrentKarachiTime().toDateString()) && (!watch('addDate') || new Date(watch('addDate')).toDateString() !== new Date(currentAddDateMonth.getFullYear(), currentAddDateMonth.getMonth(), day).toDateString()) && 'text-gray-800 hover:bg-gray-100'
+                              )}
+                            >
+                              {day}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* ADDRESS */}
                 <div className="form-group">
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
                     ADDRESS
                   </label>
                   <input
                     {...register('address')}
                     type="text"
                     id="address"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
                     placeholder="Enter address"
                   />
                 </div>
 
+                {/* STATUS */}
                 <div className="form-group">
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="status" className="block text-sm font-semibold text-gray-700 mb-2">
                     STATUS
                   </label>
-                  <input
+                  <select
                     {...register('status')}
-                    type="text"
                     id="status"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
-                    placeholder="Active"
-                    defaultValue="Active"
-                  />
-                </div>
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
               </div>
 
-              {/* Right Column */}
-              <div className="space-y-4">
+                {/* MEDICAL HISTORY */}
                 <div className="form-group">
-                  <label htmlFor="medicalHistory" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="medicalHistory" className="block text-sm font-semibold text-gray-700 mb-2">
                     MEDICAL HISTORY
                   </label>
                   <textarea
                     {...register('medicalHistory')}
                     id="medicalHistory"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors resize-none"
                     placeholder="Enter medical history"
-                    rows={8}
+                    rows={6}
                   />
                 </div>
               </div>
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end gap-4 mt-6 pt-5 border-t border-gray-200">
+            <div className="flex gap-3 justify-end pt-6 border-t border-gray-200 mt-8">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 mr-0"
+                className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-5 py-2.5 bg-primary-500 text-white border border-primary-500 rounded-lg font-medium hover:bg-primary-600 transition-all duration-200 flex items-center gap-2"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
                 {isSubmitting ? 'Saving...' : patient ? 'Update Patient' : 'Save Patient'}
               </button>

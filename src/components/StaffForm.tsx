@@ -4,20 +4,24 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, User, Phone, Mail, Calendar, MapPin } from 'lucide-react'
 import { Staff } from '@/stores/useAppStore'
-import { cn } from '@/lib/utils'
+import { cn, getCurrentKarachiTime } from '@/lib/utils'
 
 const staffSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(1, 'Phone number is required'),
-  position: z.string().min(1, 'Position is required'),
-  department: z.string().min(1, 'Department is required'),
-  hireDate: z.string().min(1, 'Hire date is required'),
-  salary: z.number().min(0, 'Salary must be non-negative'),
+  role: z.string().min(1, 'Role is required'),
+  department: z.string().optional(),
+  joinDate: z.string().min(1, 'Join date is required'),
+  salary: z.number().min(0, 'Salary must be non-negative').optional(),
+  gender: z.enum(['male', 'female', 'other']).optional(),
+  age: z.number().min(1, 'Age must be at least 1').optional(),
   address: z.string().optional(),
   emergencyContact: z.string().optional(),
   emergencyPhone: z.string().optional(),
   qualifications: z.string().optional(),
+  experience: z.string().optional(),
+  jobTerm: z.enum(['permanent', 'contract', 'temporary']).optional(),
   status: z.enum(['active', 'inactive', 'on_leave']),
   notes: z.string().optional()
 })
@@ -42,14 +46,18 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
       name: staff?.name || '',
       email: staff?.email || '',
       phone: staff?.phone || '',
-      position: staff?.position || '',
+      role: staff?.role || '',
       department: staff?.department || '',
-      hireDate: staff?.hireDate || new Date().toISOString().split('T')[0],
+      joinDate: staff?.joinDate || getCurrentKarachiTime().toISOString().split('T')[0],
       salary: staff?.salary || 0,
+      gender: staff?.gender || 'male',
+      age: staff?.age || 25,
       address: staff?.address || '',
       emergencyContact: staff?.emergencyContact || '',
       emergencyPhone: staff?.emergencyPhone || '',
       qualifications: staff?.qualifications || '',
+      experience: staff?.experience || '',
+      jobTerm: staff?.jobTerm || 'permanent',
       status: staff?.status || 'active',
       notes: staff?.notes || ''
     }
@@ -95,7 +103,7 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto scrollbar-hide"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -172,21 +180,56 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="position" className="form-label">
-                    Position *
+                  <label htmlFor="gender" className="form-label">
+                    Gender
                   </label>
                   <select
-                    {...register('position')}
-                    id="position"
-                    className={cn('form-input', errors.position && 'border-red-500')}
+                    {...register('gender')}
+                    id="gender"
+                    className="form-input"
                   >
-                    <option value="">Select position</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="form-group">
+                  <label htmlFor="age" className="form-label">
+                    Age
+                  </label>
+                  <input
+                    {...register('age', { valueAsNumber: true })}
+                    type="number"
+                    id="age"
+                    min="1"
+                    max="100"
+                    className={cn('form-input', errors.age && 'border-red-500')}
+                    placeholder="Enter age"
+                  />
+                  {errors.age && (
+                    <span className="text-red-500 text-sm">{errors.age.message}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="role" className="form-label">
+                    Role *
+                  </label>
+                  <select
+                    {...register('role')}
+                    id="role"
+                    className={cn('form-input', errors.role && 'border-red-500')}
+                  >
+                    <option value="">Select role</option>
                     {positions.map((position) => (
                       <option key={position} value={position}>{position}</option>
                     ))}
                   </select>
-                  {errors.position && (
-                    <span className="text-red-500 text-sm">{errors.position.message}</span>
+                  {errors.role && (
+                    <span className="text-red-500 text-sm">{errors.role.message}</span>
                   )}
                 </div>
               </div>
@@ -194,21 +237,48 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-group">
                   <label htmlFor="department" className="form-label">
-                    Department *
+                    Department
                   </label>
                   <select
                     {...register('department')}
                     id="department"
-                    className={cn('form-input', errors.department && 'border-red-500')}
+                    className="form-input"
                   >
                     <option value="">Select department</option>
                     {departments.map((dept) => (
                       <option key={dept} value={dept}>{dept}</option>
                     ))}
                   </select>
-                  {errors.department && (
-                    <span className="text-red-500 text-sm">{errors.department.message}</span>
-                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="experience" className="form-label">
+                    Experience
+                  </label>
+                  <input
+                    {...register('experience')}
+                    type="text"
+                    id="experience"
+                    className="form-input"
+                    placeholder="e.g., 5 years"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="form-group">
+                  <label htmlFor="jobTerm" className="form-label">
+                    Job Term
+                  </label>
+                  <select
+                    {...register('jobTerm')}
+                    id="jobTerm"
+                    className="form-input"
+                  >
+                    <option value="permanent">Permanent</option>
+                    <option value="contract">Contract</option>
+                    <option value="temporary">Temporary</option>
+                  </select>
                 </div>
 
                 <div className="form-group">
@@ -237,23 +307,23 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-group">
-                  <label htmlFor="hireDate" className="form-label">
-                    Hire Date *
+                  <label htmlFor="joinDate" className="form-label">
+                    Join Date *
                   </label>
                   <input
-                    {...register('hireDate')}
+                    {...register('joinDate')}
                     type="date"
-                    id="hireDate"
-                    className={cn('form-input', errors.hireDate && 'border-red-500')}
+                    id="joinDate"
+                    className={cn('form-input', errors.joinDate && 'border-red-500')}
                   />
-                  {errors.hireDate && (
-                    <span className="text-red-500 text-sm">{errors.hireDate.message}</span>
+                  {errors.joinDate && (
+                    <span className="text-red-500 text-sm">{errors.joinDate.message}</span>
                   )}
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="salary" className="form-label">
-                    Annual Salary *
+                    Monthly Salary
                   </label>
                   <input
                     {...register('salary', { valueAsNumber: true })}
@@ -262,7 +332,7 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
                     min="0"
                     step="1000"
                     className={cn('form-input', errors.salary && 'border-red-500')}
-                    placeholder="Enter annual salary"
+                    placeholder="Enter monthly salary"
                   />
                   {errors.salary && (
                     <span className="text-red-500 text-sm">{errors.salary.message}</span>

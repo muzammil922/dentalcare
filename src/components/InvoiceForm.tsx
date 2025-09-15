@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus, Trash2, DollarSign } from 'lucide-react'
 import { Invoice } from '@/stores/useAppStore'
-import { cn, formatCurrency } from '@/lib/utils'
+import { cn, formatCurrency, getCurrentKarachiTime } from '@/lib/utils'
 
 const invoiceItemSchema = z.object({
   description: z.string().min(1, 'Description is required'),
@@ -53,8 +53,8 @@ export default function InvoiceForm({ invoice, onSave, onClose }: InvoiceFormPro
       patientName: invoice?.patientName || '',
       patientPhone: invoice?.patientPhone || '',
       patientEmail: invoice?.patientEmail || '',
-      date: invoice?.date || new Date().toISOString().split('T')[0],
-      dueDate: invoice?.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      date: invoice?.date || getCurrentKarachiTime().toISOString().split('T')[0],
+      dueDate: invoice?.dueDate || new Date(getCurrentKarachiTime().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       items: invoice?.items || [{ description: '', quantity: 1, unitPrice: 0 }],
       status: invoice?.status || 'pending',
       paymentMethod: invoice?.paymentMethod || undefined,

@@ -11,6 +11,7 @@ export function formatDate(dateString: string | Date): string {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'Asia/Karachi'
   })
 }
 
@@ -19,13 +20,14 @@ export function formatTime(timeString: string): string {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
+    timeZone: 'Asia/Karachi'
   })
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-PK', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'PKR',
   }).format(amount)
 }
 
@@ -47,4 +49,27 @@ export function validateEmail(email: string): boolean {
 export function validatePhone(phone: string): boolean {
   const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
   return phoneRegex.test(phone.replace(/\s/g, ''))
+}
+
+export function getCurrentKarachiTime(): Date {
+  return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Karachi"}))
+}
+
+export function formatCurrentKarachiDate(): string {
+  return getCurrentKarachiTime().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'Asia/Karachi'
+  })
+}
+
+export function formatCurrentKarachiTime(): string {
+  return getCurrentKarachiTime().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Karachi'
+  })
 }

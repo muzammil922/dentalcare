@@ -6,14 +6,14 @@ import { getFunctions, connectFunctionsEmulator } from 'firebase/functions'
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-}
+  apiKey: "AIzaSyDhLAdZkCDebQdEVXNlGijcc-cjlzw7yw4",
+  authDomain: "dentalcare-pro.firebaseapp.com",
+  projectId: "dentalcare-pro",
+  storageBucket: "dentalcare-pro.appspot.com",
+  messagingSenderId: "611470299813",
+  appId: "1:611470299813:web:0d4b498eefca6eff89b34c",
+  measurementId: "G-T434FS6WX0"
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)

@@ -23,9 +23,11 @@ export interface Appointment {
   patientGender: 'male' | 'female' | 'other' // Add patient gender
   date: string
   time: string
+  duration?: string
   type: string
   status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show'
   priority: 'normal' | 'high' | 'urgent'
+  reminder?: string
   notes?: string
   createdAt: string
 }
@@ -64,8 +66,19 @@ export interface Staff {
   phone: string
   email: string
   joinDate: string
-  status: 'active' | 'inactive'
+  status: 'active' | 'inactive' | 'on_leave'
   salary?: number
+  // Additional fields from Staff Details modal
+  gender?: 'male' | 'female' | 'other'
+  age?: number
+  address?: string
+  qualifications?: string
+  experience?: string
+  jobTerm?: 'permanent' | 'contract' | 'temporary'
+  department?: string
+  emergencyContact?: string
+  emergencyPhone?: string
+  notes?: string
 }
 
 export interface Attendance {
@@ -261,10 +274,141 @@ export const useAppStore = create<AppState>()(
         currentTab: 'patient-management',
         currentFilter: 'all',
         
-        patients: [],
-        appointments: [],
+        patients: [
+          {
+            id: 'p-01',
+            name: 'John Doe',
+            age: 35,
+            gender: 'male' as const,
+            phone: '+91 9876543210',
+            email: 'john.doe@email.com',
+            address: '123 Main Street, Delhi',
+            medicalHistory: 'No known allergies',
+            status: 'active' as const,
+            registrationDate: '2024-01-15',
+            lastVisit: '2024-01-20'
+          },
+          {
+            id: 'p-02',
+            name: 'Jane Smith',
+            age: 28,
+            gender: 'female' as const,
+            phone: '+91 9876543211',
+            email: 'jane.smith@email.com',
+            address: '456 Oak Avenue, Mumbai',
+            medicalHistory: 'Diabetes',
+            status: 'active' as const,
+            registrationDate: '2024-01-10',
+            lastVisit: '2024-01-18'
+          }
+        ],
+        appointments: [
+          {
+            id: 'a-01',
+            patientId: 'p-01',
+            patientName: 'John Doe',
+            patientGender: 'male' as const,
+            date: '2024-01-25',
+            time: '10:00',
+            duration: '30 mins',
+            type: 'Cleaning',
+            status: 'scheduled' as const,
+            priority: 'normal' as const,
+            notes: 'Regular checkup',
+            createdAt: '2024-01-20T10:00:00Z'
+          },
+          {
+            id: 'a-02',
+            patientId: 'p-02',
+            patientName: 'Jane Smith',
+            patientGender: 'female' as const,
+            date: '2024-01-26',
+            time: '14:00',
+            duration: '45 mins',
+            type: 'Root Canal',
+            status: 'confirmed' as const,
+            priority: 'high' as const,
+            notes: 'Follow-up treatment',
+            createdAt: '2024-01-20T14:00:00Z'
+          },
+          {
+            id: 'a-03',
+            patientId: 'p-01',
+            patientName: 'John Doe',
+            patientGender: 'male' as const,
+            date: '2024-01-27',
+            time: '11:00',
+            duration: '60 mins',
+            type: 'Filling',
+            status: 'scheduled' as const,
+            priority: 'normal' as const,
+            notes: 'Cavity treatment',
+            createdAt: '2024-01-21T11:00:00Z'
+          }
+        ],
         invoices: [],
-        staff: [],
+        staff: [
+          {
+            id: 's-01',
+            name: 'Dr. Sarah Johnson',
+            role: 'Senior Dentist',
+            phone: '+91 9876543220',
+            email: 'sarah.johnson@clinic.com',
+            joinDate: '2023-01-15',
+            status: 'active' as const,
+            salary: 120000,
+            gender: 'female' as const,
+            age: 35,
+            address: '123 Medical Street, Delhi',
+            qualifications: 'BDS, MDS Orthodontics',
+            experience: '10 years',
+            jobTerm: 'permanent' as const,
+            department: 'Orthodontics',
+            emergencyContact: 'Dr. Johnson\'s Husband',
+            emergencyPhone: '+91 9876543221',
+            notes: 'Specialist in orthodontic treatments'
+          },
+          {
+            id: 's-02',
+            name: 'Nurse Mary Wilson',
+            role: 'Senior Nurse',
+            phone: '+91 9876543222',
+            email: 'mary.wilson@clinic.com',
+            joinDate: '2023-03-20',
+            status: 'on_leave' as const,
+            salary: 45000,
+            gender: 'female' as const,
+            age: 28,
+            address: '456 Care Avenue, Mumbai',
+            qualifications: 'BSc Nursing',
+            experience: '5 years',
+            jobTerm: 'permanent' as const,
+            department: 'Patient Care',
+            emergencyContact: 'Wilson Family',
+            emergencyPhone: '+91 9876543223',
+            notes: 'Currently on maternity leave'
+          },
+          {
+            id: 's-03',
+            name: 'John Smith',
+            role: 'Receptionist',
+            phone: '+91 9876543224',
+            email: 'john.smith@clinic.com',
+            joinDate: '2023-06-10',
+            status: 'inactive' as const,
+            salary: 25000,
+            gender: 'male' as const,
+            age: 24,
+            address: '789 Reception Road, Delhi',
+            qualifications: 'High School',
+            experience: '2 years',
+            jobTerm: 'contract' as const,
+            department: 'Administration',
+            emergencyContact: 'Smith Family',
+            emergencyPhone: '+91 9876543225',
+            notes: 'Temporarily inactive due to personal reasons'
+          }
+        ],
         attendance: [],
         salaries: [],
         inventory: [],

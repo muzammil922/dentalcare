@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, DollarSign, Calendar, Calculator } from 'lucide-react'
 import { Salary } from '@/stores/useAppStore'
-import { cn } from '@/lib/utils'
+import { cn, getCurrentKarachiTime } from '@/lib/utils'
 
 const salarySchema = z.object({
   staffId: z.string().min(1, 'Staff member is required'),
@@ -38,8 +38,8 @@ export default function SalaryForm({ salary, staffMembers, onSave, onClose }: Sa
     resolver: zodResolver(salarySchema),
     defaultValues: {
       staffId: salary?.staffId || '',
-      month: salary?.month || new Date().toLocaleDateString('en-US', { month: 'long' }),
-      year: salary?.year || new Date().getFullYear(),
+      month: salary?.month || getCurrentKarachiTime().toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Karachi' }),
+      year: salary?.year || getCurrentKarachiTime().getFullYear(),
       baseSalary: salary?.baseSalary || 0,
       allowances: salary?.allowances || 0,
       deductions: salary?.deductions || 0,
@@ -73,7 +73,7 @@ export default function SalaryForm({ salary, staffMembers, onSave, onClose }: Sa
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  const currentYear = new Date().getFullYear()
+  const currentYear = getCurrentKarachiTime().getFullYear()
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i)
 
   return (

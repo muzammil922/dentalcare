@@ -13,8 +13,10 @@ import {
   Menu,
   X,
   User,
+  Loader2,
 } from "lucide-react";
 import { cn } from '@/lib/utils'
+import { useAppStore } from '@/stores/useAppStore'
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,8 +34,10 @@ const navigationItems = [
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
+  const { isLoading } = useAppStore();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -44,6 +48,15 @@ export default function Layout({ children }: LayoutProps) {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Handle initial app loading - only on first load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 2000); // Show loading only on first page load
+
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array ensures this runs only once
 
   const handleNavigation = (href: string) => {
     navigate(href);
@@ -56,6 +69,17 @@ export default function Layout({ children }: LayoutProps) {
     const currentItem = navigationItems.find(item => item.href === location.pathname);
     return currentItem ? currentItem.label : "Dashboard";
   };
+
+  // Show global loader during initialization
+  if (isInitializing) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <div className="p-6 w-full">
+          <SkeletonLoader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -153,6 +177,81 @@ export default function Layout({ children }: LayoutProps) {
         <main className="min-h-[calc(100vh-70px)]">
           {children}
         </main>
+      </div>
+    </div>
+  );
+}
+
+// Skeleton Loader Component
+function SkeletonLoader() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between">
+        <div className="h-8 bg-gray-200 rounded w-48"></div>
+        <div className="h-8 bg-gray-200 rounded w-32"></div>
+      </div>
+
+      {/* Stats cards skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-8 bg-gray-200 rounded w-16"></div>
+              </div>
+              <div className="h-12 w-12 bg-gray-200 rounded-lg"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Content area skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left column */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="space-y-4">
+            <div className="h-6 bg-gray-200 rounded w-40"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-3 p-3 border rounded">
+                <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div className="h-6 w-16 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="space-y-4">
+            <div className="h-6 bg-gray-200 rounded w-40"></div>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 border rounded">
+                <div className="flex items-center space-x-3">
+                  <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                  <div className="space-y-1">
+                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    <div className="h-3 bg-gray-200 rounded w-16"></div>
+                  </div>
+                </div>
+                <div className="h-6 w-20 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Loading indicator */}
+      <div className="flex items-center justify-center py-8">
+        <div className="flex items-center space-x-2 text-gray-500">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span className="text-sm font-medium">Loading your dental clinic...</span>
+        </div>
       </div>
     </div>
   );
