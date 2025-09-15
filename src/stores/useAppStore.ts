@@ -99,11 +99,24 @@ export interface Salary {
   month: string
   year: number
   basicSalary: number
-  allowances: Allowance[]
-  deductions: Deduction[]
+  allowances: Allowance[] | number
+  deductions: Deduction[] | number
   totalSalary: number
   status: 'pending' | 'paid'
   paymentDate?: string
+  department?: string
+  overtime?: number
+  bonus?: number
+  grossSalary?: number
+  netSalary?: number
+  // Attendance data
+  presentDays?: number
+  absentDays?: number
+  leaveDays?: number
+  lateDays?: number
+  halfDays?: number
+  workingDays?: number
+  notes?: string
 }
 
 export interface Allowance {

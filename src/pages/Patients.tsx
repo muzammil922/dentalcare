@@ -363,7 +363,8 @@ function Patients() {
     setSelectedPatients(newSelected)
   }, [selectedPatients])
 
-  const handleSelectAll = useCallback((checked: boolean) => {
+  const handleSelectAll = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked
     if (checked) {
       setSelectedPatients(new Set(paginatedPatients.map(p => p.id)))
     } else {
@@ -381,7 +382,8 @@ function Patients() {
     setSelectedAppointments(newSelected)
   }, [selectedAppointments])
 
-  const handleSelectAllAppointments = (checked: boolean) => {
+  const handleSelectAllAppointments = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked
     if (checked) {
       setSelectedAppointments(new Set(paginatedAppointments.map(a => a.id)))
     } else {
@@ -1716,11 +1718,11 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                 <div className="relative" ref={filterDropdownRef}>
                   <button
                     onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                    className="flex items-center gap-2 px-4 py-3 bg-primary-500 text-white border border-primary-500 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] whitespace-nowrap hover:bg-primary-600 hover:border-primary-600"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white border border-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                   >
-                    <Users className="w-4 h-4 text-white" />
+                    <Users className="w-4 h-4" />
                     {filters.find(f => f.value === currentFilter)?.label || 'All Patients'}
-                    <ChevronDown className={`w-4 h-4 ml-2 ${showFilterDropdown ? 'rotate-180' : ''} text-white`} />
+                    <ChevronDown className="w-4 h-4" />
                   </button>
                   
                   {/* Dropdown Menu */}
@@ -1733,10 +1735,10 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                             setCurrentFilter(filter.value)
                             setShowFilterDropdown(false)
                           }}
-                          className={`flex items-center gap-2 w-full px-4 py-3 text-left text-sm font-medium cursor-pointer hover:bg-gray-50 ${
+                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
                   currentFilter === filter.value
-                              ? 'bg-primary-500 text-white'
-                              : 'text-gray-700'
+                              ? 'bg-blue-50 text-blue-600'
+                              : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                           <Users className="w-4 h-4" />
@@ -1878,9 +1880,9 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
 
           {/* Patients Table Header */}
           <div key={`patients-header-${refreshTrigger}`} className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-gray-700 font-medium">Total Patients: {filteredPatients.length}</span>
+            <div className="flex items-center justify-between pb-4">
+            <div className="text-gray-700 font-semibold text-base">
+                Total Salary Records: <span className="text-blue-600">{filteredPatients.length}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-gray-600 text-sm">
@@ -1898,21 +1900,23 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
               </div>
             </div>
 
+
  {/* Patients Table */}
           <div key={`patients-table-container-${refreshTrigger}`} className="bg-white rounded-lg shadow-sm overflow-hidden">
             {/* Table Header */}
             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 font-semibold">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
                     checked={selectedPatients.size === paginatedPatients.length && paginatedPatients.length > 0}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    onChange={handleSelectAll}
                     className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
                   />
-                  
+                  <span className="ml-3 text-sm text-blue-600">Select All</span>
                 </div>
-               
+                <div className="flex-1 text-center text-sm text-blue-600">Patient Information</div>
+                <div className="min-w-[100px] text-center text-sm text-blue-600">Actions</div>
               </div>
             </div>
 
@@ -2135,15 +2139,15 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                 <div className="relative" ref={appointmentFilterDropdownRef}>
                   <button
                     onClick={() => setShowAppointmentFilterDropdown(!showAppointmentFilterDropdown)}
-                    className="flex items-center gap-2 px-4 py-3 bg-primary-500 text-white border border-primary-500 rounded-lg text-sm font-medium cursor-pointer min-h-[44px] whitespace-nowrap hover:bg-primary-600 hover:border-primary-600"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white border border-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                   >
-                    <Calendar className="w-4 h-4 text-white" />
+                    <Calendar className="w-4 h-4" />
                     {appointmentCurrentFilter === 'all' ? 'All Appointments' :
                      appointmentCurrentFilter === 'scheduled' ? 'Scheduled' :
                      appointmentCurrentFilter === 'confirmed' ? 'Confirmed' :
                      appointmentCurrentFilter === 'completed' ? 'Completed' :
                      appointmentCurrentFilter === 'cancelled' ? 'Cancelled' : 'All Appointments'}
-                    <ChevronDown className="w-4 h-4 ml-2 text-white" />
+                    <ChevronDown className="w-4 h-4" />
                   </button>
                   
                   {/* Dropdown Menu */}
@@ -2162,10 +2166,10 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                             setAppointmentCurrentFilter(filter.value as 'all' | 'scheduled' | 'confirmed' | 'completed' | 'cancelled')
                             setShowAppointmentFilterDropdown(false)
                           }}
-                          className={`flex items-center gap-2 w-full px-4 py-3 text-left text-sm font-medium cursor-pointer hover:bg-gray-50 ${
+                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
                             appointmentCurrentFilter === filter.value
-                              ? 'bg-primary-500 text-white'
-                              : 'text-gray-700'
+                              ? 'bg-blue-50 text-blue-600'
+                              : 'text-gray-700 hover:bg-gray-50'
                           }`}
                         >
                           <Calendar className="w-4 h-4" />
@@ -2318,9 +2322,9 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
           {/* Appointments Table */}
           <div key={`appointments-header-${appointmentRefreshTrigger}`} className=" rounded-lg p-4 mb-4 bg-white border border-gray-200 ">
           <div key={`appointments-container-${appointmentRefreshTrigger}`} className=" rounded-lg ">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-gray-700 font-medium">Total Appointments: {filteredAppointments.length}</span>
+            <div className="flex items-center justify-between pb-4">
+            <div className="text-gray-700 font-semibold text-base">
+                Total Salary Records: <span className="text-blue-600">{filteredAppointments.length}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-gray-600 text-sm">
@@ -2338,6 +2342,8 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
               </div>
             </div>
           </div>
+
+
           {/* Calendar View or Table View */}
           {showCalendarView ? (
             <div key={`calendar-${appointmentCalendarMonth.getFullYear()}-${appointmentCalendarMonth.getMonth()}`} className="bg-white rounded-lg shadow-lg overflow-hidden w-full max-w-7xl mx-auto">
@@ -2518,18 +2524,18 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             {/* Table Header */}
 
             <div key={`appointments-table-header-${appointmentRefreshTrigger}`} className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 font-semibold">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
                     checked={selectedAppointments.size === paginatedAppointments.length && paginatedAppointments.length > 0}
-                    onChange={(e) => handleSelectAllAppointments(e.target.checked)}
+                    onChange={handleSelectAllAppointments}
                     className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
                   />
-                  <span className="ml-2 text-sm font-medium text-gray-700"></span>
+                  <span className="ml-3 text-sm text-blue-600">Select All</span>
                 </div>
-                <div className="flex-1 text-sm font-medium text-gray-700"></div>
-                <div className="text-sm font-medium text-gray-700"></div>
+                <div className="flex-1 text-center text-sm text-blue-600">Appointment Information</div>
+                <div className="min-w-[100px] text-center text-sm text-blue-600">Actions</div>
               </div>
             </div>
 
@@ -2840,7 +2846,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
               <div className="modal-header flex items-center justify-between p-4 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-800 m-0">Confirm Bulk Delete Appointments</h3>
                 <span 
-                  className="close text-2xl text-gray-500 hover:text-gray-700 cursor-pointer font-bold"
+                  className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
                   onClick={cancelBulkDeleteAppointments}
                 >
                   &times;
@@ -2885,7 +2891,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
               <div className="modal-header flex items-center justify-between p-4 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-800 m-0">Confirm Delete Appointment</h3>
                 <span 
-                  className="close text-2xl text-gray-500 hover:text-gray-700 cursor-pointer font-bold"
+                  className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200 "
                   onClick={cancelDeleteAppointment}
                 >
                   &times;
@@ -3159,7 +3165,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>
             <button 
               onClick={() => setShowDeleteConfirm(false)}
-              className="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
+              className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
                 >
                   &times;
             </button>
@@ -3198,7 +3204,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Bulk Delete</h3>
             <button 
               onClick={() => setShowBulkDeleteConfirm(false)}
-              className="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
+              className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
                 >
                   &times;
             </button>
@@ -3235,84 +3241,6 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                     </div>
         )}
 
-        {/* Appointment Bulk Delete Confirmation Modal */}
-        {showAppointmentBulkDeleteConfirm && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[999999] max-w-none">
-            <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
-          <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Bulk Delete</h3>
-            <button 
-              onClick={() => setShowAppointmentBulkDeleteConfirm(false)}
-              className="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
-                >
-                  &times;
-            </button>
-              </div>
-              <div style={{padding: '1.5rem'}}>
-                <p style={{marginBottom: '1.5rem', color: '#374151', lineHeight: '1.5'}}>
-              Are you sure you want to delete <strong>{selectedAppointments.size} selected appointment(s)</strong>? 
-                  This action cannot be undone.
-                </p>
-                <div className="form-actions flex gap-3 justify-end">
-                  <button 
-                    type="button" 
-                onClick={() => setShowAppointmentBulkDeleteConfirm(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={confirmBulkDeleteAppointments}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                Delete All
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Appointment Delete Confirmation Modal */}
-        {showAppointmentDeleteConfirm && appointmentToDelete && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[999999] max-w-none">
-            <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
-          <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>
-            <button 
-              onClick={() => setShowAppointmentDeleteConfirm(false)}
-              className="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
-                >
-                  &times;
-            </button>
-              </div>
-              <div style={{padding: '1.5rem'}}>
-                <p style={{marginBottom: '1.5rem', color: '#374151', lineHeight: '1.5'}}>
-                  Are you sure you want to delete appointment for <strong>"{appointmentToDelete?.patientName}"</strong>? 
-                  This action cannot be undone.
-                </p>
-                <div className="form-actions flex gap-3 justify-end">
-                  <button 
-                    type="button" 
-                onClick={() => setShowAppointmentDeleteConfirm(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={confirmDeleteAppointment}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Appointment Details Modal */}
         {showAppointmentDetails && viewingAppointment && (
           <div 
@@ -3333,9 +3261,9 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                 </div>
                 <button
                   onClick={() => setShowAppointmentDetails(false)}
-                  className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors duration-200"
+                  className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5 bg-blue-600 " />
                 </button>
               </div>
 

@@ -292,9 +292,9 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
             >
-              <X className="w-6 h-6 text-gray-500" />
+              <X className="w-6 h-6 text-white" />
             </button>
           </div>
 

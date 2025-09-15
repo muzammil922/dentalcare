@@ -22,6 +22,26 @@ import SalaryForm from '@/components/SalaryForm'
 import { Staff as StaffType, Salary as SalaryType } from '@/stores/useAppStore'
 
 export default function Staff() {
+  // Add CSS for hiding scrollbars
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.textContent = `
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+      }
+    `
+    document.head.appendChild(style)
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style)
+      }
+    }
+  }, [])
+
   const [mainTab, setMainTab] = useState<'staff' | 'attendance' | 'salary'>('staff' as const)
   const [currentFilter, setCurrentFilter] = useState('all')
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
@@ -36,6 +56,10 @@ export default function Staff() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [staffToDelete, setStaffToDelete] = useState<StaffType | null>(null)
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+  const [showSalaryDeleteConfirm, setShowSalaryDeleteConfirm] = useState(false)
+  const [salaryToDelete, setSalaryToDelete] = useState<SalaryType | null>(null)
+  const [showBulkSalaryDeleteConfirm, setShowBulkSalaryDeleteConfirm] = useState(false)
+  const [selectedSalaries, setSelectedSalaries] = useState<Set<string>>(new Set())
   const [showStaffDetails, setShowStaffDetails] = useState(false)
   const [selectedStaffDetails, setSelectedStaffDetails] = useState<StaffType | null>(null)
   
@@ -43,6 +67,11 @@ export default function Staff() {
   const [showImportDropdown, setShowImportDropdown] = useState(false)
   const [isRefreshingStaff, setIsRefreshingStaff] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [showSalaryImportDropdown, setShowSalaryImportDropdown] = useState(false)
+  const [isRefreshingSalary, setIsRefreshingSalary] = useState(false)
+  const [salaryRefreshTrigger, setSalaryRefreshTrigger] = useState(0)
+  const [salaryFilter, setSalaryFilter] = useState('all')
+  const [showSalaryFilterDropdown, setShowSalaryFilterDropdown] = useState(false)
   
   // Pagination state
   const [staffPerPage, setStaffPerPage] = useState(10)
@@ -89,6 +118,7 @@ export default function Staff() {
   // Ref for dropdown
   const filterDropdownRef = useRef<HTMLDivElement>(null)
   const importDropdownRef = useRef<HTMLDivElement>(null)
+  const salaryFilterDropdownRef = useRef<HTMLDivElement>(null)
 
   // Load saved settings and attendance records on component mount
   useEffect(() => {
@@ -225,12 +255,16 @@ export default function Staff() {
       if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
         setShowFilterDropdown(false)
       }
-      // Close import dropdown when clicking outside
-      if (!event.target || !(event.target as Element).closest('.import-dropdown-container')) {
-        setShowImportDropdown(false)
+      if (salaryFilterDropdownRef.current && !salaryFilterDropdownRef.current.contains(event.target as Node)) {
+        setShowSalaryFilterDropdown(false)
       }
+            // Close import dropdown when clicking outside
+            if (!event.target || !(event.target as Element).closest('.import-dropdown-container')) {
+              setShowImportDropdown(false)
+              setShowSalaryImportDropdown(false)
+            }
     }
-
+    
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
@@ -338,6 +372,14 @@ export default function Staff() {
     
     return filtered
   }, [staff, attendanceSearchTerm])
+
+  // Filtered salaries based on status
+  const filteredSalaries = useMemo(() => {
+    if (salaryFilter === 'all') {
+      return salaries
+    }
+    return salaries.filter(salary => salary.status === salaryFilter)
+  }, [salaries, salaryFilter])
   
   const attendancePaginationData = useMemo(() => {
     const totalPages = Math.ceil(filteredAttendanceStaff.length / attendancePerPage)
@@ -421,13 +463,21 @@ export default function Staff() {
   }
 
   const handleSaveSalary = (salaryData: Omit<SalaryType, 'id'>) => {
+    // Find the staff member to get the name
+    const staffMember = staff.find(s => s.id === salaryData.staffId)
+    const staffName = staffMember?.name || 'Unknown Staff'
+    
     if (editingSalary) {
-      updateSalary(editingSalary.id, salaryData)
+      updateSalary(editingSalary.id, {
+        ...salaryData,
+        staffName
+      })
       setEditingSalary(null)
       showToast('Salary record updated successfully', 'success')
     } else {
       addSalary({
         ...salaryData,
+        staffName,
         id: Math.random().toString(36).substr(2, 9)
       })
       showToast('Salary record added successfully', 'success')
@@ -1673,8 +1723,8 @@ export default function Staff() {
                   box-sizing: border-box;
               }
               
-              body {
-                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              body { 
+                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                   line-height: 1.6;
                   color: #1e293b;
                   background: #f8fafc;
@@ -1909,7 +1959,7 @@ export default function Staff() {
               @media print {
                   body {
                       padding: 0;
-                      background: white;
+                  background: white;
                   }
                   
                   .print-container {
@@ -2187,85 +2237,568 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
   }
 
   const handleDeleteSalary = (salaryId: string) => {
-    if (window.confirm('Are you sure you want to delete this salary record?')) {
-      deleteSalary(salaryId)
-      showToast('Salary record deleted successfully', 'success')
+    const salary = salaries.find(s => s.id === salaryId)
+    if (salary) {
+      setSalaryToDelete(salary)
+      setShowSalaryDeleteConfirm(true)
     }
   }
 
+  const confirmDeleteSalary = () => {
+    if (salaryToDelete) {
+      deleteSalary(salaryToDelete.id)
+      showToast('Salary record deleted successfully', 'success')
+      setShowSalaryDeleteConfirm(false)
+      setSalaryToDelete(null)
+    }
+  }
+
+  const handleMarkAsPaid = (salaryId: string) => {
+    updateSalary(salaryId, { status: 'paid' })
+    showToast('Salary marked as paid', 'success')
+  }
+
+  const handleMarkAsPending = (salaryId: string) => {
+    updateSalary(salaryId, { status: 'pending' })
+    showToast('Salary marked as pending', 'success')
+  }
+
+  const handleSelectSalary = (salaryId: string) => {
+    const newSelected = new Set(selectedSalaries)
+    if (newSelected.has(salaryId)) {
+      newSelected.delete(salaryId)
+    } else {
+      newSelected.add(salaryId)
+    }
+    setSelectedSalaries(newSelected)
+  }
+
+  const handleSelectAllSalaries = () => {
+    if (selectedSalaries.size === filteredSalaries.length) {
+      setSelectedSalaries(new Set())
+    } else {
+      setSelectedSalaries(new Set(filteredSalaries.map(s => s.id)))
+    }
+  }
+
+  const handleBulkDeleteSalaries = () => {
+    if (selectedSalaries.size > 0) {
+      setShowBulkSalaryDeleteConfirm(true)
+    }
+  }
+
+  const confirmBulkDeleteSalaries = () => {
+    selectedSalaries.forEach(salaryId => {
+      deleteSalary(salaryId)
+    })
+    showToast(`${selectedSalaries.size} salary records deleted successfully`, 'success')
+    setSelectedSalaries(new Set())
+    setShowBulkSalaryDeleteConfirm(false)
+  }
+
+  // Salary import and refresh functions
+  const downloadSalarySampleCSV = () => {
+    const csvContent = `staffId,month,year,paymentDate,department,baseSalary,allowances,deductions,overtime,bonus,presentDays,absentDays,leaveDays,lateDays,halfDays,workingDays,notes
+s-01,December,2024,2024-12-25,Medical,50000,5000,2000,1000,2000,25,2,1,3,1,30,Monthly salary with allowances
+s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regular monthly payment`
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'sample_salary.csv'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+    
+    showToast('Sample salary CSV downloaded!', 'success')
+  }
+
+  const handleSalaryFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        let salaryRecords: any[] = []
+
+        if (file.name.endsWith('.csv')) {
+          const content = e.target?.result as string
+          const lines = content.split('\n').filter(line => line.trim() !== '')
+          const headers = lines[0].split(',').map(h => h.trim())
+          salaryRecords = lines.slice(1).map(line => {
+            const values = line.split(',').map(v => v.trim())
+            const salary: any = {}
+            headers.forEach((header, index) => {
+              salary[header] = values[index] || ''
+            })
+            return salary
+          })
+        } else {
+          showToast('Please select a CSV file', 'error')
+          return
+        }
+
+        if (salaryRecords.length > 0) {
+          let successCount = 0
+          let skippedCount = 0
+          
+          salaryRecords.forEach((salaryRecord) => {
+            if (salaryRecord.staffId && salaryRecord.month && salaryRecord.year) {
+              try {
+                const staffMember = staff.find(s => s.id === salaryRecord.staffId)
+                const newSalary = {
+                  id: Math.random().toString(36).substr(2, 9),
+                  staffId: salaryRecord.staffId.trim(),
+                  staffName: staffMember?.name || 'Unknown Staff',
+                  month: salaryRecord.month.trim(),
+                  year: parseInt(salaryRecord.year) || new Date().getFullYear(),
+                  paymentDate: salaryRecord.paymentDate || new Date().toISOString().split('T')[0],
+                  department: salaryRecord.department || 'Staff',
+                  basicSalary: parseFloat(salaryRecord.baseSalary) || 0,
+                  allowances: parseFloat(salaryRecord.allowances) || 0,
+                  deductions: parseFloat(salaryRecord.deductions) || 0,
+                  overtime: parseFloat(salaryRecord.overtime) || 0,
+                  bonus: parseFloat(salaryRecord.bonus) || 0,
+                  presentDays: parseInt(salaryRecord.presentDays) || 0,
+                  absentDays: parseInt(salaryRecord.absentDays) || 0,
+                  leaveDays: parseInt(salaryRecord.leaveDays) || 0,
+                  lateDays: parseInt(salaryRecord.lateDays) || 0,
+                  halfDays: parseInt(salaryRecord.halfDays) || 0,
+                  workingDays: parseInt(salaryRecord.workingDays) || 30,
+                  notes: salaryRecord.notes || '',
+                  totalSalary: (parseFloat(salaryRecord.baseSalary) || 0) + (parseFloat(salaryRecord.allowances) || 0) + (parseFloat(salaryRecord.overtime) || 0) + (parseFloat(salaryRecord.bonus) || 0) - (parseFloat(salaryRecord.deductions) || 0),
+                  status: 'pending' as const
+                }
+                addSalary(newSalary)
+                successCount++
+              } catch (error) {
+                console.error('Error adding salary:', salaryRecord, error)
+                skippedCount++
+              }
+            } else {
+              console.log('Skipping invalid salary record:', salaryRecord)
+              skippedCount++
+            }
+          })
+          showToast(`Import completed: ${successCount} salary records added, ${skippedCount} skipped`, 'success')
+        } else {
+          showToast('No valid salary data found in the file', 'error')
+        }
+      } catch (error) {
+        console.error('Import error:', error)
+        showToast('Error importing file. Please check the file format.', 'error')
+      }
+    }
+    reader.readAsText(file)
+    event.target.value = ''
+  }
+
   const handlePrintSalary = (salary: SalaryType) => {
-    const printWindow = window.open('', '_blank')
+    // Create print window with salary record
+    const printWindow = window.open('', '_blank', 'width=800,height=600')
     if (!printWindow) return
 
     const printContent = `
       <!DOCTYPE html>
       <html>
-        <head>
-          <title>Salary Record - ${salary.staffName}</title>
+      <head>
+          <title>Salary Slip - ${salary.staffName}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-            .info-label { font-weight: bold; color: #374151; }
-            .info-value { color: #6b7280; }
-            .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-            .status-paid { background: #dcfce7; color: #166534; }
-            .status-pending { background: #fef3c7; color: #92400e; }
-            .footer { margin-top: 30px; text-align: center; color: #6b7280; font-size: 12px; }
+              @media print {
+                  body { margin: 0; }
+                  .no-print { display: none !important; }
+                  #printButtonContainer { display: none !important; }
+                  div[id="printButtonContainer"] { display: none !important; }
+                  .print-button { display: none !important; }
+              }
+              
+              body { 
+                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                  margin: 0; 
+                  padding: 0; 
+                  background: #f8fafc;
+                  color: #1e293b;
+              }
+              
+              .container {
+                  width: 100%;
+                  margin: 0px auto 20px auto;
+                  background: white;
+                  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+              }
+              
+              .header {
+                  background: #dbeafe;
+                  color: #2563eb;
+                  padding: 2rem;
+                  text-align: center;
+                  position: relative;
+              }
+              
+              .header h1 {
+                  margin: 0;
+                  font-size: 2.5rem;
+                  font-weight: 700;
+                  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              }
+              
+              .header h2 {
+                  margin: 0.5rem 0 0 0;
+                  font-size: 1.5rem;
+                  font-weight: 400;
+                  opacity: 0.9;
+              }
+              
+              .clinic-info {
+                  background: rgba(255,255,255,0.1);
+                  padding: 1rem;
+                  border-radius: 12px;
+                  margin-top: 1rem;
+                  backdrop-filter: blur(10px);
+              }
+              
+              .content {
+                  padding: 2rem;
+                  background: #f8fafc;
+              }
+              
+              .section {
+                  margin-bottom: 2rem;
+                  background: white;
+                  border-radius: 12px;
+                  padding: 1.5rem;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+              
+              .section h3 {
+                  margin: 0 0 1rem 0;
+                  color: #2563eb;
+                  font-size: 1.25rem;
+                  font-weight: 600;
+              }
+              
+              .info-grid {
+                  display: grid;
+                  grid-template-columns: repeat(4, 1fr);
+                  gap: 1rem;
+              }
+              
+              .info-grid-3 {
+                  display: grid;
+                  grid-template-columns: repeat(3, 1fr);
+                  gap: 1rem;
+              }
+              
+              .info-grid-6 {
+                  display: grid;
+                  grid-template-columns: repeat(3, 1fr);
+                  gap: 1rem;
+              }
+              
+              .info-item {
+                  background: white;
+                  padding: 1rem;
+                  border-radius: 8px;
+                  border: 1px solid #e2e8f0;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+              }
+              
+              .info-label {
+                  font-weight: 600;
+                  color: #475569;
+                  font-size: 0.75rem;
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+                  margin-bottom: 0.25rem;
+              }
+              
+              .info-value {
+                  color: #1e293b;
+                  font-size: 1rem;
+                  font-weight: 500;
+              }
+              
+              .financial-item {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding: 0.5rem 0;
+              }
+              
+              .financial-label {
+                  color: #6b7280;
+                  font-weight: 500;
+              }
+              
+              .financial-value {
+                  color: #1e293b;
+                  font-weight: 500;
+              }
+              
+              .net-salary {
+                  border-top: 1px solid #e5e7eb;
+                  padding-top: 0.5rem;
+                  margin-top: 0.5rem;
+              }
+              
+              .net-salary .financial-label {
+                  font-weight: 700;
+                  color: #1e293b;
+              }
+              
+              .net-salary .financial-value {
+                  font-weight: 700;
+                  font-size: 1.125rem;
+                  color: #1e293b;
+              }
+              
+              .attendance-grid {
+                  display: grid;
+                  grid-template-columns: repeat(3, 1fr);
+                  gap: 1rem;
+              }
+              
+              .attendance-item {
+                  background: white;
+                  padding: 1rem;
+                  border-radius: 8px;
+                  border: 1px solid #e2e8f0;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                  text-align: center;
+              }
+              
+              .attendance-label {
+                  font-weight: 600;
+                  color: #475569;
+                  font-size: 0.75rem;
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+                  margin-bottom: 0.25rem;
+              }
+              
+              .attendance-value {
+                  color: #1e293b;
+                  font-size: 1.25rem;
+                  font-weight: 600;
+              }
+              
+              .footer {
+                  background: #f8fafc;
+                  padding: 1.5rem;
+                  text-align: center;
+                  border-top: 1px solid #e2e8f0;
+              }
+              
+              .footer p {
+                  margin: 0;
+                  color: #64748b;
+                  font-size: 0.875rem;
+              }
+              
+              .status-badge {
+                  display: inline-block;
+                  padding: 0.25rem 0.75rem;
+                  border-radius: 20px;
+                  font-size: 0.75rem;
+                  font-weight: 600;
+                  text-transform: uppercase;
+                  letter-spacing: 0.05em;
+              }
+              
+              .status-paid {
+                  background: #dcfce7;
+                  color: #15803d;
+              }
+              
+              .status-pending {
+                  background: #fef3c7;
+                  color: #d97706;
+              }
           </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>🦷 DentalCare Pro</h1>
-            <h2>Salary Record</h2>
-            <p>Professional Dental Management System</p>
-          </div>
-          
-          <div class="info-grid">
-            <div>
-              <div class="info-label">Staff Name:</div>
-              <div class="info-value">${salary.staffName || 'N/A'}</div>
-            </div>
-            <div>
-              <div class="info-label">Period:</div>
-              <div class="info-value">${salary.month} ${salary.year}</div>
-            </div>
-            <div>
-              <div class="info-label">Basic Salary:</div>
-              <div class="info-value">Rs ${salary.basicSalary?.toLocaleString() || '0'}</div>
-            </div>
-            <div>
-              <div class="info-label">Total Salary:</div>
-              <div class="info-value">Rs ${salary.totalSalary?.toLocaleString() || '0'}</div>
-            </div>
-            <div>
-              <div class="info-label">Status:</div>
-              <div class="info-value">
-                <span class="status-badge status-${salary.status || 'pending'}">
-                  ${(salary.status || 'pending').toUpperCase()}
-                </span>
+      </head>
+      <body>
+      <!-- Print Button (Top Right Corner) -->
+      <div id="printButtonContainer" class="no-print" style="
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 1000;
+          background: #059669;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 8px;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          border: none;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+      " onclick="window.print()" onmouseover="this.style.background='#047857'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669'; this.style.transform='scale(1)'">
+          <i class="fas fa-print"></i>
+          Print Salary Slip
+      </div>
+          <div class="container">
+              <div class="header">
+                  <h1>🦷 DentalCare Pro</h1>
+                  <h2>Salary Slip</h2>
+                  <div class="clinic-info">
+                      <strong>Professional Payroll</strong><br>
+                      <small>Excellence in Team Management</small>
+                  </div>
               </div>
-            </div>
+              
+              <div class="content">
+                  <!-- Staff Information -->
+                  <div class="section">
+                      <h3>Staff Information</h3>
+                      <div class="info-grid">
+                          <div class="info-item">
+                              <div class="info-label">Staff Name</div>
+                              <div class="info-value">${salary.staffName || 'N/A'}</div>
+                          </div>
+                          <div class="info-item">
+                              <div class="info-label">Role</div>
+                              <div class="info-value">${staff.find(s => s.id === salary.staffId)?.role || 'N/A'}</div>
+                          </div>
+                          <div class="info-item">
+                              <div class="info-label">Phone</div>
+                              <div class="info-value">${staff.find(s => s.id === salary.staffId)?.phone || 'N/A'}</div>
+                          </div>
+                          <div class="info-item">
+                              <div class="info-label">Join Date</div>
+                              <div class="info-value">${staff.find(s => s.id === salary.staffId)?.joinDate ? new Date(staff.find(s => s.id === salary.staffId)!.joinDate).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              }) : 'N/A'}</div>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <!-- Salary Information -->
+                  <div class="section">
+                      <h3>Salary Information</h3>
+                      <div class="info-grid-3">
+                          <div class="info-item">
+                              <div class="info-label">Month</div>
+                              <div class="info-value">${salary.paymentDate ? new Date(salary.paymentDate).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: '2-digit' 
+                              }).replace('/', '-') : `${salary.month} ${salary.year}`}</div>
+                          </div>
+                          <div class="info-item">
+                              <div class="info-label">Status</div>
+                              <div class="info-value">
+                                  <span class="status-badge status-${salary.status || 'pending'}">${(salary.status || 'pending').toUpperCase()}</span>
+                              </div>
+                          </div>
+                          <div class="info-item">
+                              <div class="info-label">Payment Date</div>
+                              <div class="info-value">${salary.paymentDate ? new Date(salary.paymentDate).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              }) : 'Not specified'}</div>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <!-- Financial Details -->
+                  <div class="section">
+                      <h3>Financial Details</h3>
+                      <div class="financial-item">
+                          <span class="financial-label">Basic Salary</span>
+                          <span class="financial-value">Rs ${Math.round(salary.basicSalary || 0).toLocaleString()}</span>
+                      </div>
+                      <div class="financial-item">
+                          <span class="financial-label">Total Allowance</span>
+                          <span class="financial-value">Rs ${Math.round(typeof salary.allowances === 'number' ? salary.allowances : 0).toLocaleString()}</span>
+                      </div>
+                      <div class="financial-item">
+                          <span class="financial-label">Total Deduction</span>
+                          <span class="financial-value">Rs ${Math.round(typeof salary.deductions === 'number' ? salary.deductions : 0).toLocaleString()}</span>
+                      </div>
+                      <div class="financial-item net-salary">
+                          <span class="financial-label">Net Salary</span>
+                          <span class="financial-value">Rs ${Math.round(salary.totalSalary || 0).toLocaleString()}</span>
+                      </div>
+                  </div>
+                  
+                  <!-- Attendance Summary -->
+                  <div class="section">
+                      <h3>Attendance Summary</h3>
+                      <div class="attendance-grid">
+                          <div class="attendance-item">
+                              <div class="attendance-label">Working Days</div>
+                              <div class="attendance-value">${salary.workingDays || 0}</div>
+                          </div>
+                          <div class="attendance-item">
+                              <div class="attendance-label">Present Days</div>
+                              <div class="attendance-value">${salary.presentDays || 0}</div>
+                          </div>
+                          <div class="attendance-item">
+                              <div class="attendance-label">Absent Days</div>
+                              <div class="attendance-value">${salary.absentDays || 0}</div>
+                          </div>
+                          <div class="attendance-item">
+                              <div class="attendance-label">Leave Days</div>
+                              <div class="attendance-value">${salary.leaveDays || 0}</div>
+                          </div>
+                          <div class="attendance-item">
+                              <div class="attendance-label">Late Days</div>
+                              <div class="attendance-value">${salary.lateDays || 0}</div>
+                          </div>
+                          <div class="attendance-item">
+                              <div class="attendance-label">Half Days</div>
+                              <div class="attendance-value">${salary.halfDays || 0}</div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              
+              <div class="footer">
+                  <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
+                  <p>This is an official salary slip from DentalCare Pro</p>
+              </div>
           </div>
-          
-          <div class="footer">
-            <p>Generated on: ${new Date().toLocaleString()}</p>
-            <p>This is a computer-generated document.</p>
-          </div>
-        </body>
+      </body>
       </html>
     `
 
     printWindow.document.write(printContent)
     printWindow.document.close()
     printWindow.focus()
-    printWindow.print()
   }
 
   const handleViewSalaryDetails = (salary: SalaryType) => {
     setSelectedSalary(salary)
     setShowSalaryModal(true)
   }
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showSalaryModal) {
+        setShowSalaryModal(false)
+      }
+    }
+
+    if (showSalaryModal) {
+      document.addEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'hidden'
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'unset'
+    }
+  }, [showSalaryModal])
 
 
   const confirmBulkDelete = () => {
@@ -2425,9 +2958,9 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                           }}
                           className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         >
-                          <Download className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                           Import CSV
-                        </button>
+                </button>
                         <div className="border-t border-gray-200 my-2"></div>
                         <button
                           onClick={() => downloadSampleCSV()}
@@ -2435,7 +2968,7 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                         >
                           <Download className="w-4 h-4" />
                           Download Sample CSV
-                        </button>
+                </button>
                       </div>
                     </div>
                   )}
@@ -2470,14 +3003,23 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                   <RefreshCw className={`w-4 h-4 ${isRefreshingStaff ? 'animate-spin' : ''}`} />
                 </button>
                 
-                {/* Hidden file input for CSV import */}
-                <input
-                  id="csvInput"
-                  type="file"
-                  accept=".csv"
-                  onChange={(e) => handleFileImport(e)}
-                  className="hidden"
-                />
+        {/* Hidden file input for CSV import */}
+        <input
+          id="csvInput"
+          type="file"
+          accept=".csv"
+          onChange={(e) => handleFileImport(e)}
+          className="hidden"
+        />
+        
+        {/* Hidden file input for Salary CSV import */}
+        <input
+          id="salaryCsvInput"
+          type="file"
+          accept=".csv"
+          onChange={(e) => handleSalaryFileImport(e)}
+          className="hidden"
+        />
               </div>
             </div>
           </div>
@@ -2496,9 +3038,10 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
 
           {/* Staff List Header */}
           <div key={`staff-header-${refreshTrigger}`} className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-gray-700 font-medium">Total Staff: {filteredStaff.length}</span>
+            <div className="flex items-center justify-between pb-4">
+            <div className="text-gray-700 font-semibold text-base">
+                Total Salary Records:
+                 <span className="text-blue-600">{filteredStaff.length}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-gray-600 text-sm">
@@ -2521,7 +3064,7 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
           <div key={`staff-table-container-${refreshTrigger}`} className="bg-white rounded-lg shadow-sm overflow-hidden">
             {/* Table Header */}
             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 font-semibold">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -2529,7 +3072,10 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                     onChange={handleSelectAll}
                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                   />
+                  <span className="ml-3 text-sm text-blue-600">Select All</span>
                 </div>
+                <div className="flex-1 text-center text-sm text-blue-600">Staff Information</div>
+                <div className="min-w-[100px] text-center text-sm text-blue-600">Actions</div>
               </div>
             </div>
             </div>
@@ -2869,11 +3415,60 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
           <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-md">
             <div className="flex gap-4 items-center justify-between flex-wrap">
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white border border-blue-600 rounded-lg text-sm font-medium">
-                  <DollarSign className="w-4 h-4" />
-                  All Salaries
-                  <ChevronDown className="w-4 h-4" />
-                </button>
+                <div className="relative" ref={salaryFilterDropdownRef}>
+                  <button 
+                    onClick={() => setShowSalaryFilterDropdown(!showSalaryFilterDropdown)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white border border-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    {salaryFilter === 'all' ? 'All Salaries' : salaryFilter === 'paid' ? 'Paid Salaries' : 'Pending Salaries'}
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  
+                  {/* Filter Dropdown */}
+                  {showSalaryFilterDropdown && (
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                      <div className="p-2">
+                        <button
+                          onClick={() => {
+                            setSalaryFilter('all')
+                            setShowSalaryFilterDropdown(false)
+                          }}
+                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            salaryFilter === 'all' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          All Salaries
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSalaryFilter('paid')
+                            setShowSalaryFilterDropdown(false)
+                          }}
+                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            salaryFilter === 'paid' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Paid Salaries
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSalaryFilter('pending')
+                            setShowSalaryFilterDropdown(false)
+                          }}
+                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            salaryFilter === 'pending' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Clock className="w-4 h-4" />
+                          Pending Salaries
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -2885,11 +3480,63 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                   <Plus className="w-4 h-4 text-white" />
                   Create Salary
                 </button>
-                <button className="flex items-center justify-center w-11 h-11 bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors">
-                  <Download className="w-4 h-4" />
-                </button>
-                <button className="flex items-center justify-center w-11 h-11 bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors">
-                  <RefreshCw className="w-4 h-4" />
+                {/* Import Button with Dropdown */}
+                <div className="relative import-dropdown-container">
+                  <button 
+                    onClick={() => setShowSalaryImportDropdown(!showSalaryImportDropdown)}
+                    className="flex items-center justify-center w-11 h-11 bg-blue-600 text-white border rounded-lg hover:bg-blue-700 transition-colors"
+                    title="Import Salary"
+                  >
+                    <Upload className="w-4 h-4" />
+                  </button>
+                  
+                  {/* Import Dropdown */}
+                  {showSalaryImportDropdown && (
+                    <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                      <div className="p-2">
+                        <div className="text-xs font-medium text-gray-500 mb-2 px-2">Select file type to import:</div>
+                        <button
+                          onClick={() => {
+                            document.getElementById('salaryCsvInput')?.click()
+                            setShowSalaryImportDropdown(false)
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                          Import CSV
+                        </button>
+                        <div className="border-t border-gray-200 my-2"></div>
+                        <button
+                          onClick={() => downloadSalarySampleCSV()}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download Sample CSV
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <button 
+                  onClick={() => {
+                    setIsRefreshingSalary(true)
+                    showToast('Refreshing salary list...', 'success')
+                    
+                    setTimeout(() => {
+                      setSelectedSalaries(new Set())
+                      setSalaryRefreshTrigger(prev => prev + 1)
+                      
+                      setTimeout(() => {
+                        setIsRefreshingSalary(false)
+                      }, 500)
+                    }, 200)
+                  }}
+                  disabled={isRefreshingSalary}
+                  className="flex items-center justify-center w-11 h-11 bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Refresh Salary"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isRefreshingSalary ? 'animate-spin' : ''}`} />
                 </button>
               </div>
             </div>
@@ -2903,28 +3550,31 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
               className="w-full px-4 py-3 pr-12 rounded-lg text-base bg-white focus:outline-none focus:border-primary-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
             />
             <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          </div>
+                            </div>
 
           {/* Salary Grid Container */}
-          <div key={`salary-grid-container-${refreshTrigger}`} className="bg-white rounded-lg shadow-md p-6 mb-4">
+          <div key={`salary-grid-container-${salaryRefreshTrigger}`} className="bg-white rounded-lg shadow-md p-6 mb-4">
             {/* Count Display at the top of the grid */}
-            <div className="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-              <div className="text-gray-700 font-semibold text-base">
-                Total Salary Records: <span className="text-blue-600">{salaries.length}</span>
+            <div className="flex justify-between items-center">
+              <div className="text-gray-700 font-semibold text-base pb-4">
+                Total Salary Records: <span className="text-blue-600">{filteredSalaries.length}</span>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-gray-600 text-sm">
-                  Showing <span>1</span> - <span>{salaries.length}</span> of <span>{salaries.length}</span> salary records
+                  Showing <span>1</span> - <span>{filteredSalaries.length}</span> of <span>{filteredSalaries.length}</span> salary records
                 </div>
-                <button 
-                  className="px-4 py-2 bg-red-500 text-white rounded-md cursor-pointer font-medium transition-all duration-200 hover:opacity-80 hidden"
-                  title="Delete Selected"
-                >
-                  <i className="fas fa-trash-alt mr-2"></i>
-                  Delete Selected
-                </button>
+                {selectedSalaries.size > 0 && (
+                  <button 
+                    onClick={handleBulkDeleteSalaries}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md cursor-pointer font-medium transition-all duration-200 hover:opacity-80"
+                    title="Delete Selected"
+                  >
+                    <i className="fas fa-trash-alt mr-2"></i>
+                    Delete Selected ({selectedSalaries.size})
+                  </button>
+                )}
+                          </div>
               </div>
-            </div>
 
             {/* Table Header with Select All and Actions Column */}
             <div className="flex items-center gap-6 p-4 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 mb-4 rounded-md">
@@ -2932,51 +3582,55 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                 <input 
                   type="checkbox" 
                   className="w-4 h-4 cursor-pointer"
+                  checked={selectedSalaries.size === filteredSalaries.length && filteredSalaries.length > 0}
+                  onChange={handleSelectAllSalaries}
                 />
                 <span className="text-sm text-blue-600">Select All</span>
               </div>
               <div className="flex-1 text-center text-sm text-blue-600">Salary Information</div>
               <div className="min-w-[100px] text-center text-sm text-blue-600">Actions</div>
-            </div>
+          </div>
             
             {/* Salary Rows */}
-            {salaries.length > 0 ? (
+            {filteredSalaries.length > 0 ? (
               <div className="space-y-0">
-                {salaries.map((salary, index) => (
+                {filteredSalaries.map((salary, index) => (
                   <motion.div
                     key={salary.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-6 p-4 border-b border-gray-200 transition-colors duration-200 cursor-pointer hover:bg-gray-100"
-                    style={{ borderBottom: index === salaries.length - 1 ? 'none' : '1px solid #e5e7eb' }}
+                    className="flex items-center gap-6 p-4 border-b border-gray-200 transition-colors duration-200 cursor-pointer hover:bg-blue-50"
+                    style={{ borderBottom: index === filteredSalaries.length - 1 ? 'none' : '1px solid #e5e7eb' }}
                   >
                     {/* Salary Selection Checkbox */}
                     <div className="flex items-center gap-4 min-w-[120px]">
                       <input 
                         type="checkbox" 
                         className="w-4 h-4 cursor-pointer"
+                        checked={selectedSalaries.has(salary.id)}
+                        onChange={() => handleSelectSalary(salary.id)}
                       />
                       <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-semibold text-sm">
                         {index + 1}
-                      </div>
+            </div>
                       <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-2xl">
                         <i className="fas fa-money-bill-wave"></i>
-                      </div>
-                    </div>
-                    
+            </div>
+          </div>
+
                     {/* Salary Details (Left Block) */}
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="flex flex-col gap-2 w-full">
-                        <div className="bg-blue-100 text-blue-600 p-3 rounded-lg font-semibold text-base w-full flex flex-col gap-2">
+                      <div className="flex flex-col gap-2 w-full"> 
+                        <div className="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg font-medium text-sm w-full flex flex-col gap-2">
                           <div className="flex items-center gap-2">
-                            <i className="fas fa-user mr-2"></i>
+                            {/* <i className="fas fa-user mr-2"></i> */}
                             {salary.staffName || 'Unknown Staff'}
-                          </div>
+         </div>
                         </div>
                         <div className="inline-flex items-center gap-2 w-fit">
                           <span className="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 w-fit">
                             <i className="fas fa-briefcase"></i>
-                            {salary.staffName || 'N/a'}
+                            {staff.find(s => s.id === salary.staffId)?.role || 'N/A'}
                           </span>
                         </div>
                       </div>
@@ -2986,13 +3640,17 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                     <div className="flex flex-col gap-2 min-w-[200px]">
                       <div className="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium">
                         <i className="fas fa-calendar-alt mr-2"></i>
-                        {salary.month} {salary.year}
+                        {salary.paymentDate ? new Date(salary.paymentDate).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        }) : `${salary.month} ${salary.year}`}
                       </div>
                       <div className="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium">
                         <i className="fas fa-money-bill-wave mr-2"></i>
-                        Rs&nbsp;{salary.totalSalary?.toLocaleString() || '0'}
-                      </div>
-                      <div className="flex items-center gap-2">
+                        Rs&nbsp;{Math.round(salary.totalSalary || 0).toLocaleString()}
+                </div>
+                <div className="flex items-center gap-2">
                         <span className={`px-4 py-2 rounded-lg text-sm font-medium text-center flex items-center gap-2 ${
                           salary.status === 'paid' 
                             ? 'bg-green-500 text-white' 
@@ -3002,12 +3660,14 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                           {salary.status === 'paid' ? 'Paid' : 'Pending'}
                         </span>
                         <button 
+                          onClick={() => handleMarkAsPaid(salary.id)}
                           className="w-9 h-9 p-0 bg-green-500 text-white rounded-md border-none cursor-pointer transition-all duration-200 hover:scale-110"
                           title="Mark as Paid"
                         >
                           <i className="fas fa-check-circle"></i>
                         </button>
                         <button 
+                          onClick={() => handleMarkAsPending(salary.id)}
                           className="w-9 h-9 p-0 bg-yellow-500 text-white rounded-md border-none cursor-pointer transition-all duration-200 hover:scale-110"
                           title="Mark as Pending"
                         >
@@ -3025,28 +3685,28 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                       >
                         <i className="fas fa-eye"></i>
                       </button>
-                      <button 
+                  <button 
                         onClick={() => handleEditSalary(salary)}
                         className="w-10 h-10 p-0 bg-blue-100 text-blue-600 rounded-md border-none cursor-pointer transition-all duration-200 hover:scale-110"
                         title="Edit Salary"
-                      >
+                  >
                         <i className="fas fa-edit"></i>
-                      </button>
-                      <button 
+                  </button>
+                  <button 
                         onClick={() => handlePrintSalary(salary)}
                         className="w-10 h-10 p-0 bg-white text-yellow-500 border border-yellow-500 rounded-md cursor-pointer transition-all duration-200 hover:scale-110"
                         title="Print"
-                      >
+                  >
                         <i className="fas fa-print"></i>
-                      </button>
-                      <button 
+                  </button>
+                  <button 
                         onClick={() => handleDeleteSalary(salary.id)}
                         className="w-10 h-10 p-0 bg-white text-red-500 border border-red-500 rounded-md cursor-pointer transition-all duration-200 hover:scale-110"
                         title="Delete"
-                      >
+                  >
                         <i className="fas fa-trash"></i>
-                      </button>
-                    </div>
+                  </button>
+                </div>
                   </motion.div>
                 ))}
               </div>
@@ -3055,7 +3715,7 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                 <DollarSign className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-xl font-medium mb-2">No salary records found</h3>
                 <p>Get started by adding your first salary record</p>
-              </div>
+                  </div>
             )}
             
             {/* Pagination Controls and Entries Dropdown at Bottom */}
@@ -3070,15 +3730,15 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                   <option value="100">100</option>
                 </select>
                 <span>entries</span>
-              </div>
-
+                        </div>
+                        
               <div className="flex justify-center items-center gap-2 flex-wrap">
                 <div className="text-gray-600 text-sm mr-4">
                   Page 1 of 1
-                </div>
-              </div>
-            </div>
-          </div>
+                              </div>
+                            </div>
+                                </div>
+                                </div>
         </>
       )}
 
@@ -3248,7 +3908,7 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                         cursor: 'pointer',
                         backgroundColor: 'transparent'
                       }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--gray-100)'}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#eff6ff'}
                       onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       {/* Staff Avatar */}
@@ -3690,7 +4350,13 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
       {showSalaryForm && (
         <SalaryForm
           salary={editingSalary}
-          staffMembers={staff.map(s => ({ id: s.id, name: s.name }))}
+          staffMembers={staff.map(s => ({ 
+            id: s.id, 
+            name: s.name, 
+            salary: s.salary,
+            gender: s.gender
+          }))}
+          existingSalaries={salaries}
           onSave={handleSaveSalary}
           onClose={() => {
             setShowSalaryForm(false)
@@ -3701,13 +4367,56 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
 
       {/* Salary Details Modal */}
       {showSalaryModal && selectedSalary && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] relative border border-gray-200 overflow-hidden flex flex-col">
+        <div 
+          key={`salary-details-modal-${selectedSalary.id}-${Date.now()}`}
+          className="modal active"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(2px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999999,
+            padding: '1rem'
+          }}
+          onClick={() => setShowSalaryModal(false)}
+        >
+          <div 
+            className="modal-content"
+            style={{
+              background: 'var(--white)',
+              borderRadius: 'var(--radius-xl)',
+              boxShadow: 'var(--shadow-xl)',
+              width: '100%',
+              maxWidth: '900px',
+              maxHeight: '85vh',
+              position: 'relative',
+              border: '1px solid var(--gray-200)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <i className="fas fa-money-bill-wave text-2xl text-blue-600"></i>
-                <h2 className="m-0 text-2xl font-semibold">Salary Details</h2>
+            <div 
+              className="modal-header"
+              style={{
+                padding: '1.5rem 2rem',
+                borderBottom: '1px solid var(--gray-200)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <i className="fas fa-money-bill-wave" style={{ fontSize: '1.5rem', color: 'var(--primary-color)' }}></i>
+                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600' }}>Salary Details</h2>
               </div>
               <button 
                 onClick={() => setShowSalaryModal(false)}
@@ -3718,143 +4427,262 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
             </div>
             
             {/* Body */}
-            <div className="p-8 overflow-y-auto flex-1 bg-gray-50">
-              <div className="grid grid-cols-2 gap-6">
+            <div 
+              className="modal-body"
+              style={{
+                padding: '2rem',
+                overflowY: 'auto',
+                flex: 1,
+                background: 'var(--gray-50)',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                WebkitScrollbar: { display: 'none' } as any
+              }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
                 
                 {/* Staff Information Card */}
-                <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                      <i className="fas fa-user text-base"></i>
+                <div 
+                  style={{
+                    background: 'var(--white)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '1.5rem',
+                    boxShadow: 'var(--shadow-md)',
+                    border: '1px solid var(--gray-200)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                    <div 
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        background: 'var(--primary-light)',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--primary-color)'
+                      }}
+                    >
+                      <i className="fas fa-user" style={{ fontSize: '1rem' }}></i>
                     </div>
-                    <h3 className="m-0 text-blue-600 text-xl font-semibold">Staff Information</h3>
+                    <h3 style={{ margin: 0, color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: '600' }}>Staff Information</h3>
                   </div>
                   
-                  <div className="flex flex-col gap-3">
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                      <span className="text-gray-600 font-medium text-sm">Name</span>
-                      <span className="text-blue-600 font-semibold text-sm">{selectedSalary.staffName || 'N/A'}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                      <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Name</span>
+                      <span style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.staffName || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                      <span className="text-gray-600 font-medium text-sm">Role</span>
-                      <span className="text-blue-600 font-semibold text-sm">{selectedSalary.staffName || 'N/A'}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                      <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Role</span>
+                      <span style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.875rem' }}>{staff.find(s => s.id === selectedSalary.staffId)?.role || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                      <span className="text-gray-600 font-medium text-sm">Phone</span>
-                      <span className="text-blue-600 font-semibold text-sm">Not specified</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                      <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Phone</span>
+                      <span style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.875rem' }}>{staff.find(s => s.id === selectedSalary.staffId)?.phone || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
                 
                 {/* Salary Information Card */}
-                <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                      <i className="fas fa-calendar-alt text-base"></i>
+                <div 
+                  style={{
+                    background: 'var(--white)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '1.5rem',
+                    boxShadow: 'var(--shadow-md)',
+                    border: '1px solid var(--gray-200)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                    <div 
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        background: 'var(--success-light)',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--success-color)'
+                      }}
+                    >
+                      <i className="fas fa-calendar-alt" style={{ fontSize: '1rem' }}></i>
                     </div>
-                    <h3 className="m-0 text-blue-600 text-xl font-semibold">Salary Information</h3>
+                    <h3 style={{ margin: 0, color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: '600' }}>Salary Information</h3>
                   </div>
                   
-                  <div className="flex flex-col gap-3">
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                      <span className="text-gray-600 font-medium text-sm">Month</span>
-                      <span className="text-blue-600 font-semibold text-sm">{selectedSalary.month} {selectedSalary.year}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                      <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Month</span>
+                      <span style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.paymentDate ? new Date(selectedSalary.paymentDate).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit' 
+                      }).replace('/', '-') : `${selectedSalary.month} ${selectedSalary.year}`}</span>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                      <span className="text-gray-600 font-medium text-sm">Status</span>
-                      <span className={`px-3 py-1 rounded-md text-xs font-medium ${
-                        selectedSalary.status === 'paid' 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-yellow-500 text-white'
-                      }`}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                      <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Status</span>
+                      <span style={{ background: selectedSalary.status === 'paid' ? 'var(--success-color)' : 'var(--warning-color)', color: 'var(--white)', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-md)', fontSize: '0.75rem', fontWeight: '500' }}>
                         {selectedSalary.status || 'pending'}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                      <span className="text-gray-600 font-medium text-sm">Payment Date</span>
-                      <span className="text-blue-600 font-semibold text-sm">Not specified</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                      <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Payment Date</span>
+                      <span style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.paymentDate ? new Date(selectedSalary.paymentDate).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      }) : 'Not specified'}</span>
                     </div>
                   </div>
                 </div>
               </div>
               
               {/* Financial Details Card */}
-              <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200 mt-6">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                    <i className="fas fa-calculator text-base"></i>
+              <div 
+                style={{
+                  background: 'var(--white)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '1.5rem',
+                  boxShadow: 'var(--shadow-md)',
+                  border: '1px solid var(--gray-200)',
+                  marginTop: '1.5rem'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                  <div 
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      background: 'var(--info-light)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--info-color)'
+                    }}
+                  >
+                    <i className="fas fa-calculator" style={{ fontSize: '1rem' }}></i>
                   </div>
-                  <h3 className="m-0 text-blue-600 text-xl font-semibold">Financial Details</h3>
+                  <h3 style={{ margin: 0, color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: '600' }}>Financial Details</h3>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <span className="text-gray-600 font-medium text-sm">Base Amount</span>
-                    <span className="text-blue-600 font-semibold text-sm">Rs. {selectedSalary.basicSalary?.toLocaleString() || '0'}</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Base Amount</span>
+                    <span style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.875rem' }}>Rs. {Math.round(selectedSalary.basicSalary || 0).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <span className="text-gray-600 font-medium text-sm">Total Allowance</span>
-                    <span className="text-green-600 font-semibold text-sm">Rs. 0</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Total Allowance</span>
+                    <span style={{ color: 'var(--success-color)', fontWeight: '600', fontSize: '0.875rem' }}>Rs. {Math.round(typeof selectedSalary.allowances === 'number' ? selectedSalary.allowances : 0).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <span className="text-gray-600 font-medium text-sm">Total Deduction</span>
-                    <span className="text-red-600 font-semibold text-sm">Rs. 0</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Total Deduction</span>
+                    <span style={{ color: 'var(--error-color)', fontWeight: '600', fontSize: '0.875rem' }}>Rs. {Math.round(typeof selectedSalary.deductions === 'number' ? selectedSalary.deductions : 0).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-green-100 rounded-md border-2 border-green-500">
-                    <span className="text-green-600 font-semibold text-base">Net Salary</span>
-                    <span className="text-green-600 font-bold text-lg">Rs. {selectedSalary.totalSalary?.toLocaleString() || '0'}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--success-light)', borderRadius: 'var(--radius-md)', border: '2px solid var(--success-color)' }}>
+                    <span style={{ color: 'var(--success-color)', fontWeight: '600', fontSize: '1rem' }}>Net Salary</span>
+                    <span style={{ color: 'var(--success-color)', fontWeight: '700', fontSize: '1.125rem' }}>Rs. {Math.round(selectedSalary.totalSalary || 0).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
               
               {/* Attendance Summary Card */}
-              <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200 mt-6">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
-                    <i className="fas fa-calendar-check text-base"></i>
+              <div 
+                style={{
+                  background: 'var(--white)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '1.5rem',
+                  boxShadow: 'var(--shadow-md)',
+                  border: '1px solid var(--gray-200)',
+                  marginTop: '1.5rem'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                  <div 
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      background: 'var(--warning-light)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--warning-color)'
+                    }}
+                  >
+                    <i className="fas fa-calendar-check" style={{ fontSize: '1rem' }}></i>
                   </div>
-                  <h3 className="m-0 text-blue-600 text-xl font-semibold">Attendance Summary</h3>
+                  <h3 style={{ margin: 0, color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: '600' }}>Attendance Summary</h3>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <span className="text-gray-600 font-medium text-sm">Working Days</span>
-                    <span className="text-blue-600 font-semibold text-sm">0</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--gray-600)', fontWeight: '500', fontSize: '0.875rem' }}>Working Days</span>
+                    <span style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.workingDays || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-green-100 rounded-md">
-                    <span className="text-green-600 font-medium text-sm">Present Days</span>
-                    <span className="text-green-600 font-semibold text-sm">0</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--success-light)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--success-color)', fontWeight: '500', fontSize: '0.875rem' }}>Present Days</span>
+                    <span style={{ color: 'var(--success-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.presentDays || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-red-100 rounded-md">
-                    <span className="text-red-600 font-medium text-sm">Absent Days</span>
-                    <span className="text-red-600 font-semibold text-sm">0</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--error-light)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--error-color)', fontWeight: '500', fontSize: '0.875rem' }}>Absent Days</span>
+                    <span style={{ color: 'var(--error-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.absentDays || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-yellow-100 rounded-md">
-                    <span className="text-yellow-600 font-medium text-sm">Leave Days</span>
-                    <span className="text-yellow-600 font-semibold text-sm">0</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--warning-light)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--warning-color)', fontWeight: '500', fontSize: '0.875rem' }}>Leave Days</span>
+                    <span style={{ color: 'var(--warning-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.leaveDays || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-blue-100 rounded-md">
-                    <span className="text-blue-600 font-medium text-sm">Late Days</span>
-                    <span className="text-blue-600 font-semibold text-sm">0</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--info-light)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--info-color)', fontWeight: '500', fontSize: '0.875rem' }}>Late Days</span>
+                    <span style={{ color: 'var(--info-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.lateDays || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-purple-100 rounded-md">
-                    <span className="text-purple-600 font-medium text-sm">Half Days</span>
-                    <span className="text-purple-600 font-semibold text-sm">0</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--purple-light)', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ color: 'var(--purple-color)', fontWeight: '500', fontSize: '0.875rem' }}>Half Days</span>
+                    <span style={{ color: 'var(--purple-color)', fontWeight: '600', fontSize: '0.875rem' }}>{selectedSalary.halfDays || 0}</span>
                   </div>
                 </div>
               </div>
               
               {/* Notes Card */}
-              <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200 mt-6">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600">
-                    <i className="fas fa-sticky-note text-base"></i>
+              <div 
+                style={{
+                  background: 'var(--white)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '1.5rem',
+                  boxShadow: 'var(--shadow-md)',
+                  border: '1px solid var(--gray-200)',
+                  marginTop: '1.5rem'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                  <div 
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      background: 'var(--gray-light)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--gray-color)'
+                    }}
+                  >
+                    <i className="fas fa-sticky-note" style={{ fontSize: '1rem' }}></i>
                   </div>
-                  <h3 className="m-0 text-blue-600 text-xl font-semibold">Notes</h3>
+                  <h3 style={{ margin: 0, color: 'var(--primary-color)', fontSize: '1.25rem', fontWeight: '600' }}>Notes</h3>
                 </div>
                 
-                <div className="bg-gray-50 p-4 rounded-md border-l-4 border-blue-600">
-                  <p className="text-gray-700 italic m-0 leading-relaxed">No notes available</p>
+                <div 
+                  style={{
+                    background: 'var(--gray-50)',
+                    padding: '1rem',
+                    borderRadius: 'var(--radius-md)',
+                    borderLeft: '4px solid var(--primary-color)'
+                  }}
+                >
+                  <p style={{ color: 'var(--gray-700)', fontStyle: 'italic', margin: 0, lineHeight: '1.6' }}>{selectedSalary.notes || 'No notes available'}</p>
                 </div>
               </div>
             </div>
@@ -3864,15 +4692,15 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && staffToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[999999] max-w-none">
+        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-xs flex items-center justify-center z-[9999999] max-w-none">
           <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
             <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>
               <button 
                 onClick={() => setShowDeleteConfirm(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
+                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
               >
-                &times;
+                ×
               </button>
             </div>
             <div style={{padding: '1.5rem'}}>
@@ -3903,15 +4731,15 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
 
       {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[999999] max-w-none">
+        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-xs flex items-center justify-center z-[9999999] max-w-none">
           <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
             <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Bulk Delete</h3>
               <button 
                 onClick={() => setShowBulkDeleteConfirm(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
+                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
               >
-                &times;
+                ×
               </button>
             </div>
             <div style={{padding: '1.5rem'}}>
@@ -3957,12 +4785,12 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 9999,
+            zIndex: 9999999,
             padding: '1rem'
           }}
           onClick={() => setShowStaffDetails(false)}
@@ -4001,23 +4829,7 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
               </div>
               <button 
                 onClick={() => setShowStaffDetails(false)}
-                style={{
-                  background: 'var(--primary-color)',
-                  color: 'var(--white)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '36px',
-                  height: '36px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.125rem',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'var(--primary-color)'}
+                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
               >
                 x
               </button>
@@ -4033,7 +4845,7 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                 background: 'var(--gray-50)',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
-                WebkitScrollbar: { display: 'none' }
+                WebkitScrollbar: { display: 'none' } as any
               }}
             >
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
@@ -4268,12 +5080,12 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 999999,
+            zIndex: 9999999,
             padding: '1rem'
           }}
           onClick={handleCloseMarkAttendanceModal}
@@ -4857,7 +5669,7 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
       {/* Settings Sidebar */}
       {showSettingsSidebar && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex justify-end"
+          className="fixed inset-0 bg-black bg-opacity-20 z-[9999999] flex justify-end"
           onClick={handleToggleSettings}
         >
           <div 
@@ -5130,12 +5942,12 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 9999,
+            zIndex: 9999999,
             padding: '1rem'
           }}
           onClick={handleCloseAttendanceCalendar}
@@ -5174,26 +5986,21 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
               }}>
                 {selectedStaffForCalendar.name} - Attendance Calendar
               </h3>
-              <span 
-                className="close"
+              <button 
                 onClick={handleCloseAttendanceCalendar}
-                style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: 'var(--gray-500)',
-                  cursor: 'pointer',
-                  lineHeight: '1',
-                  padding: '0.25rem'
-                }}
+                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
               >
                 ×
-              </span>
+              </button>
             </div>
             
             <div style={{ 
               padding: '1.5rem',
               overflowY: 'auto',
-              flex: 1
+              flex: 1,
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitScrollbar: { display: 'none' } as any
             }}>
               <div style={{
                 display: 'grid',
@@ -5714,6 +6521,84 @@ Mike Johnson,Receptionist,1122334455,mike@email.com,2025-01-03,active,25000,male
                   </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Salary Delete Confirmation Modal */}
+      {showSalaryDeleteConfirm && salaryToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-xs flex items-center justify-center z-[9999999] max-w-none">
+          <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
+            <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>
+              <button 
+                onClick={() => setShowSalaryDeleteConfirm(false)}
+                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
+              >
+                ×
+              </button>
+            </div>
+            <div style={{padding: '1.5rem'}}>
+              <p style={{marginBottom: '1.5rem', color: '#374151', lineHeight: '1.5'}}>
+                Are you sure you want to delete the salary record for <strong>"{salaryToDelete.staffName}"</strong> ({salaryToDelete.month} {salaryToDelete.year})? 
+                This action cannot be undone.
+              </p>
+              <div className="form-actions flex gap-3 justify-end">
+                <button 
+                  type="button" 
+                  onClick={() => setShowSalaryDeleteConfirm(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  onClick={confirmDeleteSalary}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Salary Delete Confirmation Modal */}
+      {showBulkSalaryDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-xs flex items-center justify-center z-[9999999] max-w-none">
+          <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
+            <div className="modal-header flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>
+              <button 
+                onClick={() => setShowBulkSalaryDeleteConfirm(false)}
+                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
+              >
+                ×
+              </button>
+            </div>
+            <div style={{padding: '1.5rem'}}>
+              <p style={{marginBottom: '1.5rem', color: '#374151', lineHeight: '1.5'}}>
+                Are you sure you want to delete <strong>{selectedSalaries.size}</strong> selected salary records? 
+                This action cannot be undone.
+              </p>
+              <div className="form-actions flex gap-3 justify-end">
+                <button 
+                  type="button" 
+                  onClick={() => setShowBulkSalaryDeleteConfirm(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  onClick={confirmBulkDeleteSalaries}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Delete All
+                </button>
               </div>
             </div>
           </div>
