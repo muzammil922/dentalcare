@@ -3434,11 +3434,10 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                             setSalaryFilter('all')
                             setShowSalaryFilterDropdown(false)
                           }}
-                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
-                            salaryFilter === 'all' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            salaryFilter === 'all' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-blue-50'
                           }`}
                         >
-                          <DollarSign className="w-4 h-4" />
                           All Salaries
                         </button>
                         <button
@@ -3446,11 +3445,10 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                             setSalaryFilter('paid')
                             setShowSalaryFilterDropdown(false)
                           }}
-                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
-                            salaryFilter === 'paid' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            salaryFilter === 'paid' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-blue-50'
                           }`}
                         >
-                          <CheckCircle className="w-4 h-4" />
                           Paid Salaries
                         </button>
                         <button
@@ -3458,11 +3456,10 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                             setSalaryFilter('pending')
                             setShowSalaryFilterDropdown(false)
                           }}
-                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
-                            salaryFilter === 'pending' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                            salaryFilter === 'pending' ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-blue-50'
                           }`}
                         >
-                          <Clock className="w-4 h-4" />
                           Pending Salaries
                         </button>
                       </div>

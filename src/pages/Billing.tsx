@@ -565,13 +565,12 @@ Mike Johnson,2025-01-15,2025-01-22,filling,Cavity filling,2,800,0,pending,cash,E
                         setCurrentFilter(filter.value)
                     setShowFilterDropdown(false)
                   }}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                      className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
                         currentFilter === filter.value
                           ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          : 'text-gray-700 hover:bg-blue-50'
                       }`}
                     >
-                      <i className={filter.icon}></i>
                       {filter.label}
                     </button>
                   ))}

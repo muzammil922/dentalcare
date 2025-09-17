@@ -1747,16 +1747,13 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                             setCurrentFilter(filter.value)
                             setShowFilterDropdown(false)
                           }}
-                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
                   currentFilter === filter.value
                               ? 'bg-blue-50 text-blue-600'
-                              : 'text-gray-700 hover:bg-gray-50'
+                              : 'text-gray-700 hover:bg-blue-50'
                 }`}
               >
-                          <Users className="w-4 h-4" />
                 {filter.label}
-                          {filter.value === 'active' && <CheckCircle className="w-4 h-4 ml-auto text-green-500" />}
-                          {filter.value === 'inactive' && <XCircle className="w-4 h-4 ml-auto text-red-500" />}
               </button>
             ))}
                     </div>
@@ -2178,16 +2175,13 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                             setAppointmentCurrentFilter(filter.value as 'all' | 'scheduled' | 'confirmed' | 'completed' | 'cancelled')
                             setShowAppointmentFilterDropdown(false)
                           }}
-                          className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm rounded transition-colors ${
+                          className={`w-full px-3 py-2 text-left text-sm rounded transition-colors ${
                             appointmentCurrentFilter === filter.value
                               ? 'bg-blue-50 text-blue-600'
-                              : 'text-gray-700 hover:bg-gray-50'
+                              : 'text-gray-700 hover:bg-blue-50'
                           }`}
                         >
-                          <Calendar className="w-4 h-4" />
                           {filter.label}
-                          {filter.value === 'confirmed' && <CheckCircle className="w-4 h-4 ml-auto text-green-500" />}
-                          {filter.value === 'cancelled' && <XCircle className="w-4 h-4 ml-auto text-red-500" />}
                         </button>
                       ))}
                     </div>
