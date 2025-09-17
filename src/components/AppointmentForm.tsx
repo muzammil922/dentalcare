@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { motion, AnimatePresence } from 'framer-motion'
 import { X, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Appointment, Patient } from '@/stores/useAppStore'
 import { cn, getCurrentKarachiTime } from '@/lib/utils'
@@ -325,15 +326,22 @@ export default function AppointmentForm({ appointment, patients, appointments, o
   }
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4" 
-      onClick={onClose}
-    >
-      <div
-        ref={modalRef}
-        className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide"
-        onClick={(e) => e.stopPropagation()}
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4" 
+        onClick={onClose}
       >
+        <motion.div
+          ref={modalRef}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-hide"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-800">
@@ -341,9 +349,9 @@ export default function AppointmentForm({ appointment, patients, appointments, o
             </h2>
             <button
               onClick={onClose}
-            className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
+              className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
             >
-            <X className="w-6 h-6 text-white" />
+              ×
             </button>
           </div>
 
@@ -660,19 +668,20 @@ export default function AppointmentForm({ appointment, patients, appointments, o
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                className="btn btn-secondary flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg transition-colors"
               >
-                Cancel
+                <span>Cancel</span>
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="btn btn-primary flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {appointment ? 'Update Appointment' : 'Schedule Appointment'}
+                <span>{appointment ? 'Update Appointment' : 'Schedule Appointment'}</span>
               </button>
             </div>
           </form>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   )
 }

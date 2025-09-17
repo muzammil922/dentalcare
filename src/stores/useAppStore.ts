@@ -46,6 +46,7 @@ export interface Invoice {
   total: number
   status: 'pending' | 'paid' | 'overdue' | 'cancelled'
   paymentMethod?: string
+  receiptNumber?: string
   notes?: string
   createdAt: string
 }
@@ -189,7 +190,7 @@ interface AppState {
   currentPatientPage: number
   appointmentsPerPage: number
   currentAppointmentPage: number
-  billingPerPage: number
+  invoicePerPage: number
   
   // Selected items
   selectedAppointments: Set<string>
@@ -253,7 +254,7 @@ interface AppState {
   setCurrentPatientPage: (page: number) => void
   setAppointmentsPerPage: (perPage: number) => void
   setCurrentAppointmentPage: (page: number) => void
-  setBillingPerPage: (perPage: number) => void
+  setInvoicePerPage: (perPage: number) => void
   
   // Selection actions
   toggleSelectedAppointment: (id: string) => void
@@ -432,7 +433,7 @@ export const useAppStore = create<AppState>()(
         currentPatientPage: 1,
         appointmentsPerPage: 10,
         currentAppointmentPage: 1,
-        billingPerPage: 10,
+        invoicePerPage: 10,
         
         selectedAppointments: new Set(),
         selectedInvoices: new Set(),
@@ -608,7 +609,7 @@ export const useAppStore = create<AppState>()(
         setCurrentPatientPage: (page) => set({ currentPatientPage: page }),
         setAppointmentsPerPage: (perPage) => set({ appointmentsPerPage: perPage }),
         setCurrentAppointmentPage: (page) => set({ currentAppointmentPage: page }),
-        setBillingPerPage: (perPage) => set({ billingPerPage: perPage }),
+        setInvoicePerPage: (perPage) => set({ invoicePerPage: perPage }),
         
         // Selection actions
         toggleSelectedAppointment: (id) => set((state) => {

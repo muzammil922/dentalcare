@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, DollarSign, Calendar, Calculator, Users, Clock, CheckCircle } from 'lucide-react'
+import { X, DollarSign, Calendar, Calculator, Users, Clock, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Salary, Staff } from '@/stores/useAppStore'
 import { cn, getCurrentKarachiTime } from '@/lib/utils'
 import { useState, useEffect } from 'react'
@@ -47,6 +47,12 @@ export default function SalaryForm({ salary, staffMembers, existingSalaries, onS
     halfDays: 0,
     workingDays: 0
   })
+
+  // Calendar states
+  const [showPaymentDateCalendar, setShowPaymentDateCalendar] = useState(false)
+  const [currentPaymentDateMonth, setCurrentPaymentDateMonth] = useState(getCurrentKarachiTime())
+  const [showPaymentDateYearDropdown, setShowPaymentDateYearDropdown] = useState(false)
+  const [showPaymentDateMonthDropdown, setShowPaymentDateMonthDropdown] = useState(false)
 
   // Function to check if salary already exists for this staff member and month/year
   const checkDuplicateSalary = (staffId: string, month: string, year: number) => {
@@ -190,6 +196,106 @@ export default function SalaryForm({ salary, staffMembers, existingSalaries, onS
     onClose()
   }
 
+  // Calendar utility functions
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  }
+
+  const generateYears = () => {
+    const currentYear = getCurrentKarachiTime().getFullYear()
+    return Array.from({ length: 6 }, (_, i) => currentYear + i)
+  }
+
+  const generateMonths = () => {
+    return [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+  }
+
+  const navigatePaymentDateMonth = (direction: 'prev' | 'next') => {
+    setCurrentPaymentDateMonth(prev => {
+      const newDate = new Date(prev)
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1)
+      } else {
+        newDate.setMonth(prev.getMonth() + 1)
+      }
+      return newDate
+    })
+  }
+
+  const selectPaymentDateMonth = (monthIndex: number) => {
+    setCurrentPaymentDateMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setMonth(monthIndex)
+      return newDate
+    })
+    setShowPaymentDateMonthDropdown(false)
+  }
+
+  const selectPaymentDateYear = (year: number) => {
+    setCurrentPaymentDateMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setFullYear(year)
+      return newDate
+    })
+    setShowPaymentDateYearDropdown(false)
+  }
+
+  const selectPaymentDate = (day: number) => {
+    const year = currentPaymentDateMonth.getFullYear()
+    const month = currentPaymentDateMonth.getMonth()
+    const selectedDate = new Date(year, month, day)
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    
+    setValue('paymentDate', formattedDate)
+    setShowPaymentDateCalendar(false)
+  }
+
+  const isSelectedPaymentDate = (day: number) => {
+    const selectedDate = watch('paymentDate')
+    if (!selectedDate) return false
+    
+    const year = currentPaymentDateMonth.getFullYear()
+    const month = currentPaymentDateMonth.getMonth()
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    return selectedDate === formattedDate
+  }
+
+  const isToday = (day: number, month: Date) => {
+    const today = getCurrentKarachiTime()
+    return day === today.getDate() && 
+           month.getMonth() === today.getMonth() && 
+           month.getFullYear() === today.getFullYear()
+  }
+
+  // Handle click outside to close calendar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
+      
+      // Check if clicking outside calendar elements
+      const isCalendarElement = (target as Element).closest?.('.calendar-container')
+      const isDropdownElement = (target as Element).closest?.('.dropdown-container')
+      
+      if (!isCalendarElement && !isDropdownElement) {
+        setShowPaymentDateCalendar(false)
+        setShowPaymentDateYearDropdown(false)
+        setShowPaymentDateMonthDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -209,7 +315,7 @@ export default function SalaryForm({ salary, staffMembers, existingSalaries, onS
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-md flex items-center justify-center z-[9999] p-4"
+        className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
         onClick={onClose}
       >
         <motion.div
@@ -230,9 +336,9 @@ export default function SalaryForm({ salary, staffMembers, existingSalaries, onS
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
             >
-              <X className="w-6 h-6" />
+              ×
             </button>
           </div>
 
@@ -289,11 +395,122 @@ export default function SalaryForm({ salary, staffMembers, existingSalaries, onS
                   <div className="relative">
                     <input
                       {...register('paymentDate')}
-                      type="date"
+                      type="text"
                       id="paymentDate"
-                      className={cn('w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500', errors.paymentDate && 'border-red-500')}
+                      readOnly
+                      onClick={() => setShowPaymentDateCalendar(!showPaymentDateCalendar)}
+                      className={cn('w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer', errors.paymentDate && 'border-red-500')}
                     />
-                    <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 cursor-pointer" />
+                    
+                    {/* Custom Calendar */}
+                    {showPaymentDateCalendar && (
+                      <div className="calendar-container absolute top-full left-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 p-4 z-50 transform -rotate-1">
+                        {/* Calendar Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <button
+                            type="button"
+                            onClick={() => navigatePaymentDateMonth('prev')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5 text-gray-600" />
+                          </button>
+                          
+                          <div className="flex items-center gap-2">
+                            {/* Month Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowPaymentDateMonthDropdown(!showPaymentDateMonthDropdown)}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentPaymentDateMonth.toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Karachi' })}
+                              </button>
+                              {showPaymentDateMonthDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto scrollbar-hide">
+                                  {generateMonths().map((month, index) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      onClick={() => selectPaymentDateMonth(index)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {month}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Year Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowPaymentDateYearDropdown(!showPaymentDateYearDropdown)}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentPaymentDateMonth.getFullYear()}
+                              </button>
+                              {showPaymentDateYearDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto w-20 scrollbar-hide">
+                                  {generateYears().map((year) => (
+                                    <button
+                                      key={year}
+                                      type="button"
+                                      onClick={() => selectPaymentDateYear(year)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {year}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => navigatePaymentDateMonth('next')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5 text-gray-600" />
+                          </button>
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                            <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-1">
+                          {/* Empty cells for days before the first day of the month */}
+                          {Array.from({ length: getFirstDayOfMonth(currentPaymentDateMonth) }).map((_, index) => (
+                            <div key={`empty-${index}`} className="h-8"></div>
+                          ))}
+                          
+                          {/* Days of the month */}
+                          {Array.from({ length: getDaysInMonth(currentPaymentDateMonth) }, (_, i) => i + 1).map(day => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => selectPaymentDate(day)}
+                              className={cn(
+                                'h-8 w-8 rounded-full text-sm font-medium transition-colors hover:bg-gray-100',
+                                isToday(day, currentPaymentDateMonth) && 'bg-blue-500 text-white hover:bg-blue-600',
+                                isSelectedPaymentDate(day) && !isToday(day, currentPaymentDateMonth) && 'bg-blue-500 text-white hover:bg-blue-600',
+                                !isToday(day, currentPaymentDateMonth) && !isSelectedPaymentDate(day) && 'text-gray-800 hover:bg-gray-100'
+                              )}
+                            >
+                              {day}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {errors.paymentDate && (
                     <span className="text-red-500 text-sm">{errors.paymentDate.message}</span>
@@ -586,15 +803,15 @@ export default function SalaryForm({ salary, staffMembers, existingSalaries, onS
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="btn btn-secondary flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg transition-colors"
               >
-                Cancel
+                <span>Cancel</span>
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="btn btn-primary flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {salary ? 'Update Salary Record' : 'Add Salary Record'}
+                <span>{salary ? 'Update Salary Record' : 'Add Salary Record'}</span>
               </button>
             </div>
           </form>

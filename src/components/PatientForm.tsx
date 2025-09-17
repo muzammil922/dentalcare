@@ -292,9 +292,9 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
             </h2>
             <button
               onClick={onClose}
-              className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
+              className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
             >
-              <X className="w-6 h-6 text-white" />
+              ×
             </button>
           </div>
 
@@ -713,16 +713,16 @@ export default function PatientForm({ patient, onClose, onSave }: PatientFormPro
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                className="btn btn-secondary flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg transition-colors"
               >
-                Cancel
+                <span>Cancel</span>
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="btn btn-primary flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {isSubmitting ? 'Saving...' : patient ? 'Update Patient' : 'Save Patient'}
+                <span>{isSubmitting ? 'Saving...' : patient ? 'Update Patient' : 'Save Patient'}</span>
               </button>
             </div>
           </form>

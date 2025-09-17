@@ -3040,7 +3040,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
           <div key={`staff-header-${refreshTrigger}`} className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
             <div className="flex items-center justify-between pb-4">
             <div className="text-gray-700 font-semibold text-base">
-                Total Salary Records:
+                Total Staff:
                  <span className="text-blue-600">{filteredStaff.length}</span>
               </div>
               <div className="flex items-center gap-4">
@@ -3882,7 +3882,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                   <h3 className="text-lg font-semibold text-gray-900">Active Staff: {filteredAttendanceStaff.length}</h3>
                 </div>
                 <div className="text-sm text-gray-600">
-                  Showing {((currentAttendancePage - 1) * attendancePerPage) + 1}-{Math.min(((currentAttendancePage - 1) * attendancePerPage) + attendancePerPage, filteredAttendanceStaff.length)} of {filteredAttendanceStaff.length} active staff members
+                  Showing {((currentAttendancePage - 1) * attendancePerPage) + 1}-{Math.min(((currentAttendancePage - 1) * attendancePerPage) + attendancePerPage, filteredAttendanceStaff.length)} of {filteredAttendanceStaff.length} active staff attendance
                 </div>
               </div>
             </div>
@@ -4420,7 +4420,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
               </div>
               <button 
                 onClick={() => setShowSalaryModal(false)}
-                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
+                className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
               >
                 ×
               </button>
@@ -4698,7 +4698,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
               <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Delete</h3>
               <button 
                 onClick={() => setShowDeleteConfirm(false)}
-                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
+                className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
               >
                 ×
               </button>
@@ -4829,9 +4829,9 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
               </div>
               <button 
                 onClick={() => setShowStaffDetails(false)}
-                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
+                className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
               >
-                x
+                ×
               </button>
             </div>
             
@@ -5988,7 +5988,7 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
               </h3>
               <button 
                 onClick={handleCloseAttendanceCalendar}
-                className="bg-blue-600 text-white border-none rounded-full w-9 h-9 cursor-pointer flex items-center justify-center text-lg transition-all duration-300 hover:bg-blue-700"
+                className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
               >
                 ×
               </button>

@@ -29,12 +29,12 @@ import { useAppStore } from '@/stores/useAppStore'
 import { formatDate, formatTime, formatCurrency } from '@/lib/utils'
 import PatientForm from '@/components/PatientForm'
 import AppointmentForm from '@/components/AppointmentForm'
-import Billing from '@/pages/Billing'
+import Invoice from '@/pages/Billing'
 import { Patient, Appointment } from '@/stores/useAppStore'
 import jsPDF from 'jspdf'
 
 function Patients() {
-  const [mainTab, setMainTab] = useState<'patient' | 'appointment' | 'billing'>('patient' as const)
+  const [mainTab, setMainTab] = useState<'patient' | 'appointment' | 'invoice'>('patient' as const)
   const [currentFilter, setCurrentFilter] = useState('all')
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [showImportDropdown, setShowImportDropdown] = useState(false)
@@ -1672,7 +1672,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
   // Loading states for refresh buttons
   const [isRefreshingPatients, setIsRefreshingPatients] = useState(false)
   const [isRefreshingAppointments, setIsRefreshingAppointments] = useState(false)
-  const [isRefreshingBilling, setIsRefreshingBilling] = useState(false)
+  const [isRefreshingInvoice, setIsRefreshingInvoice] = useState(false)
 
   return (
     <div className="p-6">
@@ -1706,15 +1706,15 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             Appointment
           </button>
           <button
-            onClick={() => setMainTab('billing')}
+            onClick={() => setMainTab('invoice')}
             className={`flex items-center gap-2 px-4 py-2 border-none rounded-lg font-medium cursor-pointer ${
-              mainTab === 'billing'
+              mainTab === 'invoice'
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'bg-transparent text-gray-700 hover:bg-gray-50'
               }`}
             >
             <FileText className="w-4 h-4" />
-            Billing
+            Invoice
           </button>
         </div>
       </div>
@@ -1894,7 +1894,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
           <div key={`patients-header-${refreshTrigger}`} className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
             <div className="flex items-center justify-between pb-4">
             <div className="text-gray-700 font-semibold text-base">
-                Total Salary Records: <span className="text-blue-600">{filteredPatients.length}</span>
+                Total Patients: <span className="text-blue-600">{filteredPatients.length}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-gray-600 text-sm">
@@ -2336,7 +2336,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
           <div key={`appointments-container-${appointmentRefreshTrigger}`} className=" rounded-lg ">
             <div className="flex items-center justify-between pb-4">
             <div className="text-gray-700 font-semibold text-base">
-                Total Salary Records: <span className="text-blue-600">{filteredAppointments.length}</span>
+                Total Appointments: <span className="text-blue-600">{filteredAppointments.length}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-gray-600 text-sm">
@@ -2773,12 +2773,12 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
               <div className="modal-header flex items-center justify-between p-4 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-800 m-0">Confirm Delete</h3>
-                <span 
-                  className="close text-2xl text-gray-500 hover:text-gray-700 cursor-pointer font-bold"
+                <button
+                  className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                   onClick={cancelDelete}
                 >
-                  &times;
-                </span>
+                  ×
+                </button>
               </div>
               <div style={{padding: '1.5rem'}}>
                 <p style={{marginBottom: '1.5rem', color: '#374151', lineHeight: '1.5'}}>
@@ -2812,12 +2812,12 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
               <div className="modal-header flex items-center justify-between p-4 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-800 m-0">Confirm Bulk Delete</h3>
-                <span 
-                  className="close text-2xl text-gray-500 hover:text-gray-700 cursor-pointer font-bold"
+                <button
+                  className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                   onClick={cancelBulkDelete}
                 >
-                  &times;
-                </span>
+                  ×
+                </button>
               </div>
               <div style={{padding: '1.5rem'}}>
                 <p style={{marginBottom: '1.5rem', color: '#374151', lineHeight: '1.5'}}>
@@ -2857,12 +2857,12 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             <div className="modal-content bg-white rounded-xl shadow-2xl" style={{maxWidth: '400px', width: '90%'}}>
               <div className="modal-header flex items-center justify-between p-4 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-800 m-0">Confirm Bulk Delete Appointments</h3>
-                <span 
-                  className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
+                <button
+                  className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                   onClick={cancelBulkDeleteAppointments}
                 >
-                  &times;
-                </span>
+                  ×
+                </button>
             </div>
               <div style={{padding: '1.5rem'}}>
                 <p style={{marginBottom: '1.5rem', color: '#374151', lineHeight: '1.5'}}>
@@ -3003,9 +3003,9 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
               </div>
               <button
                 onClick={() => setShowPatientDetails(false)}
-                className="w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors duration-200"
+                className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
               >
-                <X className="w-5 h-5" />
+                ×
               </button>
             </div>
 
@@ -3216,9 +3216,9 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
             <h3 className="text-xl font-bold text-gray-800 m-0">Confirm Bulk Delete</h3>
             <button 
               onClick={() => setShowBulkDeleteConfirm(false)}
-              className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
+              className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                 >
-                  &times;
+                  ×
             </button>
               </div>
               <div style={{padding: '1.5rem'}}>
@@ -3273,9 +3273,9 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                 </div>
                 <button
                   onClick={() => setShowAppointmentDetails(false)}
-                  className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
+                  className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                 >
-                  <X className="w-5 h-5 bg-blue-600 " />
+                  ×
                 </button>
               </div>
 
@@ -3390,9 +3390,9 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
       )
     }
 
-      {/* Billing Tab Content */}
-      {mainTab === 'billing' && (
-        <Billing />
+      {/* Invoice Tab Content */}
+      {mainTab === 'invoice' && (
+        <Invoice />
       )}
     </div>
   );

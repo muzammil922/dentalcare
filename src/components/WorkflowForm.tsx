@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 const workflowSchema = z.object({
   name: z.string().min(1, 'Workflow name is required'),
   description: z.string().optional(),
-  type: z.enum(['appointment_reminder', 'follow_up', 'inventory_alert', 'billing_reminder', 'custom']),
+  type: z.enum(['appointment_reminder', 'follow_up', 'inventory_alert', 'invoice_reminder', 'custom']),
   status: z.enum(['active', 'paused', 'draft']),
   trigger: z.enum(['daily', 'weekly', 'monthly', 'on_event', 'manual']),
   triggerTime: z.string().optional(),
@@ -71,7 +71,7 @@ export default function WorkflowForm({ workflow, onSave, onClose }: WorkflowForm
     { value: 'appointment_reminder', label: 'Appointment Reminder', icon: Calendar },
     { value: 'follow_up', label: 'Patient Follow-up', icon: Clock },
     { value: 'inventory_alert', label: 'Inventory Alert', icon: Settings },
-    { value: 'billing_reminder', label: 'Billing Reminder', icon: Zap },
+    { value: 'invoice_reminder', label: 'Invoice Reminder', icon: Zap },
     { value: 'custom', label: 'Custom Workflow', icon: Settings }
   ]
 

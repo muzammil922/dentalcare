@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
-import Billing from "./pages/Billing";
+import Invoice from "./pages/Billing";
 import Staff from "./pages/Staff";
 import Inventory from "./pages/Inventory";
 import Feedback from "./pages/Feedback";
@@ -49,10 +49,10 @@ function App() {
             }
           />
           <Route
-            path="/billing"
+            path="/invoice"
             element={
               <AnimatedRoute>
-                <Billing />
+                <Invoice />
               </AnimatedRoute>
             }
           />

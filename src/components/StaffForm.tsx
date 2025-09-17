@@ -1,8 +1,9 @@
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, User, Phone, Mail, Calendar, MapPin } from 'lucide-react'
+import { User, Calendar, MapPin, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Staff } from '@/stores/useAppStore'
 import { cn, getCurrentKarachiTime } from '@/lib/utils'
 
@@ -35,11 +36,19 @@ interface StaffFormProps {
 }
 
 export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
+  // Calendar states
+  const [showJoinDateCalendar, setShowJoinDateCalendar] = useState(false)
+  const [currentJoinDateMonth, setCurrentJoinDateMonth] = useState(getCurrentKarachiTime())
+  const [showJoinDateYearDropdown, setShowJoinDateYearDropdown] = useState(false)
+  const [showJoinDateMonthDropdown, setShowJoinDateMonthDropdown] = useState(false)
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    setValue,
+    watch
   } = useForm<StaffFormData>({
     resolver: zodResolver(staffSchema),
     defaultValues: {
@@ -67,6 +76,106 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
     onSave(data)
     reset()
   }
+
+  // Calendar utility functions
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  }
+
+  const generateYears = () => {
+    const currentYear = getCurrentKarachiTime().getFullYear()
+    return Array.from({ length: 6 }, (_, i) => currentYear + i)
+  }
+
+  const generateMonths = () => {
+    return [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+  }
+
+  const navigateJoinDateMonth = (direction: 'prev' | 'next') => {
+    setCurrentJoinDateMonth(prev => {
+      const newDate = new Date(prev)
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1)
+      } else {
+        newDate.setMonth(prev.getMonth() + 1)
+      }
+      return newDate
+    })
+  }
+
+  const selectJoinDateMonth = (monthIndex: number) => {
+    setCurrentJoinDateMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setMonth(monthIndex)
+      return newDate
+    })
+    setShowJoinDateMonthDropdown(false)
+  }
+
+  const selectJoinDateYear = (year: number) => {
+    setCurrentJoinDateMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setFullYear(year)
+      return newDate
+    })
+    setShowJoinDateYearDropdown(false)
+  }
+
+  const selectJoinDate = (day: number) => {
+    const year = currentJoinDateMonth.getFullYear()
+    const month = currentJoinDateMonth.getMonth()
+    const selectedDate = new Date(year, month, day)
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    
+    setValue('joinDate', formattedDate)
+    setShowJoinDateCalendar(false)
+  }
+
+  const isSelectedJoinDate = (day: number) => {
+    const selectedDate = watch('joinDate')
+    if (!selectedDate) return false
+    
+    const year = currentJoinDateMonth.getFullYear()
+    const month = currentJoinDateMonth.getMonth()
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    return selectedDate === formattedDate
+  }
+
+  const isToday = (day: number, month: Date) => {
+    const today = getCurrentKarachiTime()
+    return day === today.getDate() && 
+           month.getMonth() === today.getMonth() && 
+           month.getFullYear() === today.getFullYear()
+  }
+
+  // Handle click outside to close calendar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
+      
+      // Check if clicking outside calendar elements
+      const isCalendarElement = (target as Element).closest?.('.calendar-container')
+      const isDropdownElement = (target as Element).closest?.('.dropdown-container')
+      
+      if (!isCalendarElement && !isDropdownElement) {
+        setShowJoinDateCalendar(false)
+        setShowJoinDateYearDropdown(false)
+        setShowJoinDateMonthDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const positions = [
     'Dentist',
@@ -113,9 +222,9 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
             </h2>
             <button
               onClick={onClose}
-              className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200"
+              className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
             >
-              <X className="w-6 h-6" />
+              ×
             </button>
           </div>
 
@@ -310,12 +419,126 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
                   <label htmlFor="joinDate" className="form-label">
                     Join Date *
                   </label>
-                  <input
-                    {...register('joinDate')}
-                    type="date"
-                    id="joinDate"
-                    className={cn('form-input', errors.joinDate && 'border-red-500')}
-                  />
+                  <div className="relative">
+                    <input
+                      {...register('joinDate')}
+                      type="text"
+                      id="joinDate"
+                      readOnly
+                      onClick={() => setShowJoinDateCalendar(!showJoinDateCalendar)}
+                      className={cn('form-input cursor-pointer', errors.joinDate && 'border-red-500')}
+                    />
+                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer" />
+                    
+                    {/* Custom Calendar */}
+                    {showJoinDateCalendar && (
+                      <div className="calendar-container absolute top-full left-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 p-4 z-50 transform -rotate-1">
+                        {/* Calendar Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <button
+                            type="button"
+                            onClick={() => navigateJoinDateMonth('prev')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5 text-gray-600" />
+                          </button>
+                          
+                          <div className="flex items-center gap-2">
+                            {/* Month Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowJoinDateMonthDropdown(!showJoinDateMonthDropdown)}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentJoinDateMonth.toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Karachi' })}
+                              </button>
+                              {showJoinDateMonthDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto scrollbar-hide">
+                                  {generateMonths().map((month, index) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      onClick={() => selectJoinDateMonth(index)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {month}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Year Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowJoinDateYearDropdown(!showJoinDateYearDropdown)}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentJoinDateMonth.getFullYear()}
+                              </button>
+                              {showJoinDateYearDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto w-20 scrollbar-hide">
+                                  {generateYears().map((year) => (
+                                    <button
+                                      key={year}
+                                      type="button"
+                                      onClick={() => selectJoinDateYear(year)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {year}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => navigateJoinDateMonth('next')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5 text-gray-600" />
+                          </button>
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                            <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-1">
+                          {/* Empty cells for days before the first day of the month */}
+                          {Array.from({ length: getFirstDayOfMonth(currentJoinDateMonth) }).map((_, index) => (
+                            <div key={`empty-${index}`} className="h-8"></div>
+                          ))}
+                          
+                          {/* Days of the month */}
+                          {Array.from({ length: getDaysInMonth(currentJoinDateMonth) }, (_, i) => i + 1).map(day => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => selectJoinDate(day)}
+                              className={cn(
+                                'h-8 w-8 rounded-full text-sm font-medium transition-colors hover:bg-gray-100',
+                                isToday(day, currentJoinDateMonth) && 'bg-blue-500 text-white hover:bg-blue-600',
+                                isSelectedJoinDate(day) && !isToday(day, currentJoinDateMonth) && 'bg-blue-500 text-white hover:bg-blue-600',
+                                !isToday(day, currentJoinDateMonth) && !isSelectedJoinDate(day) && 'text-gray-800 hover:bg-gray-100'
+                              )}
+                            >
+                              {day}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {errors.joinDate && (
                     <span className="text-red-500 text-sm">{errors.joinDate.message}</span>
                   )}
@@ -421,15 +644,15 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="btn btn-secondary mr-0"
+                className="btn btn-secondary flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg transition-colors"
               >
-                Cancel
+                <span>Cancel</span>
               </button>
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-primary flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {staff ? 'Update Staff Member' : 'Add Staff Member'}
+                <span>{staff ? 'Update Staff Member' : 'Add Staff Member'}</span>
               </button>
             </div>
           </form>
