@@ -420,10 +420,10 @@ export default function StaffForm({ staff, onSave, onClose }: StaffFormProps) {
                     Join Date *
                   </label>
                   <div className="relative">
-                    <input
-                      {...register('joinDate')}
+                  <input
+                    {...register('joinDate')}
                       type="text"
-                      id="joinDate"
+                    id="joinDate"
                       readOnly
                       onClick={() => setShowJoinDateCalendar(!showJoinDateCalendar)}
                       className={cn('form-input cursor-pointer', errors.joinDate && 'border-red-500')}

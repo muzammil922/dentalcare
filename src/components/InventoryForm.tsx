@@ -1,24 +1,23 @@
+import React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Package, DollarSign, AlertTriangle, Calendar } from 'lucide-react'
 import { InventoryItem } from '@/stores/useAppStore'
-import { cn, getCurrentKarachiTime } from '@/lib/utils'
 
 const inventorySchema = z.object({
   name: z.string().min(1, 'Item name is required'),
   category: z.string().min(1, 'Category is required'),
   description: z.string().optional(),
-  sku: z.string().min(1, 'SKU is required'),
-  unitPrice: z.number().min(0, 'Unit price must be non-negative'),
-  currentStock: z.number().min(0, 'Current stock must be non-negative'),
-  minStockLevel: z.number().min(0, 'Minimum stock level must be non-negative'),
-  maxStockLevel: z.number().min(0, 'Maximum stock level must be non-negative'),
+  unit: z.string().optional(),
+  quantity: z.number().min(0, 'Quantity must be non-negative'),
+  price: z.number().min(0, 'Price must be non-negative'),
+  totalValue: z.number().min(0, 'Total value must be non-negative'),
+  minStock: z.number().min(0, 'Minimum stock must be non-negative').optional(),
   supplier: z.string().optional(),
   location: z.string().optional(),
   expiryDate: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'discontinued']),
+  status: z.enum(['In Stock', 'Low Stock', 'Out of Stock', 'Discontinued']),
   notes: z.string().optional()
 })
 
@@ -36,74 +35,56 @@ export default function InventoryForm({ item, onSave, onClose }: InventoryFormPr
     handleSubmit,
     formState: { errors },
     watch,
-    reset
+    setValue
   } = useForm<InventoryFormData>({
     resolver: zodResolver(inventorySchema),
     defaultValues: {
       name: item?.name || '',
       category: item?.category || '',
-      description: item?.description || '',
-      sku: item?.sku || '',
-      unitPrice: item?.unitPrice || 0,
-      currentStock: item?.currentStock || 0,
-      minStockLevel: item?.minStockLevel || 10,
-      maxStockLevel: item?.maxStockLevel || 100,
-      supplier: item?.supplier || '',
-      location: item?.location || '',
+      description: item?.notes || '',
+      unit: item?.unit || '',
+      quantity: item?.quantity || 0,
+      price: item?.price || 0,
+      totalValue: (item?.quantity || 0) * (item?.price || 0),
+      minStock: item?.minQuantity || 0,
+      supplier: item?.vendor || '',
+      location: '',
       expiryDate: item?.expiryDate || '',
-      status: item?.status || 'active',
+      status: item?.status === 'in-stock' ? 'In Stock' : 
+              item?.status === 'low-stock' ? 'Low Stock' : 
+              item?.status === 'out-of-stock' ? 'Out of Stock' : 'Discontinued',
       notes: item?.notes || ''
     }
   })
 
-  const watchedCurrentStock = watch('currentStock')
-  const watchedMinStockLevel = watch('minStockLevel')
-  const watchedMaxStockLevel = watch('maxStockLevel')
+  const watchedQuantity = watch('quantity')
+  const watchedPrice = watch('price')
 
-  // Calculate stock status
-  const isLowStock = watchedCurrentStock <= watchedMinStockLevel
-  const isOverstocked = watchedCurrentStock >= watchedMaxStockLevel
-  const stockPercentage = watchedMaxStockLevel > 0 ? (watchedCurrentStock / watchedMaxStockLevel) * 100 : 0
+  // Calculate total value when quantity or price changes
+  React.useEffect(() => {
+    const totalValue = watchedQuantity * watchedPrice
+    setValue('totalValue', totalValue)
+  }, [watchedQuantity, watchedPrice, setValue])
 
   const onSubmit = (data: InventoryFormData) => {
-    onSave({
-      ...data,
-      lastUpdated: getCurrentKarachiTime().toISOString()
-    })
-    reset()
-  }
-
-  const categories = [
-    'Dental Supplies',
-    'Medications',
-    'Equipment',
-    'Consumables',
-    'Personal Protective Equipment',
-    'Laboratory Supplies',
-    'Office Supplies',
-    'Other'
-  ]
-
-  const locations = [
-    'Main Storage',
-    'Treatment Room A',
-    'Treatment Room B',
-    'Laboratory',
-    'Office',
-    'Emergency Kit',
-    'Mobile Unit'
-  ]
-
-  const getStockStatusColor = () => {
-    if (isLowStock) return 'text-red-600'
-    if (isOverstocked) return 'text-yellow-600'
-    return 'text-green-600'
-  }
-
-  const getStockStatusText = () => {
-    if (isLowStock) return 'Low Stock'
-    if (isOverstocked) return 'Overstocked'
-    return 'Normal'
+    // Map form data to inventory item structure
+    const inventoryData = {
+      name: data.name,
+      category: data.category,
+      unit: data.unit || 'Pieces',
+      vendor: data.supplier || '',
+      quantity: data.quantity,
+      price: data.price,
+      status: data.status === 'In Stock' ? 'in-stock' as const :
+              data.status === 'Low Stock' ? 'low-stock' as const :
+              data.status === 'Out of Stock' ? 'out-of-stock' as const : 'discontinued' as const,
+      minQuantity: data.minStock || 0,
+      maxQuantity: 100, // Default value
+      expiryDate: data.expiryDate,
+      notes: data.notes
+    }
+    
+    onSave(inventoryData)
   }
 
   return (
@@ -119,296 +100,502 @@ export default function InventoryForm({ item, onSave, onClose }: InventoryFormPr
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-800">
-              {item ? 'Edit Inventory Item' : 'Add New Inventory Item'}
-            </h2>
+          {/* Modal Header */}
+          <div className="modal-header" style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            padding: '24px', 
+            borderBottom: '1px solid #e5e7eb' 
+          }}>
+            <h3 id="inventory-modal-title" style={{ 
+              fontSize: '24px', 
+              fontWeight: '700', 
+              color: '#1f2937', 
+              margin: 0 
+            }}>
+              {item ? 'Edit Item' : 'Add New Item'}
+            </h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
             >
-              <X className="w-6 h-6" />
+              ×
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Basic Information
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="name" className="form-label">
-                    Item Name *
+          <form id="inventory-form" onSubmit={handleSubmit(onSubmit)} style={{ padding: '24px' }}>
+            <div className="form-layout" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: '24px' 
+            }}>
+              {/* First Column */}
+              <div className="form-column">
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-name" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    ITEM NAME *
                   </label>
                   <input
+                    type="text" 
+                    id="item-name" 
                     {...register('name')}
-                    type="text"
-                    id="name"
-                    className={cn('form-input', errors.name && 'border-red-500')}
-                    placeholder="Enter item name"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
                   {errors.name && (
-                    <span className="text-red-500 text-sm">{errors.name.message}</span>
+                    <span style={{ color: '#ef4444', fontSize: '14px', marginTop: '4px', display: 'block' }}>
+                      {errors.name.message}
+                    </span>
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="sku" className="form-label">
-                    SKU *
-                  </label>
-                  <input
-                    {...register('sku')}
-                    type="text"
-                    id="sku"
-                    className={cn('form-input', errors.sku && 'border-red-500')}
-                    placeholder="Enter SKU code"
-                  />
-                  {errors.sku && (
-                    <span className="text-red-500 text-sm">{errors.sku.message}</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="category" className="form-label">
-                    Category *
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-category" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    CATEGORY *
                   </label>
                   <select
+                    id="item-category" 
                     {...register('category')}
-                    id="category"
-                    className={cn('form-input', errors.category && 'border-red-500')}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      backgroundColor: 'white',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   >
-                    <option value="">Select category</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
+                    <option value="">Select Category</option>
+                    <option value="Dental Supplies">Dental Supplies</option>
+                    <option value="Medications">Medications</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Office Supplies">Office Supplies</option>
+                    <option value="Other">Other</option>
                   </select>
                   {errors.category && (
-                    <span className="text-red-500 text-sm">{errors.category.message}</span>
+                    <span style={{ color: '#ef4444', fontSize: '14px', marginTop: '4px', display: 'block' }}>
+                      {errors.category.message}
+                    </span>
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="status" className="form-label">
-                    Status
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-description" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    DESCRIPTION
+                  </label>
+                  <textarea 
+                    id="item-description" 
+                    {...register('description')}
+                    rows={3} 
+                    placeholder="Enter item description"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      resize: 'vertical',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-unit" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    UNIT
                   </label>
                   <select
-                    {...register('status')}
-                    id="status"
-                    className="form-input"
+                    id="item-unit" 
+                    {...register('unit')}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      backgroundColor: 'white',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="discontinued">Discontinued</option>
+                    <option value="">Select Unit</option>
+                    <option value="Pieces">Pieces</option>
+                    <option value="Boxes">Boxes</option>
+                    <option value="Bottles">Bottles</option>
+                    <option value="Tubes">Tubes</option>
+                    <option value="Packs">Packs</option>
+                    <option value="Units">Units</option>
                   </select>
                 </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="description" className="form-label">
-                  Description
-                </label>
-                <textarea
-                  {...register('description')}
-                  id="description"
-                  rows={3}
-                  className="form-input"
-                  placeholder="Enter item description"
-                />
-              </div>
-            </div>
-
-            {/* Pricing and Stock */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Pricing & Stock
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="unitPrice" className="form-label">
-                    Unit Price *
+              {/* Second Column */}
+              <div className="form-column">
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-quantity" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    QUANTITY *
                   </label>
                   <input
-                    {...register('unitPrice', { valueAsNumber: true })}
                     type="number"
-                    id="unitPrice"
+                    id="item-quantity" 
+                    {...register('quantity', { valueAsNumber: true })}
                     min="0"
-                    step="0.01"
-                    className={cn('form-input', errors.unitPrice && 'border-red-500')}
-                    placeholder="Enter unit price"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
-                  {errors.unitPrice && (
-                    <span className="text-red-500 text-sm">{errors.unitPrice.message}</span>
+                  {errors.quantity && (
+                    <span style={{ color: '#ef4444', fontSize: '14px', marginTop: '4px', display: 'block' }}>
+                      {errors.quantity.message}
+                    </span>
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="currentStock" className="form-label">
-                    Current Stock *
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-price" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    PRICE PER UNIT (PKR) *
                   </label>
                   <input
-                    {...register('currentStock', { valueAsNumber: true })}
                     type="number"
-                    id="currentStock"
+                    id="item-price" 
+                    {...register('price', { valueAsNumber: true })}
+                    step="0.01" 
                     min="0"
-                    className={cn('form-input', errors.currentStock && 'border-red-500')}
-                    placeholder="Enter current stock"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
-                  {errors.currentStock && (
-                    <span className="text-red-500 text-sm">{errors.currentStock.message}</span>
+                  {errors.price && (
+                    <span style={{ color: '#ef4444', fontSize: '14px', marginTop: '4px', display: 'block' }}>
+                      {errors.price.message}
+                    </span>
                   )}
-                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="minStockLevel" className="form-label">
-                    Minimum Stock Level *
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-total-value" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    TOTAL VALUE (PKR)
                   </label>
                   <input
-                    {...register('minStockLevel', { valueAsNumber: true })}
                     type="number"
-                    id="minStockLevel"
+                    id="item-total-value" 
+                    {...register('totalValue', { valueAsNumber: true })}
+                    step="0.01" 
                     min="0"
-                    className={cn('form-input', errors.minStockLevel && 'border-red-500')}
-                    placeholder="Enter minimum stock level"
+                    readOnly
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      backgroundColor: '#f9fafb',
+                      color: '#6b7280'
+                    }}
                   />
-                  {errors.minStockLevel && (
-                    <span className="text-red-500 text-sm">{errors.minStockLevel.message}</span>
-                  )}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="maxStockLevel" className="form-label">
-                    Maximum Stock Level *
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-min-stock" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    MINIMUM STOCK LEVEL
                   </label>
                   <input
-                    {...register('maxStockLevel', { valueAsNumber: true })}
                     type="number"
-                    id="maxStockLevel"
+                    id="item-min-stock" 
+                    {...register('minStock', { valueAsNumber: true })}
                     min="0"
-                    className={cn('form-input', errors.maxStockLevel && 'border-red-500')}
-                    placeholder="Enter maximum stock level"
+                    placeholder="Alert when stock goes below this level"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
-                  {errors.maxStockLevel && (
-                    <span className="text-red-500 text-sm">{errors.maxStockLevel.message}</span>
-                  )}
-                </div>
               </div>
 
-              {/* Stock Status Indicator */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Stock Status</span>
-                  <span className={`text-sm font-semibold ${getStockStatusColor()}`}>
-                    {getStockStatusText()}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      isLowStock ? 'bg-red-500' : isOverstocked ? 'bg-yellow-500' : 'bg-green-500'
-                    }`}
-                    style={{ width: `${Math.min(stockPercentage, 100)}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>{watchedCurrentStock} units</span>
-                  <span>{watchedMaxStockLevel} units</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Details */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
-                Additional Details
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="supplier" className="form-label">
-                    Supplier
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-supplier" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    SUPPLIER
                   </label>
-                  <input
+                  <input 
+                    type="text" 
+                    id="item-supplier" 
                     {...register('supplier')}
-                    type="text"
-                    id="supplier"
-                    className="form-input"
                     placeholder="Enter supplier name"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  />
+              </div>
+            </div>
+
+              {/* Third Column */}
+              <div className="form-column">
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-location" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    LOCATION
+                  </label>
+                  <input
+                    type="text"
+                    id="item-location" 
+                    {...register('location')}
+                    placeholder="Storage location"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="location" className="form-label">
-                    Storage Location
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-expiry-date" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    EXPIRY DATE
                   </label>
-                  <select
-                    {...register('location')}
-                    id="location"
-                    className="form-input"
-                  >
-                    <option value="">Select location</option>
-                    {locations.map((location) => (
-                      <option key={location} value={location}>{location}</option>
-                    ))}
-                  </select>
+                  <div className="enhanced-date-picker" style={{ position: 'relative' }}>
+                    <input 
+                      type="date" 
+                      id="item-expiry-date" 
+                      {...register('expiryDate')}
+                      data-calendar-initialized="true"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        outline: 'none',
+                        transition: 'border-color 0.2s ease-in-out'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    />
+                    <i 
+                      className="fas fa-calendar-alt date-icon" 
+                      data-click-handler-added="true" 
+                      style={{ 
+                        position: 'absolute', 
+                        right: '12px', 
+                        top: '50%', 
+                        transform: 'translateY(-50%)', 
+                        color: '#6b7280', 
+                        pointerEvents: 'auto', 
+                        cursor: 'pointer' 
+                      }}
+                    />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="expiryDate" className="form-label">
-                  Expiry Date
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-status" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    STATUS
                 </label>
-                <input
-                  {...register('expiryDate')}
-                  type="date"
-                  id="expiryDate"
-                  className="form-input"
-                />
+                  <select 
+                    id="item-status" 
+                    {...register('status')}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      backgroundColor: 'white',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  >
+                    <option value="In Stock">In Stock</option>
+                    <option value="Low Stock">Low Stock</option>
+                    <option value="Out of Stock">Out of Stock</option>
+                    <option value="Discontinued">Discontinued</option>
+                  </select>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="notes" className="form-label">
-                  Notes
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="item-notes" style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#374151', 
+                    marginBottom: '8px' 
+                  }}>
+                    NOTES
                 </label>
                 <textarea
+                    id="item-notes" 
                   {...register('notes')}
-                  id="notes"
                   rows={3}
-                  className="form-input"
-                  placeholder="Enter any additional notes or special instructions..."
-                />
+                    placeholder="Additional notes"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      outline: 'none',
+                      resize: 'vertical',
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Form Actions */}
-            <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+            <div className="form-actions professional-actions flex gap-3 justify-end pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="btn btn-secondary mr-0"
+                className="btn btn-secondary flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg transition-colors"
               >
-                Cancel
+                <span>Cancel</span>
               </button>
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-primary flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {item ? 'Update Item' : 'Add Item'}
+                
+                <span>{item ? 'Update Item' : 'Save Item'}</span>
               </button>
             </div>
           </form>
