@@ -14,6 +14,9 @@ import {
   X,
   User,
   Loader2,
+  Settings,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/stores/useAppStore'
@@ -35,9 +38,10 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isLoading } = useAppStore();
+  const { isLoading, clinicInfo, userInfo } = useAppStore();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -48,6 +52,21 @@ export default function Layout({ children }: LayoutProps) {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownOpen) {
+        const target = event.target as Element;
+        if (!target.closest('.user-dropdown')) {
+          setUserDropdownOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userDropdownOpen]);
 
   // Handle initial app loading - only on first load
   useEffect(() => {
@@ -67,7 +86,25 @@ export default function Layout({ children }: LayoutProps) {
 
   const getPageTitle = () => {
     const currentItem = navigationItems.find(item => item.href === location.pathname);
+    if (location.pathname === '/dashboard') {
+      return clinicInfo.name || "Dashboard";
+    }
     return currentItem ? currentItem.label : "Dashboard";
+  };
+
+  const handleSettingsClick = () => {
+    setUserDropdownOpen(false);
+    navigate('/settings');
+  };
+
+  const handleLogoutClick = () => {
+    setUserDropdownOpen(false);
+    // Add logout logic here
+    console.log('Logout clicked');
+  };
+
+  const handleUserClick = () => {
+    setUserDropdownOpen(!userDropdownOpen);
   };
 
   // Show global loader during initialization
@@ -98,8 +135,14 @@ export default function Layout({ children }: LayoutProps) {
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div className="flex items-center gap-3 text-xl font-bold text-primary-500">
-              <span className="text-white font-bold text-lg">🦷</span>
-              <span>DentalCare Pro</span>
+              {clinicInfo.logo && (
+                <img
+                  src={clinicInfo.logo}
+                  alt="Clinic Logo"
+                  className="w-8 h-8 object-contain border-0"
+                />
+              )}
+              {clinicInfo.name && <span>{clinicInfo.name}</span>}
             </div>
             {isMobile && (
               <button
@@ -164,12 +207,92 @@ export default function Layout({ children }: LayoutProps) {
                 <Menu className="w-5 h-5" />
               </button>
             )}
-            <h1 className="text-2xl font-bold text-gray-800">{getPageTitle()}</h1>
+            <div className="flex items-center gap-3">
+              {location.pathname === '/dashboard' && clinicInfo.logo && (
+                <img
+                  src={clinicInfo.logo}
+                  alt="Clinic Logo"
+                  className="w-8 h-8 object-contain border-0"
+                />
+              )}
+              <h1 className="text-2xl font-bold text-gray-800">{getPageTitle()}</h1>
+            </div>
           </div>
           
-          <div className="flex items-center gap-3 text-gray-600 font-medium">
-            <User className="w-8 h-8 text-primary-500" />
-            <span>Admin User</span>
+          <div className="relative user-dropdown">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <button
+                  onClick={handleUserClick}
+                  className="flex items-center hover:opacity-80 transition-opacity border-0 focus:outline-none focus:border-0 focus:ring-0 focus:ring-offset-0 active:border-0 active:outline-none"
+                  style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                >
+{clinicInfo.profileImage ? (
+                    <img
+                      src={clinicInfo.profileImage}
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full object-cover border-0"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-blue-600 border-0" />
+                  )}
+                </button>
+                {/* Online Status Dot */}
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+              </div>
+            </div>
+            
+            {/* Dropdown Menu */}
+            {userDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+              >
+                {/* User Profile Section */}
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      {clinicInfo.profileImage ? (
+                        <img
+                          src={clinicInfo.profileImage}
+                          alt="Profile"
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <User className="w-5 h-5 text-blue-600" />
+                        </div>
+                      )}
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">{userInfo.name}</div>
+                      <div className="text-sm text-gray-500">{userInfo.email}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Menu Items */}
+                <div className="py-1">
+                  <button
+                    onClick={handleSettingsClick}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </button>
+                  <button
+                    onClick={handleLogoutClick}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </div>
         </header>
 

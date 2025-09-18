@@ -22,7 +22,8 @@ export default function Dashboard() {
     invoices, 
     feedback,
     staff,
-    attendance 
+    attendance,
+    clinicInfo
   } = useAppStore()
 
   // Calculate statistics
@@ -41,6 +42,68 @@ export default function Dashboard() {
   const recentPatients = patients
     .sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime())
     .slice(0, 5)
+
+  // Real-time recent activity data
+  const recentActivity = [
+    ...patients.slice(-3).map(patient => ({
+      type: 'patient',
+      message: `New patient registered: ${patient.name}`,
+      time: new Date(patient.registrationDate),
+      icon: '👤'
+    })),
+    ...appointments.slice(-2).map(appointment => ({
+      type: 'appointment',
+      message: `Appointment scheduled: ${appointment.patientName}`,
+      time: new Date(appointment.date),
+      icon: '📅'
+    })),
+    ...invoices.slice(-2).map(invoice => ({
+      type: 'invoice',
+      message: `Invoice generated: Rs. ${invoice.total}`,
+      time: new Date(invoice.date),
+      icon: '💰'
+    })),
+    ...feedback.slice(-1).map(fb => ({
+      type: 'feedback',
+      message: `New feedback received: ${fb.rating} stars`,
+      time: new Date(fb.date),
+      icon: '⭐'
+    }))
+  ]
+    .sort((a, b) => b.time.getTime() - a.time.getTime())
+    .slice(0, 5)
+
+  // Real-time system status
+  const systemStatus = [
+    {
+      name: 'Appointments Today',
+      status: todaysAppointments.length > 0 ? 'active' : 'none',
+      lastCheck: new Date(),
+      count: todaysAppointments.length
+    },
+    {
+      name: 'Pending Feedback',
+      status: feedback.filter(f => f.status === 'pending').length > 0 ? 'pending' : 'none',
+      lastCheck: new Date(),
+      count: feedback.filter(f => f.status === 'pending').length
+    },
+    {
+      name: 'Staff Online',
+      status: staff.filter(s => s.status === 'active').length > 0 ? 'active' : 'offline',
+      lastCheck: new Date(),
+      count: staff.filter(s => s.status === 'active').length
+    },
+    {
+      name: 'Backup',
+      status: 'up-to-date',
+      lastCheck: new Date(Date.now() - 3600000) // 1 hour ago
+    },
+    {
+      name: 'Updates',
+      status: 'available',
+      lastCheck: new Date(Date.now() - 86400000) // 1 day ago
+    }
+  ]
 
   const stats = [
     {
@@ -275,27 +338,73 @@ export default function Dashboard() {
             System Status
           </h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Database</span>
-              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                Online
+            {systemStatus.map((item, index) => {
+              const getStatusColor = (status: string) => {
+                switch (status) {
+                  case 'active':
+                  case 'up-to-date':
+                    return 'bg-green-100 text-green-800'
+                  case 'available':
+                    return 'bg-blue-100 text-blue-800'
+                  case 'pending':
+                    return 'bg-yellow-100 text-yellow-800'
+                  case 'offline':
+                  case 'none':
+                    return 'bg-gray-100 text-gray-800'
+                  default:
+                    return 'bg-gray-100 text-gray-800'
+                }
+              }
+              
+              const getStatusDot = (status: string) => {
+                switch (status) {
+                  case 'active':
+                  case 'up-to-date':
+                    return 'bg-green-500'
+                  case 'available':
+                    return 'bg-blue-500'
+                  case 'pending':
+                    return 'bg-yellow-500'
+                  case 'offline':
+                  case 'none':
+                    return 'bg-gray-500'
+                  default:
+                    return 'bg-gray-500'
+                }
+              }
+              
+              const getStatusText = (item: any) => {
+                if (item.count !== undefined) {
+                  return `${item.count}`
+                }
+                switch (item.status) {
+                  case 'up-to-date':
+                    return 'Up to date'
+                  case 'available':
+                    return 'Available'
+                  case 'active':
+                    return 'Active'
+                  case 'pending':
+                    return 'Pending'
+                  case 'none':
+                    return 'None'
+                  case 'offline':
+                    return 'Offline'
+                  default:
+                    return item.status.charAt(0).toUpperCase() + item.status.slice(1)
+                }
+              }
+              
+              return (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">{item.name}</span>
+                  <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}>
+                    <div className={`w-2 h-2 rounded-full mr-1 ${getStatusDot(item.status)}`}></div>
+                    {getStatusText(item)}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Backup</span>
-              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                Up to date
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Updates</span>
-              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
-                Available
-              </span>
-            </div>
+              )
+            })}
           </div>
         </div>
 
@@ -306,18 +415,34 @@ export default function Dashboard() {
             Recent Activity
           </h3>
           <div className="space-y-3">
-            <div className="text-sm text-gray-600">
-              <p className="font-medium text-gray-800">New patient registered</p>
-              <p className="text-xs">2 minutes ago</p>
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => {
+                const getTimeAgo = (date: Date) => {
+                  const now = new Date()
+                  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+                  
+                  if (diffInMinutes < 1) return 'Just now'
+                  if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`
+                  
+                  const diffInHours = Math.floor(diffInMinutes / 60)
+                  if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`
+                  
+                  const diffInDays = Math.floor(diffInHours / 24)
+                  return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`
+                }
+                
+                return (
+                  <div key={index} className="text-sm text-gray-600">
+                    <p className="font-medium text-gray-800">{activity.message}</p>
+                    <p className="text-xs text-gray-500">{getTimeAgo(activity.time)}</p>
             </div>
-            <div className="text-sm text-gray-600">
-              <p className="font-medium text-gray-800">Appointment confirmed</p>
-              <p className="text-xs">15 minutes ago</p>
+                )
+              })
+            ) : (
+              <div className="text-sm text-gray-500 text-center py-4">
+                No recent activity
             </div>
-            <div className="text-sm text-gray-600">
-              <p className="font-medium text-gray-800">Invoice generated</p>
-              <p className="text-xs">1 hour ago</p>
-            </div>
+            )}
           </div>
         </div>
       </motion.div>

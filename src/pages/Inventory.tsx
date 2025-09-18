@@ -27,6 +27,7 @@ export default function Inventory() {
   
   const { 
     inventory, 
+    clinicInfo,
     addInventoryItem, 
     updateInventoryItem, 
     deleteInventoryItem,
@@ -108,9 +109,20 @@ export default function Inventory() {
       updateInventoryItem(editingItem.id, itemData)
       setEditingItem(null)
     } else {
+      // Generate sequential ID like item-01, item-02, etc.
+      const existingIds = inventory.map(item => item.id)
+      let nextId = 1
+      let newId = `item-${nextId.toString().padStart(2, '0')}`
+      
+      // Find the next available sequential ID
+      while (existingIds.includes(newId)) {
+        nextId++
+        newId = `item-${nextId.toString().padStart(2, '0')}`
+      }
+      
       addInventoryItem({
         ...itemData,
-        id: Math.random().toString(36).substr(2, 9)
+        id: newId
       })
     }
     setShowInventoryForm(false)
@@ -176,9 +188,20 @@ export default function Inventory() {
   const handleRecordUsage = (data: { itemId: string; quantity: number; reason?: string; notes?: string }) => {
     const item = inventory.find(i => i.id === data.itemId)
     if (item) {
+      // Generate sequential usage record ID like usage-01, usage-02, etc.
+      const existingUsageIds = usageRecords.map(record => record.id)
+      let nextUsageId = 1
+      let newUsageId = `usage-${nextUsageId.toString().padStart(2, '0')}`
+      
+      // Find the next available sequential usage ID
+      while (existingUsageIds.includes(newUsageId)) {
+        nextUsageId++
+        newUsageId = `usage-${nextUsageId.toString().padStart(2, '0')}`
+      }
+      
       // Add usage record to the store
       const usageRecord = {
-        id: `usage-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: newUsageId,
         itemId: data.itemId,
         itemName: item.name,
         quantity: data.quantity,
@@ -208,10 +231,16 @@ export default function Inventory() {
   // Generate inventory print HTML
   const generateInventoryPrintHTML = () => {
     const currentDate = new Date().toLocaleDateString()
+    const currentTime = new Date().toLocaleTimeString()
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const totalItems = inventory.length
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const inStockItems = inventory.filter(item => getItemStatus(item.id, item.quantity) === 'in-stock').length
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const lowStockItems = inventory.filter(item => getItemStatus(item.id, item.quantity) === 'low-stock').length
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const outOfStockItems = inventory.filter(item => getItemStatus(item.id, item.quantity) === 'out-of-stock').length
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const discontinuedItems = inventory.filter(item => item.status === 'discontinued').length
 
     return `
@@ -220,25 +249,34 @@ export default function Inventory() {
       <head>
         <title>Inventory Report - ${currentDate}</title>
         <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-          .container { width: 100%; margin: 0 auto; background: white; }
-          .header { background: #dbeafe; color: #2563eb; padding: 2rem; text-align: center; position: relative; overflow: hidden; }
-          .header h1 { margin: 0; font-size: 2.5rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-          .header h2 { margin: 0.5rem 0 0 0; font-size: 1.5rem; font-weight: 400; opacity: 0.9; }
-          .header .tagline { background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 12px; margin-top: 1rem; backdrop-filter: blur(10px); }
-          .content { padding: 2rem; }
-          .section { margin-bottom: 2rem; background: #f8fafc; border-radius: 12px; padding: 1.5rem; }
-          .section h3 { margin: 0 0 1rem 0; color: #2563eb; font-size: 1.25rem; font-weight: 600; }
-          .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-          .card { background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-          .card-label { font-weight: 600; color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
-          .card-value { color: #1e293b; font-size: 1rem; font-weight: 500; }
-          .status-badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; }
-          table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-          th { background: #2563eb; color: white; padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; }
-          td { padding: 1rem; border-bottom: 1px solid #f1f5f9; }
-          .footer { background: #f8fafc; padding: 2rem; text-align: center; border-top: 1px solid #e2e8f0; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
+          .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+          .clinic-header { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1rem; }
+          .clinic-logo { width: 60px; height: 60px; object-fit: contain; }
+          .clinic-icon { font-size: 3rem; }
+          .header h1 { color: #2563eb; margin: 0; font-size: 24px; }
+          .header p { color: #666; margin: 5px 0; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+          .info-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9fafb; }
+          .info-label { font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
+          .info-value { font-size: 16px; font-weight: bold; color: #333; }
+          .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+          .status-instock { background: #dcfce7; color: #166534; }
+          .status-lowstock { background: #fef3c7; color: #92400e; }
+          .status-outstock { background: #fee2e2; color: #991b1b; }
+          .status-discontinued { background: #f3f4f6; color: #6b7280; }
+          .description { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9fafb; margin-top: 20px; }
+          .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
+          .footer-content { max-width: 100%; margin: 0 auto; }
+          .footer-content h3 { margin: 0 0 1rem 0; color: #2563eb; font-size: 1.25rem; font-weight: bold; }
+          .footer-details { margin-bottom: 1rem; line-height: 1.6; }
+          .footer-details p { margin: 0.25rem 0; color: #374151; font-size: 0.875rem; }
+          .footer-bottom { border-top: 1px solid #d1d5db; padding-top: 1rem; margin-top: 1rem; }
+          .footer-bottom p { margin: 0.25rem 0; color: #64748b; font-size: 0.8rem; }
+          .item-section { margin-bottom: 40px; border-bottom: 1px solid #e5e7eb; padding-bottom: 30px; }
+          .item-section:last-child { border-bottom: none; }
+          .item-title { color: #2563eb; margin: 0 0 10px 0; font-size: 20px; }
+          .item-id { color: #666; margin: 0 0 20px 0; font-size: 14px; }
           .print-controls { 
             position: fixed; 
             top: 20px; 
@@ -248,7 +286,11 @@ export default function Inventory() {
             gap: 12px; 
             align-items: center;
           }
-          @media print { body { margin: 0; } .container { box-shadow: none; } .print-controls { display: none !important; } }
+          @media print { 
+            body { margin: 0; } 
+            .header { border-bottom-color: #000; } 
+            .print-controls { display: none !important; } 
+          }
         </style>
         <script>
           function printInventory() {
@@ -261,101 +303,102 @@ export default function Inventory() {
         </script>
       </head>
       <body>
-        <div class="container">
-          <!-- Print Controls -->
-          <div class="print-controls">
-            <button onclick="printInventory()" style="padding: 12px 24px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#047857'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.background='#059669'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'">
-              Print Inventory
-            </button>
-            <button onclick="closeWindow()" style="padding: 12px 24px; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#b91c1c'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.background='#dc2626'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'">
-              Close
-            </button>
+        <!-- Print Controls -->
+        <div class="print-controls">
+          <button onclick="printInventory()" style="padding: 12px 24px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#047857'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.background='#059669'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'">
+            Print Report
+          </button>
+      
+        </div>
+        
+        <div class="header">
+          <div class="clinic-header">
+              ${clinicInfo.logo ? `<img src="${clinicInfo.logo}" alt="Clinic Logo" class="clinic-logo" />` : ''}
+              ${clinicInfo.name ? `<h1>${clinicInfo.name}</h1>` : ''}
           </div>
-          
-          <div class="header">
-            <h1>📦 DentalCare Pro</h1>
-            <h2>Inventory Report</h2>
-            <div class="tagline"><strong>Generated on ${currentDate}</strong></div>
+          <p>Inventory Report</p>
+        </div>
+        
+       
           </div>
+        </div>
+        
+        <!-- Individual Items -->
+        ${inventory.map((item) => {
+          const remaining = getRemainingQuantity(item.id, item.quantity)
+          const used = item.quantity - remaining
+          const status = getItemStatus(item.id, item.quantity)
+          const totalValue = item.quantity * item.price
           
-          <div class="content">
-            <div class="section">
-              <h3>Inventory Summary</h3>
-              <div class="grid">
-                <div class="card">
-                  <div class="card-label">Total Items</div>
-                  <div class="card-value">${totalItems}</div>
+          const statusClass = status === 'in-stock' ? 'status-instock' : 
+                             status === 'low-stock' ? 'status-lowstock' : 
+                             status === 'out-of-stock' ? 'status-outstock' : 'status-discontinued'
+          
+          const statusText = status === 'in-stock' ? 'In Stock' : 
+                            status === 'low-stock' ? 'Low Stock' : 
+                            status === 'out-of-stock' ? 'Out of Stock' : 'Discontinued'
+          
+          return `
+            <div class="item-section">
+              <h2 class="item-title">${item.name}</h2>
+              <p class="item-id">Item ID: ${item.id}</p>
+              
+              <div class="info-grid">
+                <div class="info-card">
+                  <div class="info-label">Category</div>
+                  <div class="info-value">${item.category || 'N/A'}</div>
                 </div>
-                <div class="card">
-                  <div class="card-label">In Stock</div>
-                  <div class="card-value" style="color: #16a34a;">${inStockItems}</div>
+                <div class="info-card">
+                  <div class="info-label">Supplier</div>
+                  <div class="info-value">${item.vendor || 'N/A'}</div>
                 </div>
-                <div class="card">
-                  <div class="card-label">Low Stock</div>
-                  <div class="card-value" style="color: #d97706;">${lowStockItems}</div>
+                <div class="info-card">
+                  <div class="info-label">Total Quantity</div>
+                  <div class="info-value">${item.quantity} ${item.unit || 'units'}</div>
                 </div>
-                <div class="card">
-                  <div class="card-label">Out of Stock</div>
-                  <div class="card-value" style="color: #dc2626;">${outOfStockItems}</div>
+                <div class="info-card">
+                  <div class="info-label">Used Quantity</div>
+                  <div class="info-value">${used} ${item.unit || 'units'}</div>
                 </div>
-                <div class="card">
-                  <div class="card-label">Discontinued</div>
-                  <div class="card-value" style="color: #6b7280;">${discontinuedItems}</div>
+                <div class="info-card">
+                  <div class="info-label">Remaining Quantity</div>
+                  <div class="info-value">${remaining} ${item.unit || 'units'}</div>
+                </div>
+                <div class="info-card">
+                  <div class="info-label">Price per Unit</div>
+                  <div class="info-value">Rs. ${Math.round(item.price || 0).toLocaleString()}</div>
+                </div>
+                <div class="info-card">
+                  <div class="info-label">Total Value</div>
+                  <div class="info-value">Rs. ${totalValue.toLocaleString()}</div>
+                </div>
+                <div class="info-card">
+                  <div class="info-label">Status</div>
+                  <div class="info-value">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                  </div>
                 </div>
               </div>
+              
+              ${item.notes ? `
+              <div class="description">
+                <div class="info-label">Description</div>
+                <div style="color: #333; line-height: 1.5; margin-top: 5px;">${item.notes}</div>
+              </div>` : ''}
             </div>
-            
-            <div class="section">
-              <h3>Inventory Items</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Item Name</th>
-                    <th>Category</th>
-                    <th>Vendor</th>
-                    <th style="text-align: center;">Total</th>
-                    <th style="text-align: center;">Remaining</th>
-                    <th style="text-align: center;">Status</th>
-                    <th style="text-align: center;">Unit</th>
-                    <th style="text-align: right;">Price (PKR)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${inventory.map(item => {
-                    const remaining = getRemainingQuantity(item.id, item.quantity)
-                    const status = getItemStatus(item.id, item.quantity)
-                    const statusInfo = status === 'in-stock' ? { bg: '#dcfce7', color: '#16a34a', text: 'Available' } :
-                                      status === 'low-stock' ? { bg: '#fef3c7', color: '#d97706', text: 'Low Stock' } :
-                                      status === 'out-of-stock' ? { bg: '#fecaca', color: '#dc2626', text: 'Out of Stock' } :
-                                      { bg: '#f3f4f6', color: '#6b7280', text: 'Discontinued' }
-                    
-                    return `
-                      <tr>
-                        <td>
-                          <div style="font-weight: 600; margin-bottom: 0.25rem;">${item.name}</div>
-                          ${item.notes ? `<div style="font-size: 0.875rem; color: #6b7280;">${item.notes}</div>` : ''}
-                        </td>
-                        <td>${item.category}</td>
-                        <td>${item.vendor}</td>
-                        <td style="text-align: center;">${item.quantity}</td>
-                        <td style="text-align: center;">${remaining}</td>
-                        <td style="text-align: center;">
-                          <span class="status-badge" style="background: ${statusInfo.bg}; color: ${statusInfo.color};">${statusInfo.text}</span>
-                        </td>
-                        <td style="text-align: center;">${item.unit}</td>
-                        <td style="text-align: right; font-weight: 600;">Rs. ${item.price}</td>
-                      </tr>
-                    `
-                  }).join('')}
-                </tbody>
-              </table>
+          `
+        }).join('')}
+        
+        <div class="footer">
+          <div class="footer-content">
+            <h3>${clinicInfo.name}</h3>
+            <div class="footer-details">
+              <p><strong>Address:</strong> ${clinicInfo.address}</p>
+              <p><strong>Phone:</strong> ${clinicInfo.phone} | <strong>Email:</strong> ${clinicInfo.email}</p>
+              <p><strong>Website:</strong> ${clinicInfo.website} | <strong>Hours:</strong> ${clinicInfo.hours}</p>
             </div>
-          </div>
-          
-          <div class="footer">
-            <p style="color: #6b7280; font-size: 0.875rem;">
-              This report was generated on ${currentDate} by DentalCare Pro Inventory Management System
-            </p>
+            <div class="footer-bottom">
+            </div>
           </div>
         </div>
       </body>
@@ -509,13 +552,6 @@ export default function Inventory() {
           title="Refresh Inventory"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshingInventory ? 'animate-spin' : ''}`} />
-        </button>
-        <button 
-          onClick={handlePrintInventory}
-          className="flex items-center justify-center w-12 h-12 bg-white border border-primary-500 rounded-lg text-primary-500 hover:bg-primary-50 transition-colors"
-          title="Print Inventory"
-        >
-          <i className="fas fa-print w-4 h-4"></i>
         </button>
       </div>
 
@@ -838,10 +874,10 @@ export default function Inventory() {
                         justifyContent: 'center'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.1)'
+                        e.currentTarget.style.background = '#dbeafe'
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)'
+                        e.currentTarget.style.background = 'none'
                       }}
                     >
                       <i className="fas fa-eye" style={{ fontSize: '0.85rem' }}></i>
@@ -865,16 +901,17 @@ export default function Inventory() {
                         justifyContent: 'center'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.1)'
+                        e.currentTarget.style.background = '#dbeafe'
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)'
+                        e.currentTarget.style.background = 'none'
                       }}
                     >
                       <i className="fas fa-pen-to-square" style={{ fontSize: '0.85rem' }}></i>
                     </button>
                     <button 
                       className="action-btn print" 
+                      onClick={() => handlePrintInventory()}
                       title="Print" 
                       style={{
                         width: '32px',
@@ -888,14 +925,13 @@ export default function Inventory() {
                         transition: '0.2s ease-in-out',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        transform: 'scale(1)'
+                        justifyContent: 'center'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.1)'
+                        e.currentTarget.style.background = '#fef3c7'
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)'
+                        e.currentTarget.style.background = 'none'
                       }}
                     >
                       <i className="fas fa-print" style={{ fontSize: '0.85rem' }}></i>
@@ -919,14 +955,14 @@ export default function Inventory() {
                         justifyContent: 'center'
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.1)'
+                        e.currentTarget.style.background = '#fee2e2'
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)'
+                        e.currentTarget.style.background = 'none'
                       }}
                     >
                       <i className="fas fa-trash" style={{ fontSize: '0.85rem' }}></i>
-                </button>
+                    </button>
                   </div>
               </div>
             </motion.div>
@@ -960,7 +996,16 @@ export default function Inventory() {
                 border: '1px solid #d1d5db',
                 borderRadius: '4px',
                 backgroundColor: 'white',
-                fontSize: '14px'
+                fontSize: '14px',
+                cursor: 'pointer',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+                backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236b7280\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 8px center',
+                backgroundSize: '12px',
+                paddingRight: '28px'
               }}
             >
               <option value={10}>10</option>

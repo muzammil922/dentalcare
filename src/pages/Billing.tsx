@@ -78,6 +78,7 @@ export default function Billing() {
     invoices, 
     patients,
     appointments,
+    clinicInfo,
     addInvoice, 
     updateInvoice, 
     deleteInvoice 
@@ -243,6 +244,9 @@ export default function Billing() {
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
           .container { width: 100%; margin: 0 auto; background: white; }
           .header { background: #dbeafe; color: #2563eb; padding: 2rem; text-align: center; position: relative; overflow: hidden; }
+          .clinic-header { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1rem; }
+          .clinic-logo { width: 60px; height: 60px; object-fit: contain; }
+          .clinic-icon { font-size: 3rem; }
           .header h1 { margin: 0; font-size: 2.5rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
           .header h2 { margin: 0.5rem 0 0 0; font-size: 1.5rem; font-weight: 400; opacity: 0.9; }
           .header .tagline { background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 12px; margin-top: 1rem; backdrop-filter: blur(10px); }
@@ -260,6 +264,12 @@ export default function Billing() {
           .total-card { border: 2px solid #2563eb; }
           .total-amount { color: #2563eb; font-size: 1.3rem; font-weight: bold; }
           .footer { background: #f8fafc; padding: 2rem; text-align: center; border-top: 1px solid #e2e8f0; }
+          .footer-content { max-width: 100%; margin: 0 auto; }
+          .footer-content h3 { margin: 0 0 1rem 0; color: #2563eb; font-size: 1.25rem; font-weight: bold; }
+          .footer-details { margin-bottom: 1rem; line-height: 1.6; }
+          .footer-details p { margin: 0.25rem 0; color: #374151; font-size: 0.875rem; }
+          .footer-bottom { border-top: 1px solid #d1d5db; padding-top: 1rem; margin-top: 1rem; }
+          .footer-bottom p { margin: 0.25rem 0; color: #64748b; font-size: 0.8rem; }
           .print-controls { 
             position: fixed; 
             top: 20px; 
@@ -292,7 +302,10 @@ export default function Billing() {
           </div>
           
           <div class="header">
-            <h1>🦷 DentalCare Pro</h1>
+            <div class="clinic-header">
+                ${clinicInfo.logo ? `<img src="${clinicInfo.logo}" alt="Clinic Logo" class="clinic-logo" />` : ''}
+                ${clinicInfo.name ? `<h1>${clinicInfo.name}</h1>` : ''}
+            </div>
             <h2>Professional Invoice</h2>
             <div class="tagline"><strong>Excellence in Dental Care</strong></div>
           </div>
@@ -365,6 +378,27 @@ export default function Billing() {
             </div>
             
             <div class="section">
+              <h3>Appointment Information</h3>
+              <div class="grid">
+                <div class="card">
+                  <div class="card-label">Re Appointments</div>
+                  <div class="card-value">${appointments.filter(a => a.patientId === invoice.patientId && a.type === 'reappointment').length}</div>
+                </div>
+                <div class="card">
+                  <div class="card-label">Last Re Appointment</div>
+                  <div class="card-value">${(() => {
+                    const reAppointments = appointments.filter(a => a.patientId === invoice.patientId && a.type === 'reappointment');
+                    if (reAppointments.length > 0) {
+                      const lastReAppointment = reAppointments[reAppointments.length - 1];
+                      return formatDate(lastReAppointment.date);
+                    }
+                    return 'No re appointments';
+                  })()}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section">
               <h3>Treatments & Services</h3>
               <table>
                 <thead>
@@ -423,8 +457,17 @@ export default function Billing() {
           </div>
           
           <div class="footer">
-            <p style="margin: 0 0 0.5rem 0; color: #64748b; font-size: 1rem; font-weight: 500;">Thank you for choosing our dental services!</p>
-            <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">Generated on: ${new Date().toLocaleString()}</p>
+            <div class="footer-content">
+              <h3>${clinicInfo.name}</h3>
+              <div class="footer-details">
+                <p><strong>Address:</strong> ${clinicInfo.address}</p>
+                <p><strong>Phone:</strong> ${clinicInfo.phone} | <strong>Email:</strong> ${clinicInfo.email}</p>
+                <p><strong>Website:</strong> ${clinicInfo.website} | <strong>Hours:</strong> ${clinicInfo.hours}</p>
+              </div>
+              <div class="footer-bottom">
+                <p style="margin: 0 0 0.5rem 0; color: #64748b; font-size: 1rem; font-weight: 500;">Thank you for choosing our dental services!</p>
+              </div>
+            </div>
           </div>
         </div>
       </body>
@@ -1055,77 +1098,29 @@ Mike Johnson,2025-01-15,2025-01-22,filling,Cavity filling,2,800,0,pending,cash,E
                   }}>
                     <button 
                       onClick={() => handleViewInvoice(invoice)}
-                      style={{
-                        width: '40px', 
-                        height: '40px', 
-                        padding: '0', 
-                        background: 'var(--primary-light)', 
-                        color: 'var(--primary-color)', 
-                        borderRadius: 'var(--radius-md)', 
-                        border: 'none', 
-                        cursor: 'pointer', 
-                        transition: 'all 0.2s ease-in-out'
-                      }}
+                      className="w-10 h-10 p-5 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200"
                       title="View Details"
-                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
                       <i className="fas fa-eye"></i>
                     </button>
                       <button
                         onClick={() => handleEditInvoice(invoice)}
-                      style={{
-                        width: '40px', 
-                        height: '40px', 
-                        padding: '0', 
-                        background: 'var(--primary-light)', 
-                        color: 'var(--primary-color)', 
-                        borderRadius: 'var(--radius-md)', 
-                        border: 'none', 
-                        cursor: 'pointer', 
-                        transition: 'all 0.2s ease-in-out'
-                      }}
-                      title="Update Invoice"
-                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        className="w-10 h-10 p-5 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200"
+                        title="Update Invoice"
                     >
                       <i className="fas fa-edit"></i>
                     </button>
                     <button 
                       onClick={() => handlePrintInvoice(invoice)}
-                      style={{
-                        width: '40px', 
-                        height: '40px', 
-                        padding: '0', 
-                        background: 'var(--white)', 
-                        color: 'var(--warning-color)', 
-                        border: '1px solid var(--warning-color)', 
-                        borderRadius: 'var(--radius-md)', 
-                        cursor: 'pointer', 
-                        transition: 'all 0.2s ease-in-out'
-                      }}
+                      className="w-10 h-10 p-5 bg-white border border-yellow-300 rounded-lg flex items-center justify-center text-yellow-600 hover:bg-yellow-50"
                       title="Print"
-                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
                       <i className="fas fa-print"></i>
                       </button>
                       <button
                         onClick={() => handleDeleteInvoice(invoice.id)}
-                      style={{
-                        width: '40px', 
-                        height: '40px', 
-                        padding: '0', 
-                        background: 'var(--white)', 
-                        color: 'var(--error-color)', 
-                        border: '1px solid var(--error-color)', 
-                        borderRadius: 'var(--radius-md)', 
-                        cursor: 'pointer', 
-                        transition: 'all 0.2s ease-in-out'
-                      }}
-                      title="Delete"
-                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        className="w-10 h-10 p-5 bg-white border border-red-300 rounded-lg flex items-center justify-center text-red-600 hover:bg-red-50"
+                        title="Delete"
                     >
                       <i className="fas fa-trash"></i>
                       </button>

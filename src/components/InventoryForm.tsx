@@ -1,9 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { InventoryItem } from '@/stores/useAppStore'
+import { cn, getCurrentKarachiTime } from '@/lib/utils'
 
 const inventorySchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -30,6 +32,11 @@ interface InventoryFormProps {
 }
 
 export default function InventoryForm({ item, onSave, onClose }: InventoryFormProps) {
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState(getCurrentKarachiTime())
+  const [showYearDropdown, setShowYearDropdown] = useState(false)
+  const [showMonthDropdown, setShowMonthDropdown] = useState(false)
+  
   const {
     register,
     handleSubmit,
@@ -59,12 +66,115 @@ export default function InventoryForm({ item, onSave, onClose }: InventoryFormPr
 
   const watchedQuantity = watch('quantity')
   const watchedPrice = watch('price')
+  const watchedExpiryDate = watch('expiryDate')
+
+  // Calendar utility functions
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  }
+
+  // Generate years array (from 1950 to current year + 10)
+  const generateYears = () => {
+    const currentYear = getCurrentKarachiTime().getFullYear()
+    const years = []
+    for (let year = 1950; year <= currentYear + 10; year++) {
+      years.push(year)
+    }
+    return years.reverse()
+  }
+
+  // Generate months array
+  const generateMonths = () => {
+    return [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+  }
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev)
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1)
+      } else {
+        newDate.setMonth(prev.getMonth() + 1)
+      }
+      return newDate
+    })
+  }
+
+  // Handle year selection
+  const selectYear = (year: number) => {
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setFullYear(year)
+      return newDate
+    })
+    setShowYearDropdown(false)
+  }
+
+  // Handle month selection
+  const selectMonth = (monthIndex: number) => {
+    setCurrentMonth(prev => {
+      const newDate = new Date(prev)
+      newDate.setMonth(monthIndex)
+      return newDate
+    })
+    setShowMonthDropdown(false)
+  }
+
+  const selectDate = (day: number) => {
+    const year = currentMonth.getFullYear()
+    const month = currentMonth.getMonth()
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    setValue('expiryDate', formattedDate)
+    setShowCalendar(false)
+  }
+
+  const isToday = (day: number) => {
+    const today = getCurrentKarachiTime()
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+    return date.toDateString() === today.toDateString()
+  }
+
+  const isSelectedDate = (day: number) => {
+    if (!watchedExpiryDate) return false
+    const selectedDate = new Date(watchedExpiryDate)
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+    return date.toDateString() === selectedDate.toDateString()
+  }
 
   // Calculate total value when quantity or price changes
   React.useEffect(() => {
     const totalValue = watchedQuantity * watchedPrice
     setValue('totalValue', totalValue)
   }, [watchedQuantity, watchedPrice, setValue])
+
+  // Close calendar when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      
+      // Check if clicking outside calendar elements
+      const isCalendarElement = target.closest?.('.calendar-container')
+      const isDropdownElement = target.closest?.('.dropdown-container')
+      
+      if (!isCalendarElement && !isDropdownElement) {
+        setShowCalendar(false)
+        setShowYearDropdown(false)
+        setShowMonthDropdown(false)
+      }
+    }
+
+    if (showCalendar) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showCalendar])
 
   const onSubmit = (data: InventoryFormData) => {
     // Map form data to inventory item structure
@@ -192,10 +302,25 @@ export default function InventoryForm({ item, onSave, onClose }: InventoryFormPr
                       fontSize: '16px',
                       outline: 'none',
                       backgroundColor: 'white',
-                      transition: 'border-color 0.2s ease-in-out'
+                      transition: 'border-color 0.2s ease-in-out',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236b7280\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      backgroundSize: '16px',
+                      paddingRight: '40px'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#3b82f6'
+                      e.target.style.backgroundImage = 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%232563eb\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#d1d5db'
+                      e.target.style.backgroundImage = 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236b7280\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")'
+                    }}
                   >
                     <option value="">Select Category</option>
                     <option value="Dental Supplies">Dental Supplies</option>
@@ -483,38 +608,128 @@ export default function InventoryForm({ item, onSave, onClose }: InventoryFormPr
                     EXPIRY DATE
                   </label>
                   <div className="enhanced-date-picker" style={{ position: 'relative' }}>
-                    <input 
-                      type="date" 
-                      id="item-expiry-date" 
+                    <input
                       {...register('expiryDate')}
-                      data-calendar-initialized="true"
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        outline: 'none',
-                        transition: 'border-color 0.2s ease-in-out'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                      type="text"
+                      id="item-expiry-date"
+                      readOnly
+                      onClick={() => setShowCalendar(!showCalendar)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                      placeholder="Select expiry date"
+                      value={watchedExpiryDate ? new Date(watchedExpiryDate).toLocaleDateString('en-US', { timeZone: 'Asia/Karachi' }) : ''}
                     />
-                    <i 
-                      className="fas fa-calendar-alt date-icon" 
-                      data-click-handler-added="true" 
-                      style={{ 
-                        position: 'absolute', 
-                        right: '12px', 
-                        top: '50%', 
-                        transform: 'translateY(-50%)', 
-                        color: '#6b7280', 
-                        pointerEvents: 'auto', 
-                        cursor: 'pointer' 
-                      }}
-                    />
+                    <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer" />
+                    
+                    {/* Custom Calendar */}
+                    {showCalendar && (
+                      <div className="calendar-container absolute top-full left-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 p-4 z-50 transform -rotate-1">
+                        {/* Calendar Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <button
+                            type="button"
+                            onClick={() => navigateMonth('prev')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5 text-gray-600" />
+                          </button>
+                          
+                          <div className="flex items-center gap-2">
+                            {/* Month Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowMonthDropdown(!showMonthDropdown)}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentMonth.toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Karachi' })}
+                              </button>
+                              {showMonthDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto scrollbar-hide">
+                                  {generateMonths().map((month, index) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      onClick={() => selectMonth(index)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {month}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Year Dropdown */}
+                            <div className="dropdown-container relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowYearDropdown(!showYearDropdown)}
+                                className="px-3 py-1 text-lg font-semibold text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                {currentMonth.getFullYear()}
+                              </button>
+                              {showYearDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto w-20 scrollbar-hide">
+                                  {generateYears().map((year) => (
+                                    <button
+                                      key={year}
+                                      type="button"
+                                      onClick={() => selectYear(year)}
+                                      className="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors"
+                                    >
+                                      {year}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => navigateMonth('next')}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5 text-gray-600" />
+                          </button>
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                            <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-1">
+                          {/* Empty cells for days before the first day of the month */}
+                          {Array.from({ length: getFirstDayOfMonth(currentMonth) }).map((_, index) => (
+                            <div key={`empty-${index}`} className="h-8"></div>
+                          ))}
+                          
+                          {/* Days of the month */}
+                          {Array.from({ length: getDaysInMonth(currentMonth) }, (_, i) => i + 1).map(day => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => selectDate(day)}
+                              className={cn(
+                                'h-8 w-8 rounded-full text-sm font-medium transition-colors hover:bg-gray-100',
+                                isToday(day) && 'bg-blue-500 text-white hover:bg-blue-600',
+                                isSelectedDate(day) && !isToday(day) && 'bg-blue-500 text-white hover:bg-blue-600',
+                                !isToday(day) && !isSelectedDate(day) && 'text-gray-800 hover:bg-gray-100'
+                              )}
+                            >
+                              {day}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
                 <div className="form-group" style={{ marginBottom: '20px' }}>
                   <label htmlFor="item-status" style={{ 

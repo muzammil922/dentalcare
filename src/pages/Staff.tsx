@@ -286,6 +286,7 @@ export default function Staff() {
   const { 
     staff, 
     salaries,
+    clinicInfo,
     addStaff, 
     updateStaff, 
     deleteStaff,
@@ -709,6 +710,24 @@ export default function Staff() {
                   animation: float 6s ease-in-out infinite;
               }
               
+              .clinic-header {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 1rem;
+                  margin-bottom: 1rem;
+              }
+              
+              .clinic-logo {
+                  width: 60px;
+                  height: 60px;
+                  object-fit: contain;
+              }
+              
+              .clinic-icon {
+                  font-size: 3rem;
+              }
+              
               .header h1 {
                   margin: 0;
                   font-size: 2.5rem;
@@ -806,10 +825,39 @@ export default function Staff() {
                   border-top: 1px solid #e2e8f0;
               }
               
-              .footer p {
-                  margin: 0;
-                  color: #64748b;
+              .footer-content {
+                  max-width: 100%;
+                  margin: 0 auto;
+              }
+              
+              .footer-content h3 {
+                  margin: 0 0 1rem 0;
+                  color: #2563eb;
+                  font-size: 1.25rem;
+                  font-weight: bold;
+              }
+              
+              .footer-details {
+                  margin-bottom: 1rem;
+                  line-height: 1.6;
+              }
+              
+              .footer-details p {
+                  margin: 0.25rem 0;
+                  color: #374151;
                   font-size: 0.875rem;
+              }
+              
+              .footer-bottom {
+                  border-top: 1px solid #d1d5db;
+                  padding-top: 1rem;
+                  margin-top: 1rem;
+              }
+              
+              .footer-bottom p {
+                  margin: 0.25rem 0;
+                  color: #64748b;
+                  font-size: 0.8rem;
               }
               
               .status-badge {
@@ -867,7 +915,10 @@ export default function Staff() {
       </div>
           <div class="container">
               <div class="header">
-                  <h1>🦷 DentalCare Pro</h1>
+                  <div class="clinic-header">
+                      ${clinicInfo.logo ? `<img src="${clinicInfo.logo}" alt="Clinic Logo" class="clinic-logo" />` : ''}
+                      ${clinicInfo.name ? `<h1>${clinicInfo.name}</h1>` : ''}
+                  </div>
                   <h2>Staff Record</h2>
                   <div class="clinic-info">
                       <strong>Professional Staff Management</strong><br>
@@ -1002,8 +1053,16 @@ export default function Staff() {
               </div>
               
               <div class="footer">
-                  <p><strong>Generated on:</strong> ${formatCurrentKarachiDate()} at ${formatCurrentKarachiTime()}</p>
-                  <p>This is an official staff record from DentalCare Pro</p>
+                  <div class="footer-content">
+                      <h3>${clinicInfo.name}</h3>
+                      <div class="footer-details">
+                          <p><strong>Address:</strong> ${clinicInfo.address}</p>
+                          <p><strong>Phone:</strong> ${clinicInfo.phone} | <strong>Email:</strong> ${clinicInfo.email}</p>
+                          <p><strong>Website:</strong> ${clinicInfo.website} | <strong>Hours:</strong> ${clinicInfo.hours}</p>
+                      </div>
+                      <div class="footer-bottom">
+                      </div>
+                  </div>
               </div>
           </div>
       </body>
@@ -1569,8 +1628,14 @@ export default function Staff() {
               
               <div class="footer">
                   <div class="footer-content">
-                      <strong>Dental Clinic Pro</strong> - Staff Attendance Management System<br>
-                      Generated on: <strong>${formatCurrentKarachiDate()}</strong> | Report Period: <strong>${monthName} ${currentYear}</strong>
+                      <h3>${clinicInfo.name}</h3>
+                      <div class="footer-details">
+                          <p><strong>Address:</strong> ${clinicInfo.address}</p>
+                          <p><strong>Phone:</strong> ${clinicInfo.phone} | <strong>Email:</strong> ${clinicInfo.email}</p>
+                          <p><strong>Website:</strong> ${clinicInfo.website} | <strong>Hours:</strong> ${clinicInfo.hours}</p>
+                      </div>
+                      <div class="footer-bottom">
+                      </div>
                   </div>
               </div>
           </div>
@@ -2109,8 +2174,14 @@ export default function Staff() {
               
               <div class="footer">
                   <div class="footer-content">
-                      <strong>Dental Clinic Pro</strong> - Staff Attendance Management System<br>
-                      Generated on: <strong>${formatCurrentKarachiDate()}</strong> | Report Period: <strong>${monthNames[currentMonth]} ${currentYear}</strong>
+                      <h3>${clinicInfo.name}</h3>
+                      <div class="footer-details">
+                          <p><strong>Address:</strong> ${clinicInfo.address}</p>
+                          <p><strong>Phone:</strong> ${clinicInfo.phone} | <strong>Email:</strong> ${clinicInfo.email}</p>
+                          <p><strong>Website:</strong> ${clinicInfo.website} | <strong>Hours:</strong> ${clinicInfo.hours}</p>
+                      </div>
+                      <div class="footer-bottom">
+                      </div>
                   </div>
               </div>
           </div>
@@ -2592,10 +2663,39 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                   border-top: 1px solid #e2e8f0;
               }
               
-              .footer p {
-                  margin: 0;
-                  color: #64748b;
+              .footer-content {
+                  max-width: 100%;
+                  margin: 0 auto;
+              }
+              
+              .footer-content h3 {
+                  margin: 0 0 1rem 0;
+                  color: #2563eb;
+                  font-size: 1.25rem;
+                  font-weight: bold;
+              }
+              
+              .footer-details {
+                  margin-bottom: 1rem;
+                  line-height: 1.6;
+              }
+              
+              .footer-details p {
+                  margin: 0.25rem 0;
+                  color: #374151;
                   font-size: 0.875rem;
+              }
+              
+              .footer-bottom {
+                  border-top: 1px solid #d1d5db;
+                  padding-top: 1rem;
+                  margin-top: 1rem;
+              }
+              
+              .footer-bottom p {
+                  margin: 0.25rem 0;
+                  color: #64748b;
+                  font-size: 0.8rem;
               }
               
               .status-badge {
@@ -2645,7 +2745,10 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
       </div>
           <div class="container">
               <div class="header">
-                  <h1>🦷 DentalCare Pro</h1>
+                  <div class="clinic-header">
+                      ${clinicInfo.logo ? `<img src="${clinicInfo.logo}" alt="Clinic Logo" class="clinic-logo" />` : ''}
+                      ${clinicInfo.name ? `<h1>${clinicInfo.name}</h1>` : ''}
+                  </div>
                   <h2>Salary Slip</h2>
                   <div class="clinic-info">
                       <strong>Professional Payroll</strong><br>
@@ -2763,8 +2866,16 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
               </div>
               
               <div class="footer">
-                  <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
-                  <p>This is an official salary slip from DentalCare Pro</p>
+                  <div class="footer-content">
+                      <h3>${clinicInfo.name}</h3>
+                      <div class="footer-details">
+                          <p><strong>Address:</strong> ${clinicInfo.address}</p>
+                          <p><strong>Phone:</strong> ${clinicInfo.phone} | <strong>Email:</strong> ${clinicInfo.email}</p>
+                          <p><strong>Website:</strong> ${clinicInfo.website} | <strong>Hours:</strong> ${clinicInfo.hours}</p>
+                      </div>
+                      <div class="footer-bottom">
+                      </div>
+                  </div>
               </div>
           </div>
       </body>
@@ -3677,28 +3788,28 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                     <div className="flex gap-2 flex-shrink-0 min-w-[100px] justify-center">
                       <button 
                         onClick={() => handleViewSalaryDetails(salary)}
-                        className="w-10 h-10 p-0 bg-blue-100 text-blue-600 rounded-md border-none cursor-pointer transition-all duration-200 hover:scale-110"
+                        className="w-10 h-10 p-0 bg-blue-100 text-blue-600 rounded-md border-none cursor-pointer transition-all duration-200 hover:bg-blue-200"
                         title="View Details"
                       >
                         <i className="fas fa-eye"></i>
                       </button>
                   <button 
                         onClick={() => handleEditSalary(salary)}
-                        className="w-10 h-10 p-0 bg-blue-100 text-blue-600 rounded-md border-none cursor-pointer transition-all duration-200 hover:scale-110"
+                        className="w-10 h-10 p-0 bg-blue-100 text-blue-600 rounded-md border-none cursor-pointer transition-all duration-200 hover:bg-blue-200"
                         title="Edit Salary"
                   >
                         <i className="fas fa-edit"></i>
                   </button>
                   <button 
                         onClick={() => handlePrintSalary(salary)}
-                        className="w-10 h-10 p-0 bg-white text-yellow-500 border border-yellow-500 rounded-md cursor-pointer transition-all duration-200 hover:scale-110"
+                        className="w-10 h-10 p-0 bg-white text-yellow-600 border border-yellow-500 rounded-md cursor-pointer transition-all duration-200 hover:bg-yellow-50"
                         title="Print"
                   >
                         <i className="fas fa-print"></i>
                   </button>
                   <button 
                         onClick={() => handleDeleteSalary(salary.id)}
-                        className="w-10 h-10 p-0 bg-white text-red-500 border border-red-500 rounded-md cursor-pointer transition-all duration-200 hover:scale-110"
+                        className="w-10 h-10 p-0 bg-white text-red-500 border border-red-500 rounded-md cursor-pointer transition-all duration-200 hover:bg-red-50"
                         title="Delete"
                   >
                         <i className="fas fa-trash"></i>
@@ -4144,17 +4255,22 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                                   width: '40px',
                                   height: '40px',
                                   padding: '0px',
-                                  background: 'var(--warning-light)',
-                                  color: 'var(--warning-color)',
+                                  background: 'var(--white)',
+                                  color: '#ca8a04',
+                                  border: '1px solid var(--warning-color)',
                                   borderRadius: 'var(--radius-md)',
-                                  border: 'none',
                                   cursor: 'pointer',
-                                  transition: '0.2s ease-in-out',
-                                  transform: 'scale(1)'
+                                  transition: '0.2s ease-in-out'
                                 }}
                                 title="Checkout"
-                                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                onMouseOver={(e) => {
+                                  e.currentTarget.style.background = '#FEFCE8'
+                                  e.currentTarget.style.color = '#ca8a04'
+                                }}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.style.background = 'var(--white)'
+                                  e.currentTarget.style.color = '#ca8a04'
+                                }}
                               >
                                 <i className="fas fa-sign-out-alt"></i>
                               </button>
@@ -4173,12 +4289,17 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                                   borderRadius: 'var(--radius-md)',
                                   border: 'none',
                                   cursor: 'pointer',
-                                  transition: '0.2s ease-in-out',
-                                  transform: 'scale(1)'
+                                  transition: '0.2s ease-in-out'
                                 }}
                                 title="Mark Attendance"
-                                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                onMouseOver={(e) => {
+                                  e.currentTarget.style.background = 'var(--primary-color)'
+                                  e.currentTarget.style.color = 'var(--white)'
+                                }}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.style.background = 'var(--primary-light)'
+                                  e.currentTarget.style.color = 'var(--primary-color)'
+                                }}
                               >
                                 <i className="fas fa-plus"></i>
                               </button>
@@ -4197,12 +4318,17 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                                   borderRadius: 'var(--radius-md)',
                                   border: 'none',
                                   cursor: 'pointer',
-                                  transition: '0.2s ease-in-out',
-                                  transform: 'scale(1)'
+                                  
                                 }}
                                 title="Mark Attendance"
-                                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                onMouseOver={(e) => {
+                                  e.currentTarget.style.background = 'var(--primary-color)'
+                                  e.currentTarget.style.color = 'var(--white)'
+                                }}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.style.background = 'var(--primary-light)'
+                                  e.currentTarget.style.color = 'var(--primary-color)'
+                                }}
                               >
                                 <i className="fas fa-plus"></i>
                               </button>
@@ -4212,21 +4338,8 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                         
                         <button
                           onClick={() => handleViewAttendanceCalendar(staffMember)}
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            padding: '0px',
-                            background: 'var(--primary-light)',
-                            color: 'var(--primary-color)',
-                            borderRadius: 'var(--radius-md)',
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: '0.2s ease-in-out',
-                            transform: 'scale(1)'
-                          }}
+                          className="w-10 h-10 p-5 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200"
                           title="View Details"
-                          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         >
                           <i className="fas fa-eye"></i>
                         </button>
@@ -4238,16 +4351,21 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                             height: '40px',
                             padding: '0px',
                             background: 'var(--white)',
-                            color: 'var(--warning-color)',
+                            color: '#ca8a04',
                             border: '1px solid var(--warning-color)',
                             borderRadius: 'var(--radius-md)',
                             cursor: 'pointer',
-                            transition: '0.2s ease-in-out',
-                            transform: 'scale(1)'
+                            transition: '0.2s ease-in-out'
                           }}
                           title="Print Attendance Report"
-                          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = '#FEFCE8'
+                            e.currentTarget.style.color = '#ca8a04'
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'var(--white)'
+                            e.currentTarget.style.color = '#ca8a04'
+                          }}
                         >
                           <i className="fas fa-print"></i>
                         </button>
@@ -5439,8 +5557,14 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                             justifyContent: 'center',
                             fontSize: '0.875rem'
                           }}
-                          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'var(--danger-color)'
+                            e.currentTarget.style.color = 'var(--white)'
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'var(--white)'
+                            e.currentTarget.style.color = 'var(--danger-color)'
+                          }}
                         >
                           <i className="fas fa-times-circle"></i>
                         </button>
@@ -5466,8 +5590,14 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                             justifyContent: 'center',
                             fontSize: '0.875rem'
                           }}
-                          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'var(--warning-color)'
+                            e.currentTarget.style.color = 'var(--white)'
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'var(--white)'
+                            e.currentTarget.style.color = 'var(--warning-color)'
+                          }}
                         >
                           <i className="fas fa-calendar-times"></i>
                         </button>
@@ -5493,8 +5623,14 @@ s-02,December,2024,2024-12-25,Staff,30000,2000,1000,500,1000,28,0,0,1,0,30,Regul
                             justifyContent: 'center',
                             fontSize: '0.875rem'
                           }}
-                          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'var(--purple-color)'
+                            e.currentTarget.style.color = 'var(--white)'
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'var(--white)'
+                            e.currentTarget.style.color = 'var(--purple-color)'
+                          }}
                         >
                           <i className="fas fa-hourglass-half"></i>
                         </button>

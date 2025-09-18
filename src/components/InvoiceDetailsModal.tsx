@@ -77,11 +77,11 @@ export default function InvoiceDetailsModal({ invoice, patient, isOpen, onClose 
             
             {/* Body */}
            
-            <div className="p-4 overflow-y-auto flex-1 bg-gray-50 scrollbar-hide">
+            <div className="p-6 overflow-y-auto flex-1 bg-gray-50 scrollbar-hide">
                {/* Floating Close Button */}
             {/* Invoice Details Heading */}
             
-             <div className="flex items-center justify-between p-4 border-b border-gray-200">
+             <div className="flex items-center justify-between p-6 border-b border-gray-200">
                <div className="flex items-center">
                  <i className="fas fa-file-invoice-dollar w-8 h-8 mr-2 bg-blue-100 rounded-full flex items-center justify-center text-blue-600"></i>
                  <h2 className="text-2xl font-bold text-gray-800 m-0">Invoice Details</h2>
@@ -94,10 +94,10 @@ export default function InvoiceDetailsModal({ invoice, patient, isOpen, onClose 
                </button>
              </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
                 
                 {/* Invoice Information Card */}
-                <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
+                <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                       <i className="fas fa-file-invoice text-blue-600 text-lg"></i>
@@ -105,44 +105,44 @@ export default function InvoiceDetailsModal({ invoice, patient, isOpen, onClose 
                     <h3 className="text-lg font-semibold text-gray-800 m-0">Invoice Information</h3>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-gray-600 font-medium">Invoice ID:</span>
-                      <span className="text-blue-600 font-medium">{invoice.id}</span>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-600 font-medium text-sm">Invoice ID</span>
+                      <span className="text-blue-600 font-semibold text-sm">{invoice.id}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-gray-600 font-medium">Invoice Number:</span>
-                      <span className="text-blue-600 font-medium">{invoice.invoiceNumber}</span>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-600 font-medium text-sm">Invoice Number</span>
+                      <span className="text-blue-600 font-semibold text-sm">{invoice.invoiceNumber}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-gray-600 font-medium">Date:</span>
-                      <span className="text-blue-600 font-medium">{formatDate(invoice.invoiceDate)}</span>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-600 font-medium text-sm">Date</span>
+                      <span className="text-blue-600 font-semibold text-sm">{formatDate(invoice.invoiceDate)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-gray-600 font-medium">Due Date:</span>
-                      <span className="text-blue-600 font-medium">{formatDate(invoice.dueDate)}</span>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-600 font-medium text-sm">Due Date</span>
+                      <span className="text-blue-600 font-semibold text-sm">{formatDate(invoice.dueDate)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-gray-600 font-medium">Status:</span>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-600 font-medium text-sm">Status</span>
                       <span className={`text-white px-3 py-1 rounded-md text-sm font-semibold ${getStatusColor(getActualStatus(invoice))}`}>
                         {getStatusText(getActualStatus(invoice))}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-gray-600 font-medium">Payment Method:</span>
-                      <span className="text-blue-600 font-medium capitalize">{invoice.paymentMethod || 'Not specified'}</span>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-600 font-medium text-sm">Payment Method</span>
+                      <span className="text-blue-600 font-semibold text-sm capitalize">{invoice.paymentMethod || 'Not specified'}</span>
                     </div>
                     {invoice.receiptNumber && (
-                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span className="text-gray-600 font-medium">Receipt Number:</span>
-                        <span className="text-blue-600 font-medium">{invoice.receiptNumber}</span>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                        <span className="text-gray-600 font-medium text-sm">Receipt Number</span>
+                        <span className="text-blue-600 font-semibold text-sm">{invoice.receiptNumber}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Patient Information Card */}
-                <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
+                <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                       <i className="fas fa-user text-blue-600 text-lg"></i>
@@ -150,28 +150,28 @@ export default function InvoiceDetailsModal({ invoice, patient, isOpen, onClose 
                     <h3 className="text-lg font-semibold text-gray-800 m-0">Patient Information</h3>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-gray-600 font-medium">Name:</span>
-                      <span className="text-blue-600 font-medium">{invoice.patientName}</span>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                      <span className="text-gray-600 font-medium text-sm">Name</span>
+                      <span className="text-blue-600 font-semibold text-sm">{invoice.patientName}</span>
                     </div>
                     {patient && (
                       <>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Phone:</span>
-                          <span className="text-blue-600 font-medium">{patient.phone}</span>
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                          <span className="text-gray-600 font-medium text-sm">Phone</span>
+                          <span className="text-blue-600 font-semibold text-sm">{patient.phone}</span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Email:</span>
-                          <span className="text-blue-600 font-medium">{patient.email || 'Not provided'}</span>
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                          <span className="text-gray-600 font-medium text-sm">Email</span>
+                          <span className="text-blue-600 font-semibold text-sm">{patient.email || 'Not provided'}</span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Age:</span>
-                          <span className="text-blue-600 font-medium">{patient.age} years</span>
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                          <span className="text-gray-600 font-medium text-sm">Age</span>
+                          <span className="text-blue-600 font-semibold text-sm">{patient.age} years</span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">Gender:</span>
-                          <span className="text-blue-600 font-medium capitalize">{patient.gender}</span>
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                          <span className="text-gray-600 font-medium text-sm">Gender</span>
+                          <span className="text-blue-600 font-semibold text-sm capitalize">{patient.gender}</span>
                         </div>
                       </>
                     )}
@@ -217,18 +217,18 @@ export default function InvoiceDetailsModal({ invoice, patient, isOpen, onClose 
                   <h3 className="text-lg font-semibold text-gray-800 m-0">Invoice Summary</h3>
                 </div>
                 
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-gray-600 font-medium">Subtotal:</span>
-                    <span className="text-blue-600 font-medium">{formatCurrency(invoice.subtotal)}</span>
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                    <span className="text-gray-600 font-medium text-sm">Subtotal</span>
+                    <span className="text-blue-600 font-semibold text-sm">{formatCurrency(invoice.subtotal)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-gray-600 font-medium">Total Discount:</span>
-                    <span className="text-blue-600 font-medium">{formatCurrency(invoice.discount)}</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                    <span className="text-gray-600 font-medium text-sm">Total Discount</span>
+                    <span className="text-blue-600 font-semibold text-sm">{formatCurrency(invoice.discount)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-3 mt-2">
-                    <span className="text-blue-600 font-medium text-lg">Total Amount:</span>
-                    <span className="text-blue-600 font-bold text-xl">{formatCurrency(invoice.total)}</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                    <span className="text-gray-600 font-medium text-sm">Total Amount</span>
+                    <span className="text-blue-600 font-bold text-lg">{formatCurrency(invoice.total)}</span>
                   </div>
                 </div>
               </div>

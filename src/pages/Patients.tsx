@@ -120,6 +120,8 @@ function Patients() {
   const { 
     patients, 
     appointments,
+    invoices,
+    clinicInfo,
     addPatient, 
     updatePatient, 
     deletePatient,
@@ -594,6 +596,22 @@ function Patients() {
                   #printButtonContainer { display: none !important; }
                   div[id="printButtonContainer"] { display: none !important; }
                   .print-button { display: none !important; }
+                  .info-cards-grid { 
+                      grid-template-columns: 1fr 1fr !important; 
+                      gap: 0.5rem !important; 
+                  }
+                  .info-card { 
+                      padding: 0.75rem !important; 
+                      margin-bottom: 0.5rem !important; 
+                  }
+                  .info-grid { 
+                      grid-template-columns: 1fr 1fr !important; 
+                      gap: 0.5rem !important; 
+                  }
+                  .info-item { 
+                      padding: 0.75rem !important; 
+                      margin-bottom: 0.5rem !important; 
+                  }
               }
               
               @keyframes float {
@@ -634,6 +652,24 @@ function Patients() {
                   height: 200%;
                   background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
                   animation: float 6s ease-in-out infinite;
+              }
+              
+              .clinic-header {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 1rem;
+                  margin-bottom: 1rem;
+              }
+              
+              .clinic-logo {
+                  width: 60px;
+                  height: 60px;
+                  object-fit: contain;
+              }
+              
+              .clinic-icon {
+                  font-size: 3rem;
               }
               
               .header h1 {
@@ -726,6 +762,21 @@ function Patients() {
                   background: #f8fafc;
               }
               
+              .info-cards-grid {
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                  gap: 1rem;
+                  margin-top: 1rem;
+              }
+              
+              .info-card {
+                  background: white;
+                  border: 1px solid #e2e8f0;
+                  border-radius: 8px;
+                  padding: 1rem;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+              
               .footer {
                   background: #f8fafc;
                   padding: 1.5rem;
@@ -733,10 +784,39 @@ function Patients() {
                   border-top: 1px solid #e2e8f0;
               }
               
-              .footer p {
-                  margin: 0;
-                  color: #64748b;
+              .footer-content {
+                  max-width: 100%;
+                  margin: 0 auto;
+              }
+              
+              .footer-content h3 {
+                  margin: 0 0 1rem 0;
+                  color: #2563eb;
+                  font-size: 1.25rem;
+                  font-weight: bold;
+              }
+              
+              .footer-details {
+                  margin-bottom: 1rem;
+                  line-height: 1.6;
+              }
+              
+              .footer-details p {
+                  margin: 0.25rem 0;
+                  color: #374151;
                   font-size: 0.875rem;
+              }
+              
+              .footer-bottom {
+                  border-top: 1px solid #d1d5db;
+                  padding-top: 1rem;
+                  margin-top: 1rem;
+              }
+              
+              .footer-bottom p {
+                  margin: 0.25rem 0;
+                  color: #64748b;
+                  font-size: 0.8rem;
               }
               
               .status-badge {
@@ -788,7 +868,10 @@ function Patients() {
       </div>
           <div class="container">
               <div class="header">
-                  <h1>🦷 DentalCare Pro</h1>
+                  <div class="clinic-header">
+                      ${clinicInfo.logo ? `<img src="${clinicInfo.logo}" alt="Clinic Logo" class="clinic-logo" />` : ''}
+                      ${clinicInfo.name ? `<h1>${clinicInfo.name}</h1>` : ''}
+                  </div>
                   <h2>Patient Medical Record</h2>
                   <div class="clinic-info">
                       <strong>Professional Dental Care Services</strong><br>
@@ -843,47 +926,44 @@ function Patients() {
                       </div>
                   </div>
                   
-                  ${patient.address ? `
                   <div class="section">
-                      <h3>Address Information</h3>
-                      <div class="highlight-box">
-                          <div class="info-label">Residential Address</div>
+                      <h3>Additional Information</h3>
+                      <div class="info-cards-grid">
+                          ${patient.address ? `
+                          <div class="info-card">
+                              <div class="info-label">RESIDENTIAL ADDRESS</div>
                           <div class="info-value">${patient.address}</div>
-                      </div>
                   </div>
                   ` : ''}
-                  
-                  <div class="section medical-history">
-                      <h3>Medical History</h3>
-                      <div class="highlight-box">
-                          ${patient.medicalHistory ? patient.medicalHistory : 'No medical history recorded for this patient.'}
+                          <div class="info-card">
+                              <div class="info-label">MEDICAL HISTORY</div>
+                              <div class="info-value">${patient.medicalHistory ? 'Yes' : 'No'}</div>
                       </div>
-                  </div>
-                  
                   ${patient.registrationDate ? `
-                  <div class="section">
-                      <h3>Record Information</h3>
-                      <div class="info-grid">
-                          <div class="info-item">
-                              <div class="info-label">Registration Date</div>
+                          <div class="info-card">
+                              <div class="info-label">REGISTRATION DATE</div>
                               <div class="info-value">${new Date(patient.registrationDate).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric'
                               })}</div>
                           </div>
+                          ` : ''}
                       </div>
                   </div>
-                  ` : ''}
               </div>
               
               <div class="footer">
-                  <p><strong>Generated on:</strong> ${new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })} at ${new Date().toLocaleTimeString()}</p>
-                  <p>This is an official medical record from Dental Clinic</p>
+                  <div class="footer-content">
+                      <h3>${clinicInfo.name}</h3>
+                      <div class="footer-details">
+                          <p><strong>Address:</strong> ${clinicInfo.address}</p>
+                          <p><strong>Phone:</strong> ${clinicInfo.phone} | <strong>Email:</strong> ${clinicInfo.email}</p>
+                          <p><strong>Website:</strong> ${clinicInfo.website} | <strong>Hours:</strong> ${clinicInfo.hours}</p>
+                      </div>
+                      <div class="footer-bottom">
+                      </div>
+                  </div>
               </div>
           </div>
       </body>
@@ -1013,6 +1093,24 @@ function Patients() {
                   animation: float 6s ease-in-out infinite;
               }
               
+              .clinic-header {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 1rem;
+                  margin-bottom: 1rem;
+              }
+              
+              .clinic-logo {
+                  width: 60px;
+                  height: 60px;
+                  object-fit: contain;
+              }
+              
+              .clinic-icon {
+                  font-size: 3rem;
+              }
+              
               .header h1 {
                   margin: 0;
                   font-size: 2.5rem;
@@ -1110,10 +1208,39 @@ function Patients() {
                   border-top: 1px solid #e2e8f0;
               }
               
-              .footer p {
-                  margin: 0;
-                  color: #64748b;
+              .footer-content {
+                  max-width: 100%;
+                  margin: 0 auto;
+              }
+              
+              .footer-content h3 {
+                  margin: 0 0 1rem 0;
+                  color: #2563eb;
+                  font-size: 1.25rem;
+                  font-weight: bold;
+              }
+              
+              .footer-details {
+                  margin-bottom: 1rem;
+                  line-height: 1.6;
+              }
+              
+              .footer-details p {
+                  margin: 0.25rem 0;
+                  color: #374151;
                   font-size: 0.875rem;
+              }
+              
+              .footer-bottom {
+                  border-top: 1px solid #d1d5db;
+                  padding-top: 1rem;
+                  margin-top: 1rem;
+              }
+              
+              .footer-bottom p {
+                  margin: 0.25rem 0;
+                  color: #64748b;
+                  font-size: 0.8rem;
               }
               
               .status-badge {
@@ -1173,7 +1300,10 @@ function Patients() {
       </div>
           <div class="container">
               <div class="header">
-                  <h1>🦷 DentalCare Pro</h1>
+                  <div class="clinic-header">
+                      ${clinicInfo.logo ? `<img src="${clinicInfo.logo}" alt="Clinic Logo" class="clinic-logo" />` : ''}
+                      ${clinicInfo.name ? `<h1>${clinicInfo.name}</h1>` : ''}
+                  </div>
                   <h2>Appointment Record</h2>
                   <div class="clinic-info">
                       <strong>Professional Dental Care Services</strong><br>
@@ -1243,12 +1373,16 @@ function Patients() {
               </div>
               
               <div class="footer">
-                  <p><strong>Generated on:</strong> ${new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })} at ${new Date().toLocaleTimeString()}</p>
-                  <p>This is an official appointment record from Dental Clinic</p>
+                  <div class="footer-content">
+                      <h3>${clinicInfo.name}</h3>
+                      <div class="footer-details">
+                          <p><strong>Address:</strong> ${clinicInfo.address}</p>
+                          <p><strong>Phone:</strong> ${clinicInfo.phone} | <strong>Email:</strong> ${clinicInfo.email}</p>
+                          <p><strong>Website:</strong> ${clinicInfo.website} | <strong>Hours:</strong> ${clinicInfo.hours}</p>
+                      </div>
+                      <div class="footer-bottom">
+                      </div>
+                  </div>
               </div>
           </div>
       </body>
@@ -1723,7 +1857,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
       {mainTab === 'patient' && (
         <>
       {/* Patient Filters and Actions */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-md">
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-md scroll">
         <div className="flex gap-4 items-center justify-between flex-wrap">
               {/* Patient Filter Dropdown */}
               <div className="flex items-center gap-2">
@@ -2608,9 +2742,9 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`px-4 py-2 rounded-lg text-sm font-medium text-center ${
-                            appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                            appointment.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
                             appointment.status === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                            appointment.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                            appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
                             appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
@@ -3009,7 +3143,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                 {/* Left Column */}
                 <div className="space-y-6">
                   {/* Patient Information Card */}
-                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 h-[420px] flex flex-col">
                     <div className="flex items-center gap-3 mb-5">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         viewingPatient?.gender === 'female' ? 'bg-pink-100' : 'bg-primary-100'
@@ -3021,7 +3155,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                       <h3 className="text-gray-800 text-lg font-semibold m-0">Patient Information</h3>
                     </div>
                     
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 flex-1">
                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                         <span className="text-gray-600 font-medium text-sm">Patient Name</span>
                         <span className="text-primary-600 font-semibold text-sm">{viewingPatient?.name}</span>
@@ -3036,18 +3170,14 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                       </div>
                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                         <span className="text-gray-600 font-medium text-sm">Status</span>
-                        <div className="flex flex-col items-center gap-2">
-                          {/* Toggle Switch */}
-                          <div className={`relative w-15 h-7 bg-white rounded-full ${
-                            viewingPatient?.status === 'active' ? 'border-2 border-green-500' : 'border-2 border-red-500'
-                          }`}>
-                            {/* Sliding Indicator */}
-                            <div className={`absolute top-0.5 w-6 h-6 rounded-full ${
-                              viewingPatient?.status === 'active' ? 'bg-green-500 left-1' : 'bg-red-500 left-1'
-                            }`}></div>
+                        <div className="flex flex-col items-center">
+                          <div 
+                            onClick={() => handleToggleStatus(viewingPatient)}
+                            className={`toggle-switch mb-1 ${viewingPatient?.status === 'active' ? 'active' : ''}`}
+                          >
+                            <div className="toggle-thumb"></div>
                           </div>
-                          {/* Status Text */}
-                          <span className={`font-semibold text-xs capitalize ${
+                          <span className={`text-sm font-medium capitalize ${
                             viewingPatient?.status === 'active' ? 'text-green-600' : 'text-red-600'
                           }`}>
                             {viewingPatient?.status === 'active' ? 'Active' : 'Inactive'}
@@ -3058,26 +3188,28 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                   </div>
 
                   {/* Medical History Card */}
-                  {viewingPatient?.medicalHistory && viewingPatient?.medicalHistory.trim() !== '' && (
-                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                          <i className="fas fa-notes-medical text-lg text-primary-500"></i>
-                        </div>
-                        <h3 className="text-gray-800 text-lg font-semibold m-0">Medical History</h3>
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 h-[449px] flex flex-col">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                        <i className="fas fa-notes-medical text-lg text-primary-500"></i>
                       </div>
-                      
-                      <div className="p-4 bg-gray-50 rounded-md border-l-4 border-primary-500">
-                        <p className="m-0 text-gray-700 text-sm leading-relaxed italic">{viewingPatient?.medicalHistory}</p>
-                      </div>
+                      <h3 className="text-gray-800 text-lg font-semibold m-0">Medical History</h3>
                     </div>
-                  )}
+                    
+                    <div className="p-4 bg-gray-50 rounded-md border-l-4 border-primary-500">
+                      {viewingPatient?.medicalHistory && viewingPatient?.medicalHistory.trim() !== '' ? (
+                        <p className="m-0 text-gray-700 text-sm leading-relaxed italic">{viewingPatient?.medicalHistory}</p>
+                      ) : (
+                        <p className="m-0 text-gray-500 text-sm italic">No medical history recorded</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Right Column */}
                 <div className="space-y-6">
                 {/* Additional Information Card */}
-                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 h-[420px] flex flex-col">
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                       <i className="fas fa-info-circle text-lg text-primary-500"></i>
@@ -3085,7 +3217,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                     <h3 className="text-gray-800 text-lg font-semibold m-0">Additional Information</h3>
                     </div>
                     
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 flex-1">
                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                         <span className="text-gray-600 font-medium text-sm">Patient ID</span>
                         <span className="text-primary-600 font-semibold text-sm">{viewingPatient?.id}</span>
@@ -3125,7 +3257,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                   </div>
 
                 {/* Appointment Statistics Card */}
-                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 flex flex-col">
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                       <i className="fas fa-calendar-alt text-lg text-primary-500"></i>
@@ -3133,7 +3265,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                     <h3 className="text-gray-800 text-lg font-semibold m-0">Appointment Statistics</h3>
                     </div>
                     
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                         <span className="text-gray-600 font-medium text-sm">Total Appointments</span>
                         <span className="text-primary-600 font-semibold text-sm">
@@ -3151,6 +3283,41 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                              return formatDate(lastAppointment.date);
                            }
                            return 'No appointments';
+                           })()}
+                         </span>
+                       </div>
+                       
+                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                         <span className="text-gray-600 font-medium text-sm">Completed Treatments</span>
+                         <span className="text-blue-600 font-semibold text-sm">
+                           {appointments.filter(a => a.patientId === viewingPatient?.id && a.status === 'completed').length}
+                         </span>
+                       </div>
+                       
+                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                         <span className="text-gray-600 font-medium text-sm">Total Billing</span>
+                         <span className="text-blue-600 font-semibold text-sm">
+                           Rs. {invoices.filter(inv => inv.patientId === viewingPatient?.id).reduce((sum, inv) => sum + inv.total, 0).toLocaleString()}
+                         </span>
+                       </div>
+                       
+                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                         <span className="text-gray-600 font-medium text-sm">Re Appointments</span>
+                         <span className="text-blue-600 font-semibold text-sm">
+                           {appointments.filter(a => a.patientId === viewingPatient?.id && a.type === 'reappointment').length}
+                         </span>
+                       </div>
+                       
+                       <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                         <span className="text-gray-600 font-medium text-sm">Last Re Appointment</span>
+                         <span className="text-blue-600 font-semibold text-sm">
+                           {(() => {
+                             const reAppointments = appointments.filter(a => a.patientId === viewingPatient?.id && a.type === 'reappointment');
+                             if (reAppointments.length > 0) {
+                               const lastReAppointment = reAppointments[reAppointments.length - 1];
+                               return formatDate(lastReAppointment.date);
+                             }
+                             return 'No re appointments';
                            })()}
                          </span>
                        </div>
@@ -3274,11 +3441,11 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
               </div>
 
               {/* Modal Body */}
-              <div className="p-6">
+              <div className="p-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Left Column - Appointment Information */}
                   <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 h-[520px] flex flex-col">
                       <div className="flex items-center gap-3 mb-5">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <Calendar className="w-5 h-5 text-blue-600" />
@@ -3286,7 +3453,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                         <h3 className="text-gray-800 text-lg font-semibold m-0">Appointment Information</h3>
                       </div>
                       
-                      <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-3.5 flex-1">
                         <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                           <span className="text-gray-600 font-medium text-sm">Patient Name</span>
                           <span className="text-blue-600 font-semibold text-sm">{viewingAppointment?.patientName}</span>
@@ -3311,8 +3478,8 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                           <span className="text-gray-600 font-medium text-sm">Status</span>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                             viewingAppointment?.status === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                        viewingAppointment?.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                            viewingAppointment?.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                        viewingAppointment?.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                            viewingAppointment?.status === 'completed' ? 'bg-green-100 text-green-800' :
                             viewingAppointment?.status === 'cancelled' ? 'bg-red-100 text-red-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
@@ -3335,7 +3502,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
 
               {/* Right Column - Additional Information */}
                   <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 h-[520px] flex flex-col">
                       <div className="flex items-center gap-3 mb-5">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                       <i className="fas fa-info-circle text-lg text-blue-600"></i>
@@ -3343,7 +3510,7 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                     <h3 className="text-gray-800 text-lg font-semibold m-0">Additional Information</h3>
                       </div>
                       
-                      <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-3.5 flex-1">
                         <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                           <span className="text-gray-600 font-medium text-sm">Appointment ID</span>
                       <span className="text-blue-600 font-semibold text-sm">{viewingAppointment?.id}</span>
@@ -3358,27 +3525,82 @@ Mike Johnson,2025-01-15,11:00,Root Canal,urgent,scheduled,Emergency treatment`
                         {viewingAppointment?.createdAt ? formatDate(new Date(viewingAppointment.createdAt)) : 'N/A'}
                       </span>
                     </div>
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                          <span className="text-gray-600 font-medium text-sm">Reminder</span>
+                      <span className="text-blue-600 font-semibold text-sm">{viewingAppointment?.reminder || 'No Reminder'}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                          <span className="text-gray-600 font-medium text-sm">Last Updated</span>
+                      <span className="text-blue-600 font-semibold text-sm">
+                        {viewingAppointment?.createdAt ? formatDate(new Date(viewingAppointment.createdAt)) : 'N/A'}
+                      </span>
+                    </div>
                   </div>
                 </div>
+                </div>
 
-                {/* Notes Section */}
-                {viewingAppointment?.notes && (
-                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-                    <div className="flex items-center gap-3 mb-5">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i className="fas fa-sticky-note text-lg text-blue-600"></i>
+                {/* Notes Section - Full Width Below Grid */}
+             
+              </div>
+            </div>
+            {viewingAppointment?.notes && (
+                  <div className="mt-6">
+                    <div 
+                      style={{
+                        background: 'var(--white)',
+                        borderRadius: 'var(--radius-lg)',
+                        padding: '1.5rem',
+                        boxShadow: 'var(--shadow-md)',
+                        border: '1px solid var(--gray-200)',
+                        width: 'auto',
+                        margin: '0px 20px 20px 20px'
+                      }}
+                    >
+                      <div 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          marginBottom: '1.25rem'
+                        }}
+                      >
+                        <div 
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            background: 'var(--primary-light)',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--primary-color)'
+                          }}
+                        >
+                          <i className="fas fa-sticky-note" style={{fontSize: '1rem'}}></i>
+                        </div>
+                        <h3 style={{
+                          margin: 0,
+                          color: 'var(--gray-800)',
+                          fontSize: '1.125rem',
+                          fontWeight: 600
+                        }}>Appointment Notes</h3>
                       </div>
-                      <h3 className="text-gray-800 text-lg font-semibold m-0">Notes</h3>
-                    </div>
-                    
-                    <div className="p-4 bg-gray-50 rounded-md border-l-4 border-blue-500">
-                      <p className="m-0 text-gray-700 text-sm leading-relaxed">{viewingAppointment.notes}</p>
+                      
+                      <div 
+                        style={{
+                          background: 'var(--gray-50)',
+                          padding: '1rem',
+                          borderRadius: 'var(--radius-md)',
+                          color: 'var(--gray-700)',
+                          lineHeight: '1.6',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        {viewingAppointment.notes}
+                      </div>
                     </div>
                   </div>
                 )}
-                </div>
-              </div>
-            </div>
       </div>
     </div>
       )

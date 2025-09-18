@@ -90,55 +90,63 @@ export default function FeedbackForm({ feedback, onSave, onClose }: FeedbackForm
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto scrollbar-hide"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-800">
-              {feedback ? 'Edit Feedback' : 'Add New Feedback'}
-            </h2>
+          <div className="flex items-center justify-between p-6 border-b border-gray-200  rounded-t-2xl">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {feedback ? 'Edit Feedback' : 'Add New Feedback'}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {feedback ? 'Update patient feedback information' : 'Record new patient feedback'}
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="close bg-blue-600 hover:bg-blue-700 text-white hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors"
             >
-              <X className="w-6 h-6" />
+              X
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <form id="feedback-form" onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
             {/* Patient Name */}
             <div className="form-group">
-              <label htmlFor="patientName" className="form-label">
+              <label htmlFor="patientName" className="block text-sm font-semibold text-gray-700 mb-2">
                 Patient Name *
               </label>
               <input
                 {...register('patientName')}
                 type="text"
                 id="patientName"
-                className={cn('form-input', errors.patientName && 'border-red-500')}
+                className={cn(
+                  'w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors',
+                  errors.patientName && 'border-red-500 focus:border-red-500'
+                )}
                 placeholder="Enter patient name"
               />
               {errors.patientName && (
-                <span className="text-red-500 text-sm">{errors.patientName.message}</span>
+                <span className="text-red-500 text-sm mt-1 block">{errors.patientName.message}</span>
               )}
             </div>
 
             {/* Rating */}
             <div className="form-group">
-              <label className="form-label">Rating *</label>
-              <div className="flex items-center gap-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Rating *</label>
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
                     onClick={() => handleRatingChange(star)}
-                    className="focus:outline-none"
+                    className="focus:outline-none transform hover:scale-110 transition-transform"
                   >
                     <Star
                       className={cn(
-                        'w-8 h-8 transition-colors',
+                        'w-10 h-10 transition-colors',
                         star <= watchedRating
                           ? 'text-yellow-400 fill-current'
                           : 'text-gray-300 hover:text-yellow-200'
@@ -146,25 +154,25 @@ export default function FeedbackForm({ feedback, onSave, onClose }: FeedbackForm
                     />
                   </button>
                 ))}
-                <span className="ml-3 text-lg font-medium text-gray-700">
+                <span className="ml-4 text-xl font-bold text-gray-700 bg-white px-3 py-1 rounded-lg">
                   {watchedRating}/5
                 </span>
               </div>
               {errors.rating && (
-                <span className="text-red-500 text-sm">{errors.rating.message}</span>
+                <span className="text-red-500 text-sm mt-1 block">{errors.rating.message}</span>
               )}
             </div>
 
             {/* Category and Priority */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-group">
-                <label htmlFor="category" className="form-label">
+                <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-2">
                   Category
                 </label>
                 <select
                   {...register('category')}
                   id="category"
-                  className="form-input"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
                 >
                   <option value="service">Service Quality</option>
                   <option value="treatment">Treatment</option>
@@ -175,13 +183,13 @@ export default function FeedbackForm({ feedback, onSave, onClose }: FeedbackForm
               </div>
 
               <div className="form-group">
-                <label htmlFor="priority" className="form-label">
+                <label htmlFor="priority" className="block text-sm font-semibold text-gray-700 mb-2">
                   Priority
                 </label>
                 <select
                   {...register('priority')}
                   id="priority"
-                  className="form-input"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -192,28 +200,28 @@ export default function FeedbackForm({ feedback, onSave, onClose }: FeedbackForm
 
             {/* Comment */}
             <div className="form-group">
-              <label htmlFor="comment" className="form-label">
+              <label htmlFor="comment" className="block text-sm font-semibold text-gray-700 mb-2">
                 Comment
               </label>
               <textarea
                 {...register('comment')}
                 id="comment"
                 rows={4}
-                className="form-input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors resize-none"
                 placeholder="Enter patient feedback comment..."
               />
             </div>
 
             {/* Status and Assigned To */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-group">
-                <label htmlFor="status" className="form-label">
+                <label htmlFor="status" className="block text-sm font-semibold text-gray-700 mb-2">
                   Status
                 </label>
                 <select
                   {...register('status')}
                   id="status"
-                  className="form-input"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
                 >
                   <option value="pending">Pending</option>
                   <option value="reviewed">Reviewed</option>
@@ -222,14 +230,14 @@ export default function FeedbackForm({ feedback, onSave, onClose }: FeedbackForm
               </div>
 
               <div className="form-group">
-                <label htmlFor="assignedTo" className="form-label">
+                <label htmlFor="assignedTo" className="block text-sm font-semibold text-gray-700 mb-2">
                   Assigned To
                 </label>
                 <input
                   {...register('assignedTo')}
                   type="text"
                   id="assignedTo"
-                  className="form-input"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
                   placeholder="Staff member name"
                 />
               </div>
@@ -237,40 +245,40 @@ export default function FeedbackForm({ feedback, onSave, onClose }: FeedbackForm
 
             {/* Follow-up Date */}
             <div className="form-group">
-              <label htmlFor="followUpDate" className="form-label">
+              <label htmlFor="followUpDate" className="block text-sm font-semibold text-gray-700 mb-2">
                 Follow-up Date
               </label>
               <input
                 {...register('followUpDate')}
                 type="date"
                 id="followUpDate"
-                className="form-input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             {/* Tags */}
             <div className="form-group">
-              <label htmlFor="tags" className="form-label">
+              <label htmlFor="tags" className="block text-sm font-semibold text-gray-700 mb-2">
                 Tags
               </label>
               <input
                 type="text"
                 id="tags"
-                className="form-input"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 transition-colors"
                 placeholder="Press Enter to add tags"
                 onKeyDown={handleTagInput}
               />
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-3">
                 {(watch('tags') || []).map((tag, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-primary-100 text-primary-800 text-sm rounded-full"
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
                   >
                     {tag}
                     <button
                       type="button"
                       onClick={() => removeTag(tag)}
-                      className="text-primary-600 hover:text-primary-800"
+                      className="text-blue-600 hover:text-blue-800"
                     >
                       <X className="w-3 h-3" />
                     </button>

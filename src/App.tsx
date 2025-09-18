@@ -9,6 +9,7 @@ import Staff from "./pages/Staff";
 import Inventory from "./pages/Inventory";
 import Feedback from "./pages/Feedback";
 import Automation from "./pages/Automation";
+import Settings from "./pages/Settings";
 
 // Animated route wrapper
 function AnimatedRoute({ children }: { children: React.ReactNode }) {
@@ -85,6 +86,14 @@ function App() {
             element={
               <AnimatedRoute>
                 <Automation />
+              </AnimatedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <AnimatedRoute>
+                <Settings />
               </AnimatedRoute>
             }
           />

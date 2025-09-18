@@ -168,11 +168,33 @@ export interface Feedback {
   status: 'pending' | 'reviewed' | 'resolved'
 }
 
+export interface ClinicInfo {
+  name: string
+  address: string
+  phone: string
+  email: string
+  hours: string
+  website: string
+  profileImage?: string
+  logo?: string
+}
+
+export interface UserInfo {
+  name: string
+  email: string
+}
+
 interface AppState {
   // Current section and tab
   currentSection: string
   currentTab: string
   currentFilter: string
+  
+  // Clinic information
+  clinicInfo: ClinicInfo
+  
+  // User information
+  userInfo: UserInfo
   
   // Data arrays
   patients: Patient[]
@@ -265,6 +287,12 @@ interface AppState {
   // Loading actions
   setLoading: (loading: boolean) => void
   
+  // Clinic actions
+  updateClinicInfo: (updates: Partial<ClinicInfo>) => void
+  
+  // User actions
+  updateUserInfo: (updates: Partial<UserInfo>) => void
+  
           // Utility actions
         getPatientById: (id: string) => Patient | undefined
         getPatientsForSelect: () => { value: string; label: string }[]
@@ -287,6 +315,22 @@ export const useAppStore = create<AppState>()(
         currentSection: 'dashboard',
         currentTab: 'patient-management',
         currentFilter: 'all',
+        
+        // Clinic information
+        clinicInfo: {
+          name: 'Dental Care Pro',
+          address: '123 Main Street, City, State 12345',
+          phone: '+1 (555) 123-4567',
+          email: 'info@dentalcarepro.com',
+          hours: 'Mon-Fri: 9:00 AM - 6:00 PM, Sat: 9:00 AM - 2:00 PM',
+          website: 'www.dentalcarepro.com'
+        },
+        
+        // User information
+        userInfo: {
+          name: 'Admin User',
+          email: 'admin@dentalcarepro.com'
+        },
         
         patients: [
           {
@@ -707,6 +751,16 @@ export const useAppStore = create<AppState>()(
         // Loading actions
         setLoading: (loading) => set({ isLoading: loading }),
         
+        // Clinic actions
+        updateClinicInfo: (updates) => set((state) => ({
+          clinicInfo: { ...state.clinicInfo, ...updates }
+        })),
+        
+        // User actions
+        updateUserInfo: (updates) => set((state) => ({
+          userInfo: { ...state.userInfo, ...updates }
+        })),
+        
         // Utility actions
         getPatientById: (id) => {
           const state = get()
@@ -800,6 +854,8 @@ export const useAppStore = create<AppState>()(
       {
         name: 'dentalcare-pro-storage',
         partialize: (state) => ({
+          clinicInfo: state.clinicInfo,
+          userInfo: state.userInfo,
           patients: state.patients,
           appointments: state.appointments,
           invoices: state.invoices,
