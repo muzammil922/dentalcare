@@ -7,6 +7,7 @@ import Patients from "./pages/Patients";
 import Invoice from "./pages/Billing";
 import Staff from "./pages/Staff";
 import Inventory from "./pages/Inventory";
+import Reports from "./pages/Reports";
 import Feedback from "./pages/Feedback";
 import Automation from "./pages/Automation";
 import Settings from "./pages/Settings";
@@ -70,6 +71,14 @@ function App() {
             element={
               <AnimatedRoute>
                 <Inventory />
+              </AnimatedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <AnimatedRoute>
+                <Reports />
               </AnimatedRoute>
             }
           />

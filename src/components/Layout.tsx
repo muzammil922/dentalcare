@@ -17,6 +17,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  FileText,
 } from "lucide-react";
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/stores/useAppStore'
@@ -30,6 +31,7 @@ const navigationItems = [
   { href: "/patients", icon: Users, label: "Patients" },
   { href: "/staff", icon: UserCheck, label: "Staff" },
   { href: "/inventory", icon: Package, label: "Inventory" },
+  { href: "/reports", icon: FileText, label: "Reports" },
   { href: "/feedback", icon: MessageSquare, label: "Feedback" },
   { href: "/automation", icon: Zap, label: "Automation" },
 ];
@@ -214,8 +216,8 @@ export default function Layout({ children }: LayoutProps) {
                   alt="Clinic Logo"
                   className="w-8 h-8 object-contain border-0"
                 />
-              )}
-              <h1 className="text-2xl font-bold text-gray-800">{getPageTitle()}</h1>
+            )}
+            <h1 className="text-2xl font-bold text-gray-800">{getPageTitle()}</h1>
             </div>
           </div>
           
@@ -237,8 +239,7 @@ export default function Layout({ children }: LayoutProps) {
                     <User className="w-8 h-8 text-blue-600 border-0" />
                   )}
                 </button>
-                {/* Online Status Dot */}
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
             </div>
             
@@ -265,15 +266,15 @@ export default function Layout({ children }: LayoutProps) {
                           <User className="w-5 h-5 text-blue-600" />
                         </div>
                       )}
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                     </div>
                     <div>
                       <div className="font-medium text-gray-900">{userInfo.name}</div>
                       <div className="text-sm text-gray-500">{userInfo.email}</div>
                     </div>
                   </div>
-                </div>
-                
+          </div>
+          
                 {/* Menu Items */}
                 <div className="py-1">
                   <button
@@ -300,6 +301,15 @@ export default function Layout({ children }: LayoutProps) {
         <main className="min-h-[calc(100vh-70px)]">
           {children}
         </main>
+
+        {/* Version Footer */}
+        <footer className=" py-3 relative z-[9998]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-12 lg:px-40">
+            <p className="text-sm text-gray-500">
+              myDashy v1.0.0
+            </p>
+          </div>
+        </footer>
       </div>
     </div>
   );
