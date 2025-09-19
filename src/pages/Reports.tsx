@@ -92,12 +92,15 @@ function ReportsComponent() {
     feedback: 'all' // all, pending, resolved
   })
   const [reportFormat, setReportFormat] = useState('list')
+  const [reportType, setReportType] = useState('list')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
   const [selectedDate, setSelectedDate] = useState('')
   const [showCalendar, setShowCalendar] = useState(false)
   const [showDateRangeCalendar, setShowDateRangeCalendar] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [selectedReportDetails, setSelectedReportDetails] = useState<any>(null)
+  const [showReportModal, setShowReportModal] = useState(false)
   const [allReports, setAllReports] = useState<Array<{
     id: string
     name: string
@@ -433,9 +436,46 @@ function ReportsComponent() {
         }
       
       case 'appointment':
+        // Debug: Log all appointment statuses
+        const allStatuses = (appointments || []).map(a => a?.status).filter(Boolean)
+        const uniqueStatuses = [...new Set(allStatuses)]
+        console.log('All appointment statuses in data:', uniqueStatuses)
+        console.log('Total appointments:', (appointments || []).length)
+        
         const filteredAppointments = filters.appointment === 'all' 
           ? (appointments || []) 
-          : (appointments || []).filter(a => a && a.status === filters.appointment)
+          : (appointments || []).filter(a => {
+              if (!a) return false
+              
+              // Handle different status mappings
+              if (filters.appointment === 'scheduled') {
+                const isScheduled = a.status === 'scheduled' || 
+                       a.status === 'Scheduled' ||
+                       a.status === 'pending' || 
+                       a.status === 'Pending' ||
+                       a.status === 'upcoming' || 
+                       a.status === 'Upcoming' ||
+                       a.status === 'new' ||
+                       a.status === 'New' ||
+                       a.status === 'booked' ||
+                       a.status === 'Booked'
+                console.log(`Appointment ${a.patientName} with status "${a.status}" is scheduled: ${isScheduled}`)
+                return isScheduled
+              }
+              
+              return a.status === filters.appointment
+            })
+        
+        console.log(`Filtered appointments for "${filters.appointment}":`, filteredAppointments.length)
+        console.log('Filtered appointment data:', filteredAppointments)
+        
+        // Debug: If no scheduled appointments found, log the issue
+        if (filteredAppointments.length === 0 && filters.appointment === 'scheduled') {
+          console.log('No scheduled appointments found in your data.')
+          console.log('Available appointment statuses:', uniqueStatuses)
+          console.log('Total appointments in system:', (appointments || []).length)
+          console.log('To see scheduled appointments, make sure you have appointments with status: scheduled, pending, upcoming, new, or booked')
+        }
         
         return {
           id: `appointment-${Date.now()}`,
@@ -446,15 +486,27 @@ function ReportsComponent() {
           data: {
             totalAppointments: filteredAppointments.length,
             filter: filters.appointment,
-            completed: filteredAppointments.filter(a => a.status === 'completed').length,
+            scheduled: filteredAppointments.filter(a => 
+              a.status === 'scheduled' || 
+              a.status === 'Scheduled' ||
+              a.status === 'pending' || 
+              a.status === 'Pending' ||
+              a.status === 'upcoming' || 
+              a.status === 'Upcoming' ||
+              a.status === 'new' ||
+              a.status === 'New' ||
+              a.status === 'booked' ||
+              a.status === 'Booked'
+            ).length,
             confirmed: filteredAppointments.filter(a => a.status === 'confirmed').length,
+            completed: filteredAppointments.filter(a => a.status === 'completed').length,
             cancelled: filteredAppointments.filter(a => a.status === 'cancelled').length,
             appointments: filteredAppointments.map(a => ({
               patientName: a.patientName,
               date: a.date,
               time: a.time,
-              status: a.status,
-              treatment: (a as any).service || 'General Checkup',
+              status: a.status === 'pending' || a.status === 'Pending' || a.status === 'upcoming' || a.status === 'Upcoming' || a.status === 'new' || a.status === 'New' || a.status === 'booked' || a.status === 'Booked' ? 'Scheduled' : a.status,
+              treatment: (a as any).service || a.type || 'General Checkup',
               duration: (a as any).duration || '30 min',
               priority: (a as any).priority || 'Normal',
               notes: (a as any).notes || ''
@@ -665,46 +717,118 @@ function ReportsComponent() {
     setSelectedReport('')
   }
 
-  const handleShowReport = async (reportType: string) => {
-    if (reportType === 'patient') {
-      // For patient reports, check both Type and Format
-      const reportData = generateReportData(reportType)
+  const handleShowReport = async (reportTypeParam: string) => {
+    if (reportTypeParam === 'patient' || reportTypeParam === 'appointment') {
+      // For patient and appointment reports, check both Type and Format
+      const reportData = generateReportData(reportTypeParam)
       if (reportData && reportData.data) {
-        if (reportFormat === 'details') {
-          (reportData as any).format = 'details'
-          handleOpenDetailedReportInNewPage(reportData)
-        } else if (reportFormat === 'list') {
-          (reportData as any).format = 'list'
-          handleOpenListReportWithTable(reportData)
-        } else if (reportFormat === 'pdf') {
-          (reportData as any).format = 'pdf'
-          handleOpenPDFInNewPage(reportData)
-        } else if (reportFormat === 'csv') {
-          (reportData as any).format = 'csv'
-          const reportWithTimestamp = {
-            ...reportData,
-            timestamp: Date.now()
-          }
-          // Add to all reports (permanent storage)
-          setAllReports(prev => {
-            const exists = prev.some(r => r.id === reportData.id)
-            if (!exists) {
-              const newAllReports = [...prev, reportWithTimestamp]
-              localStorage.setItem('allReports', JSON.stringify(newAllReports))
-              return newAllReports
+        // Use reportType for the display type (details/list) and reportFormat for the output format (pdf/csv/excel)
+        if (reportType === 'details') {
+          if (reportFormat === 'pdf') {
+            (reportData as any).format = 'details-pdf'
+            handleOpenDetailedReportInNewPage(reportData)
+          } else if (reportFormat === 'csv') {
+            (reportData as any).format = 'details-csv'
+            const reportWithTimestamp = {
+              ...reportData,
+              timestamp: Date.now()
             }
-            return prev
-          })
-          // Add to current day reports
-          setGeneratedReports(prev => [...prev, reportWithTimestamp])
-          // Download CSV directly
-          handleDownloadCSVDirectly(reportData)
+            // Add to all reports (permanent storage)
+            setAllReports(prev => {
+              const exists = prev.some(r => r.id === reportData.id)
+              if (!exists) {
+                const newAllReports = [...prev, reportWithTimestamp]
+                localStorage.setItem('allReports', JSON.stringify(newAllReports))
+                return newAllReports
+              }
+              return prev
+            })
+            // Add to current day reports
+            setGeneratedReports(prev => [...prev, reportWithTimestamp])
+            // Download CSV directly
+            handleDownloadCSVDirectly(reportData)
+          } else if (reportFormat === 'excel') {
+            (reportData as any).format = 'details-excel'
+            const reportWithTimestamp = {
+              ...reportData,
+              timestamp: Date.now()
+            }
+            // Add to all reports (permanent storage)
+            setAllReports(prev => {
+              const exists = prev.some(r => r.id === reportData.id)
+              if (!exists) {
+                const newAllReports = [...prev, reportWithTimestamp]
+                localStorage.setItem('allReports', JSON.stringify(newAllReports))
+                return newAllReports
+              }
+              return prev
+            })
+            // Add to current day reports
+            setGeneratedReports(prev => [...prev, reportWithTimestamp])
+            // Download Excel directly
+            handleDownloadCSVDirectly(reportData)
+          }
+        } else if (reportType === 'list') {
+          if (reportFormat === 'pdf') {
+            (reportData as any).format = 'list-pdf'
+            handleOpenListReportWithTable(reportData)
+          } else if (reportFormat === 'csv') {
+            (reportData as any).format = 'list-csv'
+            const reportWithTimestamp = {
+              ...reportData,
+              timestamp: Date.now()
+            }
+            // Add to all reports (permanent storage)
+            setAllReports(prev => {
+              const exists = prev.some(r => r.id === reportData.id)
+              if (!exists) {
+                const newAllReports = [...prev, reportWithTimestamp]
+                localStorage.setItem('allReports', JSON.stringify(newAllReports))
+                return newAllReports
+              }
+              return prev
+            })
+            // Add to current day reports
+            setGeneratedReports(prev => [...prev, reportWithTimestamp])
+            // Download CSV directly
+            handleDownloadCSVDirectly(reportData)
+          } else if (reportFormat === 'excel') {
+            (reportData as any).format = 'list-excel'
+            const reportWithTimestamp = {
+              ...reportData,
+              timestamp: Date.now()
+            }
+            // Add to all reports (permanent storage)
+            setAllReports(prev => {
+              const exists = prev.some(r => r.id === reportData.id)
+              if (!exists) {
+                const newAllReports = [...prev, reportWithTimestamp]
+                localStorage.setItem('allReports', JSON.stringify(newAllReports))
+                return newAllReports
+              }
+              return prev
+            })
+            // Add to current day reports
+            setGeneratedReports(prev => [...prev, reportWithTimestamp])
+            // Download Excel directly
+            handleDownloadCSVDirectly(reportData)
+          }
         }
       }
     } else {
       // For other report types, use the normal generate function
-      handleGenerateReport(reportType)
+      handleGenerateReport(reportTypeParam)
     }
+  }
+
+  const handleReportClick = (report: any) => {
+    setSelectedReportDetails(report)
+    setShowReportModal(true)
+  }
+
+  const handleCloseReportModal = () => {
+    setShowReportModal(false)
+    setSelectedReportDetails(null)
   }
 
   const handleOpenDetailedReportInNewPage = (reportData: any) => {
@@ -715,11 +839,25 @@ function ReportsComponent() {
     const inventory = reportData.data.inventory || reportData.data.detailedInventory || []
     const feedback = reportData.data.feedback || reportData.data.detailedFeedback || []
     
+    // Get original patient data from store for better matching
+    const originalPatients = storeData?.patients || []
+    const allPatients = [...patients, ...originalPatients].filter((patient, index, self) => 
+      index === self.findIndex(p => p.id === patient.id || p.name === patient.name)
+    )
+    
     // Debug: Log the data being passed
     console.log('Report Data:', reportData)
     console.log('Patients:', patients)
     console.log('Appointments:', appointments)
     console.log('Invoices:', invoices)
+    
+    // Debug: Check appointment statuses
+    if (appointments.length > 0) {
+      const statuses = appointments.map(apt => apt.status).filter(Boolean)
+      const uniqueStatuses = [...new Set(statuses)]
+      console.log('Available appointment statuses:', uniqueStatuses)
+      console.log('Sample appointment:', appointments[0])
+    }
     
     // Generate HTML content for detailed report
     const htmlContent = `
@@ -1114,7 +1252,33 @@ function ReportsComponent() {
             `
                 }).join('')
               case 'Appointment':
-                return appointments.map((appointment: any, index: number) => `
+                return appointments.map((appointment: any, index: number) => {
+                  // Find patient information - try multiple matching methods
+                  let patient = allPatients.find(p => p.name === appointment.patientName)
+                  
+                  // If not found by name, try to find by ID
+                  if (!patient && appointment.patientId) {
+                    patient = allPatients.find(p => p.id === appointment.patientId)
+                  }
+                  
+                  // If still not found, try case-insensitive name matching
+                  if (!patient) {
+                    patient = allPatients.find(p => 
+                      p.name && appointment.patientName && 
+                      p.name.toLowerCase() === appointment.patientName.toLowerCase()
+                    )
+                  }
+                  
+                  // Get completed treatments for this patient
+                  const completedTreatments = appointments
+                    .filter(apt => 
+                      (apt.patientName === appointment.patientName || apt.patientId === appointment.patientId) &&
+                      apt.status === 'completed'
+                    )
+                    .map(apt => apt.treatment || apt.type || 'General Checkup')
+                    .filter((treatment, idx, arr) => arr.indexOf(treatment) === idx) // Remove duplicates
+                  
+                  return `
                   <div class="patient-section">
                     <h2 class="patient-title">Appointment ${index + 1}: ${appointment.patientName || 'N/A'}</h2>
                     <table class="patient-table">
@@ -1129,8 +1293,28 @@ function ReportsComponent() {
                           <td class="value-cell">${appointment.patientName || 'N/A'}</td>
                         </tr>
                         <tr>
+                          <td class="label-cell">Email:</td>
+                          <td class="value-cell">${patient?.email || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td class="label-cell">Phone Number:</td>
+                          <td class="value-cell">${patient?.phone || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td class="label-cell">Address:</td>
+                          <td class="value-cell">${patient?.address || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td class="label-cell">Age:</td>
+                          <td class="value-cell">${patient?.age || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td class="label-cell">Gender:</td>
+                          <td class="value-cell">${patient?.gender || 'N/A'}</td>
+                        </tr>
+                        <tr>
                           <td class="label-cell">Date:</td>
-                          <td class="value-cell">${appointment.date || 'N/A'}</td>
+                          <td class="value-cell">${appointment.date ? new Date(appointment.date).toLocaleDateString() : 'N/A'}</td>
                         </tr>
                         <tr>
                           <td class="label-cell">Time:</td>
@@ -1138,7 +1322,7 @@ function ReportsComponent() {
                         </tr>
                         <tr>
                           <td class="label-cell">Treatment:</td>
-                          <td class="value-cell">${appointment.treatment || 'General Checkup'}</td>
+                          <td class="value-cell">${appointment.treatment || appointment.type || 'General Checkup'}</td>
                         </tr>
                         <tr>
                           <td class="label-cell">Duration:</td>
@@ -1153,13 +1337,18 @@ function ReportsComponent() {
                           <td class="value-cell">${appointment.status || 'N/A'}</td>
                         </tr>
                         <tr>
+                          <td class="label-cell">Completed Treatments:</td>
+                          <td class="value-cell">${completedTreatments.length > 0 ? completedTreatments.join(', ') : 'None'}</td>
+                        </tr>
+                        <tr>
                           <td class="label-cell">Notes:</td>
                           <td class="value-cell">${appointment.notes || 'No notes'}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                `).join('')
+                `
+                }).join('')
               case 'Financial':
                 return invoices.map((invoice: any, index: number) => `
                   <div class="patient-section">
@@ -1356,11 +1545,179 @@ function ReportsComponent() {
                     </table>
                   </div>
                 `).join('')
+              case 'Appointment':
+                return appointments.map((appointment: any, index: number) => {
+                  // Get original patient data from store for better matching
+                  const originalPatients = storeData?.patients || []
+                  const allPatients = [...patients, ...originalPatients].filter((patient, index, self) => 
+                    index === self.findIndex(p => p.id === patient.id || p.name === patient.name)
+                  )
+                  
+                  // Find patient for this appointment
+                  let patient = allPatients.find(p => p.name === appointment.patientName)
+                  
+                  // If not found by name, try to find by ID
+                  if (!patient && appointment.patientId) {
+                    patient = allPatients.find(p => p.id === appointment.patientId)
+                  }
+                  
+                  // If still not found, try case-insensitive name matching
+                  if (!patient) {
+                    patient = allPatients.find(p => 
+                      p.name && appointment.patientName && 
+                      p.name.toLowerCase() === appointment.patientName.toLowerCase()
+                    )
+                  }
+                  
+                  // Get appointment's related invoices
+                  const appointmentInvoices = invoices.filter(inv => 
+                    inv.patientName === appointment.patientName || 
+                    inv.patientId === appointment.patientId
+                  )
+                  
+                  return `
+                    <div class="patient-section">
+                      <h2 class="patient-title">Appointment ${index + 1}: ${appointment.patientName || 'N/A'}</h2>
+                
+                      <table class="patient-table">
+                        <thead>
+                          <tr>
+                            <th colspan="2" class="table-header">APPOINTMENT INFORMATION</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td class="label-cell">Patient Name:</td>
+                            <td class="value-cell">${appointment.patientName || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Date:</td>
+                            <td class="value-cell">${appointment.date ? new Date(appointment.date).toLocaleDateString() : 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Time:</td>
+                            <td class="value-cell">${appointment.time || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Treatment Type:</td>
+                            <td class="value-cell">${appointment.type || 'General Checkup'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Duration:</td>
+                            <td class="value-cell">${appointment.duration || '30 min'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Priority:</td>
+                            <td class="value-cell">${appointment.priority || 'Normal'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Status:</td>
+                            <td class="value-cell">
+                              <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px;
+                                background-color: ${appointment.status === 'scheduled' || appointment.status === 'Scheduled' || appointment.status === 'pending' || appointment.status === 'Pending' || appointment.status === 'upcoming' || appointment.status === 'Upcoming' || appointment.status === 'new' || appointment.status === 'New' || appointment.status === 'booked' || appointment.status === 'Booked' ? '#e9d5ff' : 
+                                  appointment.status === 'confirmed' || appointment.status === 'Confirmed' ? '#dbeafe' : 
+                                  appointment.status === 'completed' || appointment.status === 'Completed' ? '#d1fae5' : 
+                                  appointment.status === 'cancelled' || appointment.status === 'Cancelled' ? '#fee2e2' : '#f3f4f6'};
+                                color: ${appointment.status === 'scheduled' || appointment.status === 'Scheduled' || appointment.status === 'pending' || appointment.status === 'Pending' || appointment.status === 'upcoming' || appointment.status === 'Upcoming' || appointment.status === 'new' || appointment.status === 'New' || appointment.status === 'booked' || appointment.status === 'Booked' ? '#7c3aed' : 
+                                  appointment.status === 'confirmed' || appointment.status === 'Confirmed' ? '#1e40af' : 
+                                  appointment.status === 'completed' || appointment.status === 'Completed' ? '#065f46' : 
+                                  appointment.status === 'cancelled' || appointment.status === 'Cancelled' ? '#dc2626' : '#374151'};">
+                                ${appointment.status === 'pending' || appointment.status === 'Pending' || appointment.status === 'upcoming' || appointment.status === 'Upcoming' || appointment.status === 'new' || appointment.status === 'New' || appointment.status === 'booked' || appointment.status === 'Booked' ? 'Scheduled' : appointment.status || 'N/A'}
+                              </span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Notes:</td>
+                            <td class="value-cell">${appointment.notes || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Email:</td>
+                            <td class="value-cell">${patient?.email || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Phone Number:</td>
+                            <td class="value-cell">${patient?.phone || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Address:</td>
+                            <td class="value-cell">${patient?.address || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Age:</td>
+                            <td class="value-cell">${patient?.age || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Gender:</td>
+                            <td class="value-cell">${patient?.gender || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Completed Treatments:</td>
+                            <td class="value-cell">${appointment.completedTreatments || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <td class="label-cell">Related Invoices:</td>
+                            <td class="value-cell">
+                              <div style="margin-bottom: 10px;">
+                                ${appointmentInvoices.length > 0 ? `
+                                  <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                      <tr style="background-color: #f8f9fa;">
+                                        <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 12px;">Invoice #</th>
+                                        <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 12px;">Date</th>
+                                        <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 12px;">Total</th>
+                                        <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 12px;">Status</th>
+                                        <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left; font-size: 12px;">Payment</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      ${appointmentInvoices.map(inv => `
+                                        <tr>
+                                          <td style="padding: 6px; border: 1px solid #e5e7eb; font-size: 12px;">${inv.invoiceNumber || inv.id}</td>
+                                          <td style="padding: 6px; border: 1px solid #e5e7eb; font-size: 12px;">${new Date(inv.invoiceDate || inv.createdAt || new Date()).toLocaleDateString()}</td>
+                                          <td style="padding: 6px; border: 1px solid #e5e7eb; font-size: 12px; font-weight: bold;">Rs. ${(inv.total || 0).toLocaleString()}</td>
+                                          <td style="padding: 6px; border: 1px solid #e5e7eb; font-size: 12px;">${inv.status || 'N/A'}</td>
+                                          <td style="padding: 6px; border: 1px solid #e5e7eb; font-size: 12px;">${inv.paymentMethod || 'N/A'}</td>
+                                        </tr>
+                                      `).join('')}
+                                    </tbody>
+                                  </table>
+                                ` : `
+                                  <div style="padding: 10px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; text-align: center; color: #6b7280; font-size: 12px;">
+                                    No invoices found for this appointment
+                                  </div>
+                                `}
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  `
+                }).join('')
               default:
                 return '<div class="patient-section"><h2>No data available</h2></div>'
             }
           })()}
         </div>
+        
+        <script>
+          function handlePrintAndTrack() {
+            console.log('Print button clicked');
+            // Add report to parent window's Recent Reports
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'ADD_TO_RECENT_REPORTS',
+                reportData: ${JSON.stringify(reportData)}
+              }, '*');
+            }
+            // Print the page
+            console.log('Calling window.print()');
+            window.print();
+          }
+          
+          // Make sure the function is available globally
+          window.handlePrintAndTrack = handlePrintAndTrack;
+        </script>
       </body>
       </html>
     `
@@ -2039,7 +2396,33 @@ function ReportsComponent() {
           `
                 }).join('')
               case 'Appointment':
-                return appointments.map((appointment: any, index: number) => `
+                return appointments.map((appointment: any, index: number) => {
+                  // Find patient information - try multiple matching methods
+                  let patient = allPatients.find(p => p.name === appointment.patientName)
+                  
+                  // If not found by name, try to find by ID
+                  if (!patient && appointment.patientId) {
+                    patient = allPatients.find(p => p.id === appointment.patientId)
+                  }
+                  
+                  // If still not found, try case-insensitive name matching
+                  if (!patient) {
+                    patient = allPatients.find(p => 
+                      p.name && appointment.patientName && 
+                      p.name.toLowerCase() === appointment.patientName.toLowerCase()
+                    )
+                  }
+                  
+                  // Get completed treatments for this patient
+                  const completedTreatments = appointments
+                    .filter(apt => 
+                      (apt.patientName === appointment.patientName || apt.patientId === appointment.patientId) &&
+                      apt.status === 'completed'
+                    )
+                    .map(apt => apt.treatment || apt.type || 'General Checkup')
+                    .filter((treatment, idx, arr) => arr.indexOf(treatment) === idx) // Remove duplicates
+                  
+                  return `
                   <div class="patient-section">
                     <h2 class="patient-title">Appointment ${index + 1}: ${appointment.patientName || 'N/A'}</h2>
                     <table class="patient-table">
@@ -2054,8 +2437,28 @@ function ReportsComponent() {
                           <td class="value-cell">${appointment.patientName || 'N/A'}</td>
                         </tr>
                         <tr>
+                          <td class="label-cell">Email:</td>
+                          <td class="value-cell">${patient?.email || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td class="label-cell">Phone Number:</td>
+                          <td class="value-cell">${patient?.phone || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td class="label-cell">Address:</td>
+                          <td class="value-cell">${patient?.address || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td class="label-cell">Age:</td>
+                          <td class="value-cell">${patient?.age || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td class="label-cell">Gender:</td>
+                          <td class="value-cell">${patient?.gender || 'N/A'}</td>
+                        </tr>
+                        <tr>
                           <td class="label-cell">Date:</td>
-                          <td class="value-cell">${appointment.date || 'N/A'}</td>
+                          <td class="value-cell">${appointment.date ? new Date(appointment.date).toLocaleDateString() : 'N/A'}</td>
                         </tr>
                         <tr>
                           <td class="label-cell">Time:</td>
@@ -2063,7 +2466,7 @@ function ReportsComponent() {
                         </tr>
                         <tr>
                           <td class="label-cell">Treatment:</td>
-                          <td class="value-cell">${appointment.treatment || 'General Checkup'}</td>
+                          <td class="value-cell">${appointment.treatment || appointment.type || 'General Checkup'}</td>
                         </tr>
                         <tr>
                           <td class="label-cell">Duration:</td>
@@ -2078,13 +2481,18 @@ function ReportsComponent() {
                           <td class="value-cell">${appointment.status || 'N/A'}</td>
                         </tr>
                         <tr>
+                          <td class="label-cell">Completed Treatments:</td>
+                          <td class="value-cell">${completedTreatments.length > 0 ? completedTreatments.join(', ') : 'None'}</td>
+                        </tr>
+                        <tr>
                           <td class="label-cell">Notes:</td>
                           <td class="value-cell">${appointment.notes || 'No notes'}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                `).join('')
+                `
+                }).join('')
               default:
                 return '<div class="patient-section"><h2>No data available</h2></div>'
             }
@@ -2129,6 +2537,32 @@ function ReportsComponent() {
 
   const handleOpenListReportWithTable = (reportData: any) => {
     const patients = reportData.data.patients || []
+    const appointments = reportData.data.appointments || reportData.data.detailedAppointments || []
+    const invoices = reportData.data.invoices || reportData.data.detailedInvoices || []
+    const staff = reportData.data.staff || reportData.data.detailedStaff || []
+    const inventory = reportData.data.inventory || reportData.data.detailedInventory || []
+    const feedback = reportData.data.feedback || reportData.data.detailedFeedback || []
+    
+    // Get the appropriate data based on report type
+    const dataToShow = reportData.type === 'appointment' || reportData.type === 'Appointment' ? appointments :
+                      reportData.type === 'financial' || reportData.type === 'Financial' ? invoices :
+                      reportData.type === 'staff' || reportData.type === 'Staff' ? staff :
+                      reportData.type === 'inventory' || reportData.type === 'Inventory' ? inventory :
+                      reportData.type === 'feedback' || reportData.type === 'Feedback' ? feedback :
+                      patients
+    
+    // Debug logging
+    console.log('Report Data:', reportData)
+    console.log('Report Type:', reportData.type)
+    console.log('Appointments Data:', appointments)
+    console.log('Data to Show:', dataToShow)
+    
+    // Debug: Check appointment statuses in list report
+    if (appointments.length > 0) {
+      const statuses = appointments.map(apt => apt.status).filter(Boolean)
+      const uniqueStatuses = [...new Set(statuses)]
+      console.log('List Report - Available appointment statuses:', uniqueStatuses)
+    }
     
     // Generate HTML content for list report with proper table design
     const htmlContent = `
@@ -2244,35 +2678,109 @@ function ReportsComponent() {
         
         <div class="print-container">
           <div class="header">
-            <h1>PATIENT LIST REPORT</h1>
+            <h1>${reportData.type.toUpperCase()} LIST REPORT</h1>
             <p>Generated on: ${new Date().toLocaleDateString()}</p>
             <p>Report ID: ${reportData.id}</p>
           </div>
           
-          <div class="total-records">Total Records: ${patients.length}</div>
+          <div class="total-records">Total Records: ${dataToShow.length}</div>
           
           <table class="data-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>RegistrationDate</th>
+                ${(reportData.type === 'appointment' || reportData.type === 'Appointment') ? `
+                  <th>Patient</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Treatment</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                ` : (reportData.type === 'financial' || reportData.type === 'Financial') ? `
+                  <th>Patient</th>
+                  <th>Invoice #</th>
+                  <th>Date</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                ` : (reportData.type === 'staff' || reportData.type === 'Staff') ? `
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Hire Date</th>
+                ` : (reportData.type === 'inventory' || reportData.type === 'Inventory') ? `
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                ` : (reportData.type === 'feedback' || reportData.type === 'Feedback') ? `
+                  <th>Patient</th>
+                  <th>Rating</th>
+                  <th>Comment</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Follow Up</th>
+                ` : `
+                  <th>Name</th>
+                  <th>Age</th>
+                  <th>Gender</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>RegistrationDate</th>
+                `}
               </tr>
             </thead>
             <tbody>
-              ${patients.map((patient: any) => `
+              ${dataToShow.map((item: any) => `
                 <tr>
-                  <td class="left-align">${patient.name || 'N/A'}</td>
-                  <td class="center-align">${patient.age || 'N/A'}</td>
-                  <td class="center-align">${patient.gender || 'N/A'}</td>
-                  <td class="center-align">${patient.phone || 'N/A'}</td>
-                  <td class="left-align">${patient.email || 'N/A'}</td>
-                  <td class="center-align">${patient.status || 'N/A'}</td>
-                  <td class="left-align">${patient.registrationDate || 'N/A'}</td>
+                  ${(reportData.type === 'appointment' || reportData.type === 'Appointment') ? `
+                    <td class="left-align">${item.patientName || 'N/A'}</td>
+                    <td class="center-align">${item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}</td>
+                    <td class="center-align">${item.time || 'N/A'}</td>
+                    <td class="center-align">${item.type || 'General Checkup'}</td>
+                    <td class="center-align">${item.status || 'N/A'}</td>
+                    <td class="left-align">${item.notes || 'N/A'}</td>
+                  ` : (reportData.type === 'financial' || reportData.type === 'Financial') ? `
+                    <td class="left-align">${item.patientName || 'N/A'}</td>
+                    <td class="center-align">${item.invoiceNumber || item.id || 'N/A'}</td>
+                    <td class="center-align">${item.invoiceDate ? new Date(item.invoiceDate).toLocaleDateString() : 'N/A'}</td>
+                    <td class="center-align">${item.total ? 'Rs. ' + item.total.toLocaleString() : 'N/A'}</td>
+                    <td class="center-align">${item.status || 'N/A'}</td>
+                    <td class="center-align">${item.paymentMethod || 'N/A'}</td>
+                  ` : (reportData.type === 'staff' || reportData.type === 'Staff') ? `
+                    <td class="left-align">${item.name || 'N/A'}</td>
+                    <td class="center-align">${item.role || 'N/A'}</td>
+                    <td class="left-align">${item.email || 'N/A'}</td>
+                    <td class="center-align">${item.phone || 'N/A'}</td>
+                    <td class="center-align">${item.status || 'N/A'}</td>
+                    <td class="left-align">${item.hireDate ? new Date(item.hireDate).toLocaleDateString() : 'N/A'}</td>
+                  ` : (reportData.type === 'inventory' || reportData.type === 'Inventory') ? `
+                    <td class="left-align">${item.name || 'N/A'}</td>
+                    <td class="center-align">${item.category || 'N/A'}</td>
+                    <td class="center-align">${item.quantity || 'N/A'}</td>
+                    <td class="center-align">${item.price ? 'Rs. ' + item.price.toLocaleString() : 'N/A'}</td>
+                    <td class="center-align">${item.status || 'N/A'}</td>
+                    <td class="left-align">${item.lastUpdated ? new Date(item.lastUpdated).toLocaleDateString() : 'N/A'}</td>
+                  ` : (reportData.type === 'feedback' || reportData.type === 'Feedback') ? `
+                    <td class="left-align">${item.patientName || 'N/A'}</td>
+                    <td class="center-align">${item.rating || 'N/A'}</td>
+                    <td class="left-align">${item.comment || 'N/A'}</td>
+                    <td class="center-align">${item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}</td>
+                    <td class="center-align">${item.status || 'N/A'}</td>
+                    <td class="center-align">${item.followUp ? 'Yes' : 'No'}</td>
+                  ` : `
+                    <td class="left-align">${item.name || 'N/A'}</td>
+                    <td class="center-align">${item.age || 'N/A'}</td>
+                    <td class="center-align">${item.gender || 'N/A'}</td>
+                    <td class="center-align">${item.phone || 'N/A'}</td>
+                    <td class="left-align">${item.email || 'N/A'}</td>
+                    <td class="center-align">${item.status || 'N/A'}</td>
+                    <td class="left-align">${item.registrationDate ? new Date(item.registrationDate).toLocaleDateString() : 'N/A'}</td>
+                  `}
                 </tr>
               `).join('')}
             </tbody>
@@ -2550,16 +3058,7 @@ function ReportsComponent() {
   }
 
   // Show loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Reports...</p>
-        </div>
-      </div>
-    )
-  }
+ 
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -2620,8 +3119,9 @@ function ReportsComponent() {
               value={selectedReport}
               onChange={(e) => {
                 setSelectedReport(e.target.value)
-                // Reset format when report type changes
+                // Reset format and type when report type changes
                 setReportFormat('pdf')
+                setReportType('list')
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
@@ -2635,32 +3135,37 @@ function ReportsComponent() {
             </select>
           </div>
 
-          {/* Report Format */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-            <select
-              value={reportFormat}
-              onChange={(e) => setReportFormat(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value="details">Details</option>
-              <option value="list">List</option>
-            </select>
-          </div>
+          {/* Report Format - Only show for patient and appointment reports */}
+          {(selectedReport === 'patient' || selectedReport === 'appointment') && (
+            <>
+              {/* Report Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                <select
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="details">Details</option>
+                  <option value="list">List</option>
+                </select>
+              </div>
 
-          {/* Format */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
-            <select
-              value={reportFormat}
-              onChange={(e) => setReportFormat(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value="pdf">PDF</option>
-              <option value="csv">CSV</option>
-              <option value="excel">Excel</option>
-            </select>
-          </div>
+              {/* Format */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                <select
+                  value={reportFormat}
+                  onChange={(e) => setReportFormat(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="pdf">PDF</option>
+                  <option value="csv">CSV</option>
+                  <option value="excel">Excel</option>
+                </select>
+              </div>
+            </>
+          )}
 
           {/* Status */}
           <div>
@@ -2680,8 +3185,9 @@ function ReportsComponent() {
               {selectedReport === 'appointment' && (
                 <>
                   <option value="all">All Appointments</option>
-                  <option value="completed">Completed</option>
+                  <option value="scheduled">Scheduled</option>
                   <option value="confirmed">Confirmed</option>
+                  <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </>
               )}
@@ -3049,7 +3555,11 @@ function ReportsComponent() {
         <div className="space-y-3">
           {generatedReports.length > 0 ? (
             generatedReports.filter(report => report && report.data).map((report) => (
-              <div key={report.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div 
+                key={report.id} 
+                onClick={() => handleReportClick(report)}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+              >
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <FileText className="w-5 h-5 text-blue-600" />
@@ -3111,6 +3621,198 @@ function ReportsComponent() {
           )}
         </div>
       </motion.div>
+
+      {/* Report Details Modal */}
+      {showReportModal && selectedReportDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {selectedReportDetails.name} - Details
+              </h2>
+              <button
+                onClick={handleCloseReportModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {selectedReportDetails.type === 'patient' && selectedReportDetails.data?.patients && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-blue-800 mb-2">Total Patients</h3>
+                      <p className="text-2xl font-bold text-blue-600">{selectedReportDetails.data.totalPatients}</p>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-green-800 mb-2">Active Patients</h3>
+                      <p className="text-2xl font-bold text-green-600">{selectedReportDetails.data.active}</p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-gray-800 mb-2">Inactive Patients</h3>
+                      <p className="text-2xl font-bold text-gray-600">{selectedReportDetails.data.inactive}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <h3 className="bg-gray-50 px-4 py-3 font-semibold text-gray-800 border-b border-gray-200">
+                      Patient Details
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedReportDetails.data.patients.map((patient: any, index: number) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {patient.name || 'N/A'}
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {patient.age || 'N/A'}
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {patient.phone || 'N/A'}
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  patient.status === 'active' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {patient.status || 'N/A'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {patient.registrationDate ? new Date(patient.registrationDate).toLocaleDateString() : 'N/A'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedReportDetails.type === 'appointment' && selectedReportDetails.data?.appointments && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-blue-800 mb-2">Total Appointments</h3>
+                      <p className="text-2xl font-bold text-blue-600">{selectedReportDetails.data.totalAppointments}</p>
+                    </div>
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-purple-800 mb-2">Scheduled</h3>
+                      <p className="text-2xl font-bold text-purple-600">{selectedReportDetails.data.scheduled || 0}</p>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-yellow-800 mb-2">Confirmed</h3>
+                      <p className="text-2xl font-bold text-yellow-600">{selectedReportDetails.data.confirmed}</p>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-green-800 mb-2">Completed</h3>
+                      <p className="text-2xl font-bold text-green-600">{selectedReportDetails.data.completed}</p>
+                    </div>
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-red-800 mb-2">Cancelled</h3>
+                      <p className="text-2xl font-bold text-red-600">{selectedReportDetails.data.cancelled}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <h3 className="bg-gray-50 px-4 py-3 font-semibold text-gray-800 border-b border-gray-200">
+                      Appointment Details
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Treatment</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedReportDetails.data.appointments.map((appointment: any, index: number) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {appointment.patientName || 'N/A'}
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {appointment.date ? new Date(appointment.date).toLocaleDateString() : 'N/A'}
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {appointment.time || 'N/A'}
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {appointment.type || 'General Checkup'}
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  appointment.status === 'scheduled' || 
+                                  appointment.status === 'Scheduled' ||
+                                  appointment.status === 'pending' || 
+                                  appointment.status === 'Pending' ||
+                                  appointment.status === 'upcoming' || 
+                                  appointment.status === 'Upcoming' ||
+                                  appointment.status === 'new' ||
+                                  appointment.status === 'New' ||
+                                  appointment.status === 'booked' ||
+                                  appointment.status === 'Booked'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : appointment.status === 'confirmed' || appointment.status === 'Confirmed'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : appointment.status === 'completed' || appointment.status === 'Completed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : appointment.status === 'cancelled' || appointment.status === 'Cancelled'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {appointment.status === 'pending' || 
+                                   appointment.status === 'Pending' ||
+                                   appointment.status === 'upcoming' || 
+                                   appointment.status === 'Upcoming' ||
+                                   appointment.status === 'new' ||
+                                   appointment.status === 'New' ||
+                                   appointment.status === 'booked' ||
+                                   appointment.status === 'Booked' 
+                                    ? 'Scheduled' 
+                                    : appointment.status || 'N/A'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Add similar sections for other report types (financial, staff, inventory, feedback) */}
+              {selectedReportDetails.type !== 'patient' && selectedReportDetails.type !== 'appointment' && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Detailed view for {selectedReportDetails.type} reports coming soon...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
