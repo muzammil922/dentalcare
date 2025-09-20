@@ -84,7 +84,7 @@ export default function LoginForm() {
             <div className="flex items-center justify-center lg:justify-start space-x-4 mb-8">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
                 <img 
-                  src="/src/assest/lgo.png" 
+                  src="/lgo.png" 
                   alt="myDashy Pro Logo" 
                   className="w-10 h-10 rounded-lg"
                 />
@@ -163,7 +163,7 @@ export default function LoginForm() {
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                   <img 
-                    src="/src/assest/lgo.png" 
+                    src="/lgo.png" 
                     alt="myDashy Pro Logo" 
                     className="w-8 h-8 rounded-lg"
                   />

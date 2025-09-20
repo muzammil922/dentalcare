@@ -50,7 +50,7 @@ export default function PrivacyPolicy() {
             <div className="flex items-center space-x-3">
               <div className="w-9 h-9 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
                 <img
-                  src="/src/assest/lgo.png"
+                  src="/lgo.png"
                   alt="myDashy Pro Logo"
                   className="w-6 h-6 rounded"
                 />

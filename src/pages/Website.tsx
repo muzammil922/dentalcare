@@ -212,7 +212,7 @@ export default function Website() {
             <div className="flex items-center space-x-3">
               <div className="w-9 h-9 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
                 <img
-                  src="/src/assest/lgo.png"
+                  src="/lgo.png"
                   alt="myDashy Pro Logo"
                   className="w-6 h-6 rounded"
                 />
@@ -349,7 +349,7 @@ export default function Website() {
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
                       <img
-                        src="/src/assest/lgo.png"
+                        src="/lgo.png"
                         alt="Logo"
                         className="w-5 h-5 rounded"
                       />
@@ -688,7 +688,7 @@ export default function Website() {
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
                   <img
-                    src="/src/assest/lgo.png"
+                    src="/lgo.png"
                     alt="myDashy Pro Logo"
                     className="w-6 h-6 rounded"
                   />
