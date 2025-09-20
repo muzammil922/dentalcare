@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Users, 
@@ -17,22 +17,33 @@ import { formatDate } from '@/lib/utils'
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const { 
-    patients, 
-    appointments, 
-    invoices, 
-    feedback,
-    staff,
-    attendance,
+    patients = [], 
+    appointments = [], 
+    invoices = [], 
+    staff = [], 
+    feedback = [],
+    attendance = [],
     clinicInfo
   } = useAppStore()
+  
+  // Debug logging for data
+  useEffect(() => {
+    console.log('Dashboard: Data loaded from useAppStore:', {
+      patients: patients.length,
+      appointments: appointments.length,
+      staff: staff.length,
+      invoices: invoices.length,
+      feedback: feedback.length
+    });
+  }, [patients, appointments, staff, invoices, feedback]);
+
+
 
   // Calculate statistics
   const totalPatients = patients.length
   const totalAppointments = appointments.length
-  const totalRevenue = invoices.reduce((sum, invoice) => sum + invoice.total, 0)
-  const averageRating = feedback.length > 0 
-    ? feedback.reduce((sum, f) => sum + f.rating, 0) / feedback.length 
-    : 0
+  const totalRevenue = invoices.reduce((sum, invoice) => sum + (invoice.total || 0), 0)
+  const averageRating = feedback.length > 0 ? feedback.reduce((sum, fb) => sum + (fb.rating || 0), 0) / feedback.length : 0
 
   const todaysAppointments = appointments
     .filter(apt => new Date(apt.date).toDateString() === new Date().toDateString())
@@ -43,35 +54,60 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime())
     .slice(0, 5)
 
-  // Real-time recent activity data
+  // Real-time recent activity data - only recently added items
   const recentActivity = [
-    ...patients.slice(-3).map(patient => ({
+    ...patients.slice(-5).map(patient => ({
       type: 'patient',
-      message: `New patient registered: ${patient.name}`,
-      time: new Date(patient.registrationDate),
-      icon: '👤'
+      message: `New patient added: ${patient.name}`,
+      time: new Date(patient.createdAt || patient.registrationDate)
     })),
-    ...appointments.slice(-2).map(appointment => ({
+    ...appointments.slice(-5).map(appointment => ({
       type: 'appointment',
-      message: `Appointment scheduled: ${appointment.patientName}`,
-      time: new Date(appointment.date),
-      icon: '📅'
+      message: `New appointment added: ${appointment.patientName} - ${appointment.type || 'consultation'}`,
+      time: new Date(appointment.createdAt || appointment.date)
     })),
-    ...invoices.slice(-2).map(invoice => ({
+    ...invoices.slice(-5).map(invoice => ({
       type: 'invoice',
-      message: `Invoice generated: Rs. ${invoice.total}`,
-      time: new Date(invoice.date),
-      icon: '💰'
-    })),
-    ...feedback.slice(-1).map(fb => ({
-      type: 'feedback',
-      message: `New feedback received: ${fb.rating} stars`,
-      time: new Date(fb.date),
-      icon: '⭐'
+      message: `New invoice added: Rs. ${invoice.total} for ${invoice.patientName || 'Patient'}`,
+      time: new Date(invoice.createdAt || invoice.date)
     }))
-  ]
-    .sort((a, b) => b.time.getTime() - a.time.getTime())
-    .slice(0, 5)
+  ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10)
+
+  // If no real activity, show system status
+  const systemActivity = recentActivity.length === 0 ? [
+    {
+      type: 'system',
+      message: `Dashboard loaded with ${patients.length} patients`,
+      time: new Date()
+    },
+    {
+      type: 'system', 
+      message: `System running with ${appointments.length} appointments`,
+      time: new Date(Date.now() - 1000 * 60 * 5) // 5 minutes ago
+    },
+    {
+      type: 'system',
+      message: `Total invoices: ${invoices.length}`,
+      time: new Date(Date.now() - 1000 * 60 * 10) // 10 minutes ago
+    }
+  ] : []
+
+  // Always show real activity, even if empty - don't show system activity
+  const displayActivity = recentActivity
+
+  // Debug logging for Recent Activity
+  console.log('Recent Activity Debug:', {
+    patientsCount: patients.length,
+    appointmentsCount: appointments.length,
+    invoicesCount: invoices.length,
+    feedbackCount: feedback.length,
+    recentActivityLength: recentActivity.length,
+    systemActivityLength: systemActivity.length,
+    displayActivityLength: displayActivity.length,
+    recentActivity: recentActivity,
+    systemActivity: systemActivity,
+    displayActivity: displayActivity
+  })
 
   // Real-time system status
   const systemStatus = [
@@ -175,7 +211,7 @@ export default function Dashboard() {
   return (
     <div className="p-6">
       {/* Dashboard Overview Button */}
-      <div className="mb-6 bg-white p-3 border border-gray-200 rounded-lg shadow-sm">
+      <div className="mb-6 bg-white p-3 border border-gray-200 rounded-lg shadow-sm flex justify-between items-center">
         <button 
           className={`inline-flex items-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
             activeTab === 'overview' 
@@ -187,6 +223,7 @@ export default function Dashboard() {
           <TrendingUp className="w-4 h-4" />
           Overview
         </button>
+        
       </div>
 
       {/* Statistics Grid */}
@@ -415,8 +452,8 @@ export default function Dashboard() {
             Recent Activity
           </h3>
           <div className="space-y-3">
-            {recentActivity.length > 0 ? (
-              recentActivity.map((activity, index) => {
+            {displayActivity.length > 0 ? (
+              displayActivity.map((activity, index) => {
                 const getTimeAgo = (date: Date) => {
                   const now = new Date()
                   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
@@ -432,15 +469,16 @@ export default function Dashboard() {
                 }
                 
                 return (
-                  <div key={index} className="text-sm text-gray-600">
-                    <p className="font-medium text-gray-800">{activity.message}</p>
-                    <p className="text-xs text-gray-500">{getTimeAgo(activity.time)}</p>
+                  <div key={index} className="p-3 bg-gray-50 rounded-lg border-l-4 border-blue-400">
+                    <p className="font-medium text-gray-800 text-sm">{activity.message}</p>
+                    <p className="text-xs text-gray-500 mt-1">{getTimeAgo(activity.time)}</p>
             </div>
                 )
               })
             ) : (
               <div className="text-sm text-gray-500 text-center py-4">
-                No recent activity
+                <p>No recent activity</p>
+                <p className="text-xs mt-2">Add some patients, appointments, or invoices to see activity here</p>
             </div>
             )}
           </div>

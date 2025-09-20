@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/stores/useAppStore'
+import { useAuth } from '../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -44,6 +46,30 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoading, clinicInfo, userInfo } = useAppStore();
+  const { user, userData, logout } = useAuth();
+
+  // Debug logging for user data
+  useEffect(() => {
+    console.log('Layout - User data debug:', {
+      user: user,
+      userData: userData,
+      userInfo: userInfo,
+      clinicInfo: clinicInfo
+    });
+  }, [user, userData, userInfo, clinicInfo]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      // Force redirect to main website with a small delay to ensure logout completes
+        setTimeout(() => {
+          window.location.replace('/');
+        }, 0);
+    } catch (error) {
+      toast.error('Error logging out');
+    }
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -99,11 +125,6 @@ export default function Layout({ children }: LayoutProps) {
     navigate('/settings');
   };
 
-  const handleLogoutClick = () => {
-    setUserDropdownOpen(false);
-    // Add logout logic here
-    console.log('Logout clicked');
-  };
 
   const handleUserClick = () => {
     setUserDropdownOpen(!userDropdownOpen);
@@ -229,7 +250,7 @@ export default function Layout({ children }: LayoutProps) {
                   className="flex items-center hover:opacity-80 transition-opacity border-0 focus:outline-none focus:border-0 focus:ring-0 focus:ring-offset-0 active:border-0 active:outline-none"
                   style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
                 >
-{clinicInfo.profileImage ? (
+{clinicInfo?.profileImage ? (
                     <img
                       src={clinicInfo.profileImage}
                       alt="Profile"
@@ -255,7 +276,7 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      {clinicInfo.profileImage ? (
+                      {clinicInfo?.profileImage ? (
                         <img
                           src={clinicInfo.profileImage}
                           alt="Profile"
@@ -269,8 +290,9 @@ export default function Layout({ children }: LayoutProps) {
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">{userInfo.name}</div>
-                      <div className="text-sm text-gray-500">{userInfo.email}</div>
+                      <div className="font-medium text-gray-900">{userData?.ownerName || user?.displayName || userInfo?.name || 'User'}</div>
+                      <div className="text-sm text-gray-500">{userData?.email || user?.email || userInfo?.email}</div>
+                      <div className="text-xs text-blue-600">{userData?.clinicName || clinicInfo?.name}</div>
                     </div>
                   </div>
           </div>
@@ -285,7 +307,7 @@ export default function Layout({ children }: LayoutProps) {
                     Settings
                   </button>
                   <button
-                    onClick={handleLogoutClick}
+                    onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
