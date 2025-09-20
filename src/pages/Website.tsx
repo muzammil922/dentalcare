@@ -19,13 +19,29 @@ import {
   TrendingUp,
   Heart,
   Award,
-  Globe
+  Globe,
+  DollarSign
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export default function Website() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false)
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isContactModalOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isContactModalOpen])
   const navigate = useNavigate()
 
   // Handle scroll effect
@@ -91,22 +107,58 @@ export default function Website() {
 
   const testimonials = [
     {
-      name: "Dr. Sarah",
+      name: "Dr. Sarah Johnson",
       clinic: "Bright Smile Dental",
+      location: "New York, USA",
       rating: 5,
-      text: "myDashy Pro transformed our clinic operations. Patient management is now effortless and our efficiency has increased by 40%."
+      text: "myDashy Pro completely revolutionized our clinic operations. Patient management is now effortless and our efficiency has increased by 40%. The automated scheduling system is a game-changer!",
+      image: "👩‍⚕️",
+      specialty: "General Dentistry"
     },
     {
-      name: "Dr. Mirhab",
+      name: "Dr. Ahmed Hassan",
       clinic: "Family Dental Care",
+      location: "Karachi, Pakistan",
       rating: 5,
-      text: "The analytics dashboard gives us insights we never had before. Revenue tracking and patient trends are crystal clear."
+      text: "The appointment scheduling system is incredible. Our patients love the automated reminders and we've reduced no-shows by 60%. The billing integration saves us hours every week.",
+      image: "👨‍⚕️",
+      specialty: "Pediatric Dentistry"
     },
     {
-      name: "Dr. Abu Bakar",
-      clinic: "Modern Dentistry",
+      name: "Dr. Maria Rodriguez",
+      clinic: "Cosmetic Dentistry Plus",
+      location: "Los Angeles, USA",
       rating: 5,
-      text: "Real-time scheduling and automated reminders have reduced no-shows by 60%. Our patients love the convenience."
+      text: "From patient records to billing, everything is streamlined. The reporting features help us make better business decisions. Our revenue has increased by 25% since implementation.",
+      image: "👩‍⚕️",
+      specialty: "Cosmetic Dentistry"
+    },
+    {
+      name: "Dr. James Wilson",
+      clinic: "Orthodontic Solutions",
+      location: "London, UK",
+      rating: 5,
+      text: "The inventory management feature is outstanding. We never run out of supplies anymore, and the treatment planning tools have improved our patient outcomes significantly.",
+      image: "👨‍⚕️",
+      specialty: "Orthodontics"
+    },
+    {
+      name: "Dr. Fatima Al-Zahra",
+      clinic: "Modern Dental Clinic",
+      location: "Dubai, UAE",
+      rating: 5,
+      text: "myDashy Pro's multi-language support is perfect for our diverse patient base. The staff management features have made our team more productive and organized.",
+      image: "👩‍⚕️",
+      specialty: "Oral Surgery"
+    },
+    {
+      name: "Dr. Michael Chen",
+      clinic: "Advanced Dental Care",
+      location: "Toronto, Canada",
+      rating: 5,
+      text: "The integration with our existing systems was seamless. The analytics dashboard gives us insights we never had before. Highly recommended for any dental practice!",
+      image: "👨‍⚕️",
+      specialty: "Endodontics"
     }
   ]
 
@@ -172,7 +224,7 @@ export default function Website() {
           width: 100% !important;
           background: rgba(255, 255, 255, 0.95) !important;
           backdrop-filter: blur(8px) !important;
-          box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+          box-shadow: none !important;
           transition: all 0.3s ease-in-out !important;
         }
         
@@ -310,7 +362,7 @@ export default function Website() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={handleSignIn}
+                  onClick={() => setIsContactModalOpen(true)}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
                 >
                   <span>Start Free Trial</span>
@@ -463,42 +515,6 @@ export default function Website() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-              Trusted by Dental Professionals
-            </h2>
-            <p className="text-xl text-gray-600">
-              See what our customers say about myDashy Pro
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-8 shadow-lg"
-              >
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-600 mb-6 italic">"{testimonial.text}"</p>
-                <div>
-                  <p className="font-semibold text-gray-800">{testimonial.name}</p>
-                  <p className="text-sm text-gray-500">{testimonial.clinic}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-white">
@@ -554,6 +570,7 @@ export default function Website() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => setIsContactModalOpen(true)}
                   className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${
                     plan.popular
                       ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl'
@@ -568,113 +585,290 @@ export default function Website() {
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section id="contact" className="py-20 bg-gradient-to-br from-blue-50 via-white to-blue-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-20 bg-gradient-to-br from-gray-50 via-white to-blue-50 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full opacity-10 blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full opacity-10 blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-              Ready to Transform Your Practice?
-            </h2>
-            <p className="text-xl text-gray-600">
-              Get in touch with our team to learn more about myDashy Pro
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl mb-6 shadow-lg"
+            >
+              <Star className="w-8 h-8 text-white" />
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4"
+            >
+              Trusted by Dental Professionals
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-700"> Worldwide</span>
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-xl text-gray-600 max-w-3xl mx-auto"
+            >
+              Join thousands of dental professionals who have transformed their practice with myDashy Pro
+            </motion.p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Contact Info */}
-            <div className="space-y-8">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Phone className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800">Phone</h3>
-                  <p className="text-gray-600">+92 317 4718549</p>
-                </div>
-              </div>
+          {/* Testimonials Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ y: -5, scale: 1.02 }}
+                className="group"
+              >
+                <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 h-full">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center text-2xl">
+                        {testimonial.image}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-800 text-lg">{testimonial.name}</h4>
+                        <p className="text-sm text-blue-600 font-medium">{testimonial.specialty}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800">Email</h3>
-                  <p className="text-gray-600">aidev.muzammil@gmail.com</p>
-                </div>
-              </div>
+                  {/* Quote */}
+                  <div className="mb-6">
+                    <div className="text-4xl text-blue-200 mb-2">"</div>
+                    <p className="text-gray-600 leading-relaxed italic text-sm">
+                      {testimonial.text}
+                    </p>
+                  </div>
 
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-blue-600" />
+                  {/* Footer */}
+                  <div className="border-t border-gray-100 pt-4">
+                    <p className="font-semibold text-gray-800 text-sm">{testimonial.clinic}</p>
+                    <p className="text-xs text-gray-500 flex items-center mt-1">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {testimonial.location}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800">Address</h3>
-                  <p className="text-gray-600">74900 Karachi, Pakistan</p>
-                </div>
-              </div>
+              </motion.div>
+            ))}
+          </div>
 
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800">Support Hours</h3>
-                  <p className="text-gray-600">24/7 Customer Support</p>
-                </div>
+          {/* Stats Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-8 text-center text-white"
+          >
+            <div className="grid md:grid-cols-4 gap-8">
+              <div>
+                <div className="text-3xl font-bold mb-2">500+</div>
+                <div className="text-blue-100 text-sm">Happy Clinics</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold mb-2">50K+</div>
+                <div className="text-blue-100 text-sm">Patients Managed</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold mb-2">99.9%</div>
+                <div className="text-blue-100 text-sm">Uptime</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold mb-2">24/7</div>
+                <div className="text-blue-100 text-sm">Support</div>
               </div>
             </div>
+          </motion.div>
+        </div>
+      </section>
 
-            {/* Contact Form */}
-            <div className="bg-white rounded-2xl p-8 shadow-xl">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6">Send us a Message</h3>
-              <form className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                      placeholder="John"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                      placeholder="Doe"
-                    />
-                  </div>
-                </div>
+      {/* Ready to Transform Section */}
+      <section id="contact" className="py-20 bg-gradient-to-br from-blue-50 via-white to-blue-100 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full opacity-10 blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full opacity-10 blur-3xl"></div>
+        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                    placeholder="john@example.com"
-                  />
-                </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
+            {/* Left Side - Call to Action */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
+            >
+              {/* Header */}
+              <div className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="inline-flex items-center px-4 py-2 bg-blue-100 rounded-full text-blue-700 text-sm font-semibold uppercase tracking-wide"
+                >
+                  Jion Our Community
+                </motion.div>
+                
+                <motion.h2 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-800 leading-tight"
+                >
+                  Transform your
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-700"> Practice</span>
+                </motion.h2>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                  <textarea
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                    placeholder="Tell us about your practice..."
-                  ></textarea>
-                </div>
+              {/* Description */}
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="text-lg lg:text-xl text-gray-600 leading-relaxed max-w-lg"
+              >
+                Access your dental clinic dashboard, manage patients, track appointments, handle billing, communicate with staff, and much more - all from your web browser.
+              </motion.p>
 
+
+
+              {/* Get Started Button */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="flex justify-start"
+              >
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  onClick={() => setIsContactModalOpen(true)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  Send Message
+                  Get Started
                 </motion.button>
-              </form>
-            </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Right Side - Dashboard Features Table */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="space-y-6"
+            >
+              {/* Dashboard Features Table */}
+              <div className="p-6 bg-white/80 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg">
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Dashboard Features</h3>
+                <div className="space-y-4">
+                  {/* Staff Management */}
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <Users className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Staff Management</h4>
+                        <p className="text-sm text-gray-600">Manage team members & schedules</p>
+                      </div>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+
+                  {/* User Settings */}
+                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">User Settings</h4>
+                        <p className="text-sm text-gray-600">Configure preferences & permissions</p>
+                      </div>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+
+                  {/* Automation */}
+                  <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <Zap className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Automation</h4>
+                        <p className="text-sm text-gray-600">Automated workflows & reminders</p>
+                      </div>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+
+                  {/* Inventory */}
+                  <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Inventory</h4>
+                        <p className="text-sm text-gray-600">Track supplies & equipment</p>
+                      </div>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+
+                  {/* Reports */}
+                  <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                        <BarChart3 className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Reports</h4>
+                        <p className="text-sm text-gray-600">Analytics & performance insights</p>
+                      </div>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+
+                  {/* Patient Management */}
+                  <div className="flex items-center justify-between p-4 bg-pink-50 rounded-xl hover:bg-pink-100 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
+                        <Heart className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Patient Management</h4>
+                        <p className="text-sm text-gray-600">Complete patient records & history</p>
+                      </div>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
           </div>
         </div>
       </section>
@@ -747,6 +941,224 @@ export default function Website() {
           </div>
         </div>
       </footer>
+
+      {/* Contact Modal */}
+      {isContactModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+          >
+            {/* Modal Header */}
+            <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 px-6 md:px-8 py-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                    <img
+                      src="/lgo.png"
+                      alt="myDashy Pro Logo"
+                      className="w-8 h-8 rounded"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Get Started with myDashy Pro</h2>
+                    <p className="text-blue-100 text-sm">Transform your dental practice today</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsContactModalOpen(false)}
+                  className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-200"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 md:p-8 overflow-y-auto flex-1">
+              <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+                {/* Contact Information */}
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <Phone className="w-4 h-4 text-blue-600" />
+                      </div>
+                      Contact Information
+                    </h3>
+                    <div className="space-y-6">
+                      <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Phone className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 mb-1">Phone Support</p>
+                          <p className="text-gray-600 text-lg">+92 317 4718549</p>
+                          <p className="text-sm text-gray-500">Mon-Fri 9AM-6PM PKT</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Mail className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 mb-1">Email Support</p>
+                          <p className="text-gray-600 text-lg">aidev.muzammil@gmail.com</p>
+                          <p className="text-sm text-gray-500">24/7 response within 2 hours</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-6 h-6 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 mb-1">Office Location</p>
+                          <p className="text-gray-600 text-lg">74900 Karachi, Pakistan</p>
+                          <p className="text-sm text-gray-500">Serving dental practices globally</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trust Indicators */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6">
+                    <h4 className="font-semibold text-gray-900 mb-3">Why Choose myDashy Pro?</h4>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                        <span>Free 30-day trial</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                        <span>No setup fees</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                        <span>24/7 customer support</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                        <span>Secure & HIPAA compliant</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Form */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                      <Mail className="w-4 h-4 text-green-600" />
+                    </div>
+                    Start Your Free Trial
+                  </h3>
+                  <form className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">First Name *</label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                          placeholder="John"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Last Name *</label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                          placeholder="Doe"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+                      <input
+                        type="email"
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                        placeholder="john@dentalclinic.com"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                        placeholder="+92 300 1234567"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Clinic Name *</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                        placeholder="Bright Smile Dental Clinic"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Practice Size</label>
+                      <select className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white">
+                        <option value="">Select practice size</option>
+                        <option value="1-5">1-5 staff members</option>
+                        <option value="6-15">6-15 staff members</option>
+                        <option value="16-50">16-50 staff members</option>
+                        <option value="50+">50+ staff members</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Tell us about your needs</label>
+                      <textarea
+                        rows={4}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none bg-white"
+                        placeholder="What challenges are you facing with your current practice management system?"
+                      ></textarea>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        id="terms"
+                        required
+                        className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="terms" className="text-sm text-gray-600">
+                        I agree to the <a href="/terms-of-service" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</a>
+                      </label>
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                    >
+                      <span>Start Free Trial</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
+                    
+                    <p className="text-center text-sm text-gray-500">
+                      No credit card required • 30-day free trial • Cancel anytime
+                    </p>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   )
 }
